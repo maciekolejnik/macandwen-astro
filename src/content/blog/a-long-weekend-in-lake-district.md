@@ -2,8 +2,8 @@
 title: "A Long Weekend in Lake District"
 publishdate: "2020-07-07"
 date: "2020-05-21"
-featured_image: "https://i.imgur.com/lnjMXo5.jpg"
-small_image: "https://i.imgur.com/beG41vX.jpg"
+featured_image: "https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/lnjMXo5.webp"
+small_image: "https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/beG41vX.webp"
 ---
 
 <!-- **21st - 25th May 2020** -->
@@ -24,12 +24,12 @@ There are a few areas of interest in the Lake District, most located in the cent
 
 There's only one road leading up to Wasdale Head - you want to park at the end of it (you won't miss it). **Parking** is **free** and it's fine to leave your car overnight, but it's advised that you don't sleep inside it (especially if it's a camper/van). Once there, it's hard to miss Wasdale Head Inn - the most prominent accommodation option, but there are a few B&B type places nearby too. But if you're like us, you will want to **wild camp**. There are several options here; to make directions easier, let's define a few reference points. 
 
-![Heading to the inn](https://i.imgur.com/vPO5eWO.jpg)
+![Heading to the inn](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/vPO5eWO.webp)
 *Kirk Fell in the middle; path to Mosdale on the left; path to Sty Head is further to the right, not visible here*
 
 On the picture above is part of the view from the parking. The mountain in the middle is called **Kirk Fell**. The valley on its left (or south-west, if you prefer) is called **Mosdale** (dale = valley in northern England) - there's a path along it, which leads towards Pillar and Ennerdale. The valley on its right (south) doesn't have a name as far as we're aware (but the river that flows through is called Lingmell Beck) but it leads to **Sty Head**, which could be considered the focal point of the area; majority of hill walkers will head there. Now, to get to Mosdale, you take the asphalt road towards the Inn, then turn left towards Ritson's Bar, and then right along the river. To head towards **Sty Head**, you wanna take the **dirt road** that starts from the parking near a grey building, then turn **left** before a **farm** (there are signs) and follow the path slightly uphill; you will cross a river on a wooden **bridge**, then stick **left** when paths fork for the most straightforward route to Sty Head.
 
-![Wendy on a bridge](https://i.imgur.com/qGi3H7Z.jpg)
+![Wendy on a bridge](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/qGi3H7Z.webp)
 *Nice bridge made of strategically placed stones*
 
 ### Wild camping
@@ -45,10 +45,10 @@ With that said, here are (some of) your wild camping options:
 
 Obviously, the above list cannot be complete and we encourage exploration - it's always satisfying to find a nice wild camping spot yourself. 
 
-![Heading into Mosdale](https://i.imgur.com/9XY2UON.jpg)
+![Heading into Mosdale](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/9XY2UON.webp)
 *Heading into Mosdale*
 
-![Styhead Tarn](https://i.imgur.com/YnXr5N3.jpg)
+![Styhead Tarn](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/YnXr5N3.webp)
 *Styhead Tarn viewed from the south*
 
 # Adventures
@@ -59,26 +59,26 @@ Our original plan included plenty of **scrambling** and a bit of **hiking**. For
 
 Anyway, back to our trip: long story short, it didn't go as planned. On the positive side, we gained some invaluable experience. **We also managed to do a very decent scramble on the first, sunny, day: for those interested, full report is here:** [Wistow Crags]({{<ref "wistow-crags-scramble.md">}}). Otherwise, here are some photos.
 
-![Mosdale](https://i.imgur.com/4l7vuvU.jpg)
+![Mosdale](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/4l7vuvU.webp)
 *Post-glacial features of Mosedale valley clearly visible*
 
-![Rocks and stream](https://i.imgur.com/h2G1Kjg.jpg)
+![Rocks and stream](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/h2G1Kjg.webp)
 *Wistow Crags are the black rocks towards the top of the mountain*
 
-![Excited at start](https://i.imgur.com/IFR9k1X.jpg)
+![Excited at start](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/IFR9k1X.webp)
 *Visible excitement for the scrambling ahead*
 
-![Reading](https://i.imgur.com/COpf94m.jpg)
+![Reading](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/COpf94m.webp)
 *Finding scrambles ain't easy!*
 
-![Wendy happy](https://i.imgur.com/9PS9nrJ.jpg)
+![Wendy happy](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/9PS9nrJ.webp)
 *Happy at the midpoint*
 
-![Wistow Crags rocks](https://i.imgur.com/9XkjNmJ.jpg)
+![Wistow Crags rocks](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/9XkjNmJ.webp)
 
 The scramble was well-timed in the sense that we finished it before it got dark. The scramble was badly timed, however, in the sense that we finished it just before it got dark. As a consequence, we had to hike the 4.5 km (with 400m elevation gain and elements of scrambling) that separated us from the place where we planned to camp in the dark. It takes around an hour if you know the way and pack lightly. It took us over two hours, including picking a wrong way and scrambling over a steep slope with loose rock to get back to the right path. **Oh, and we only had one head torch to share and 15 kg backpacks. It was certainly a good relationship building exercise; we recommend all couples try it before getting married.** 
 
-![Windy Wendy](https://i.imgur.com/Jlzln5P.jpg)
+![Windy Wendy](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/Jlzln5P.webp)
 
 Thankfully, a little after midnight, we arrived at a glorious spot depicted above. Except we didn't see much and it wasn't that windy (yet). After two weeks in Scotland, **we can pitch our tent in less 5 minutes**, so shortly after arriving we were tucked in our sleeping bags ready to doze off after a long day (we set off from Windsor at 5am). It actually also started raining just after we got inside the tent, which made us feel better about ourselves. What it also made though is it made it harder to fall asleep. And soon afterward, it started getting really cold. **First lesson learned - don't bring a summer sleeping bag to the Lakes** - even if it's May and the forecast says temperature won't drop below 10°C (yeah, at sea level...). We were gonna learn many more lessons very shortly.
 
@@ -98,12 +98,12 @@ Well, on that first night, we got woken up by rain drops smashing our tent, driv
 
 The good news was that ~~initial reconnaissance~~ a peak out of the tent revealed a promising location to move to, seemingly covered from the wind by a steep slope. Roughly 50 meters (150 feet) separated us from that promised land. Under normal circumstances, we could probably just carry the tent without  packing it up. Not this time. It went quite smooth, though, and soon afterwards we were set up again, this time further from the lake, but less exposed to the wind. And we could make use of some big stones laying nearby to fix our guy lines in a rigid manner.
 
-![Tent](https://i.imgur.com/KGIqoYO.jpg)
+![Tent](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/KGIqoYO.webp)
 *Finally safe from the wind*
 
 The day was mostly spent hibernating inside the tent, interrupted by a quick resupply trip to the car (turned out one hoodie doesn't do the job) and a warm dinner - *pasta con pesto*. (Hands down best wild camping recipe!)
 
-![Bridge](https://i.imgur.com/pVJCh3Q.jpg)
+![Bridge](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/pVJCh3Q.webp)
 *Cross this bridge and wilderness awaits*
 
 ## Day 3: Hiking Great Gable & Scafell Pike in complete emptiness
@@ -120,25 +120,25 @@ With its pyramid-like shape, Great Gable is one of the more iconic mountain tops
 
 Initial ascent was actually quite pleasurable, despite the conditions; helped by fine views, big boulders on both sides of the path (scrambling practice) and lack of other human beings within 2 mile radius.
 
-![Looking over Styhead Tarn](https://i.imgur.com/3uuelst.jpg)
+![Looking over Styhead Tarn](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/3uuelst.webp)
 
 Soon afterwards, we could barely see a thing. It was just rocks and more rocks. One thing that all the mountains we topped that weekend have in common is that **the peaks are no more than a** **pile of rubble**. That loose rock, in turn, seems to attract fog, and as soon as you enter that zone, the fun stops. Navigation may also be tricky, so it's good to have an offline map on your phone. 
 
-![FOG](https://i.imgur.com/f6lpKXw.jpg)
+![FOG](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/f6lpKXw.webp)
 
 Upon reaching what looked like the top of Great Gable, cold and tired, we promptly made our way back to camp via Aaron Slack. 
 
-![Cooking](https://i.imgur.com/tf1rIyp.jpg)
+![Cooking](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/tf1rIyp.webp)
 *You get to appreciate a warm meal in circumstances like this. Even when that meal is porridge.*
 
 ### Scafell Pike
 
 With Great Gable ticked off the list, it was time to take care of England's highest mountain - Scafell Pike. Luckily, wind had calmed down somewhat and sky began clearing up a little. 
 
-![Gorge](https://i.imgur.com/ND4sQI2.jpg)
+![Gorge](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/ND4sQI2.webp)
 *Part of a route to/from Scafell Pike goes along this impressive gorge*
 
-![Winding path](https://i.imgur.com/Lks9gIa.jpg)
+![Winding path](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/Lks9gIa.webp)
 
 Overall, it was a short but intense hike and we enjoyed it very much. But then, our perception might have been a little skewed due to our prior struggles. We were so relieved that the wind settled down that we were probably seeing the world through rose-tinted glasses. We are likely going to write a separate post about climbing Scafell Pike so look out for that (we pretty much walked all various paths leading to the peak). For those interested in the route, below is a preview.
 
@@ -148,12 +148,12 @@ Overall, it was a short but intense hike and we enjoyed it very much. But then, 
 
 Note that near the top, we diverged a little to make the route a little more exciting. If you were to follow our path but didn't feel like scrambling, you should keep to the left and proceed along the obvious way. It still involves some rocks and steep terrain, but nothing that a ten year old kid couldn't climb.
 
-![Vista](https://i.imgur.com/bVq8O3R.jpg)
+![Vista](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/bVq8O3R.webp)
 *Styhead Tarn visible in the distance*
 
-![Waterfall](https://i.imgur.com/izXy3qO.jpg)
+![Waterfall](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/izXy3qO.webp)
 
-![Gorge](https://i.imgur.com/8cVkR4t.jpg)
+![Gorge](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/8cVkR4t.webp)
 
 At this point of our descent we turned left following the depicted gorge
 
@@ -161,19 +161,19 @@ At this point of our descent we turned left following the depicted gorge
 
 Little did we know that we'd ascend Scafell Pike again the next day. This time the route was much longer and our progress much slower. 
 
-![Wendy Mist](https://i.imgur.com/na1JcXq.jpg)
+![Wendy Mist](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/na1JcXq.webp)
 
 A recurring theme throughout the trip was that the peaks were bathing in clouds. Add to it lack of people and what results is a pretty apocalyptic atmosphere. 
 
-![Lake](https://i.imgur.com/jRZz7UY.jpg)
+![Lake](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/jRZz7UY.webp)
 
 ## Day 5: Scrambling Kirk Fell (well, more like river barefoot scrambling)
 
 Last day of our expedition started with an alarm... that didn't go off. Well, it did, but with no sound. Thanks for that Apple. That meant we didn't have time to do a scramble that we had planned for the day. Instead, we did a bit of barefoot scrambling up a stream, culminating in a cold water immersion. 
 
-![Barefoot scramble](https://i.imgur.com/iSZ1KDj.jpg)
+![Barefoot scramble](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/iSZ1KDj.webp)
 
-![Overlooking valley](https://i.imgur.com/JFechMq.jpg)
+![Overlooking valley](https://media.macandwen.com/images/posts/a-long-weekend-in-lake-district/JFechMq.webp)
 
 ## Conclusion: not enough scrambling but plenty of lessons learned
 

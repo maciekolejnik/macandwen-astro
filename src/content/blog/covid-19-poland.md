@@ -1,7 +1,7 @@
 ---
 title: "COVID-19 in Poland"
 publishdate: "2020-06-02"
-featured_image: "https://i.imgur.com/xbgBgnH.jpg"
+featured_image: "https://media.macandwen.com/images/posts/covid-19-poland/xbgBgnH.webp"
 small_image: "https://lh3.googleusercontent.com/Bkddsg83w7DAkl_yZjEoy5WwsZgp7wFAjWuRakBzhJqh136vOGy9bb0N9o-hqi40zKF1tYyGUu6B0A1r4NnusPggJccfiPRBu00jrAheQeIzOTBCnpp284MAzJkgrfay3qrHJA-3z4IsDOr_J9yRGK4srIx0dvtOOnXfVhTrWZfzlw8tH4Qri7oisPZINbd_QiGQenEOjZ1hHlWGAFR8NU9mA3AMhP84wQssWZgbqFofHhVf4tDsXgAOPgTRfAnbQauXhOOQv_A4g3FufpYJ2NAwMdpqbV-0KsYMbkpDy1uCRY6t7Z0HcbvWK82NA5aYaclq_PAbQvVYX8b8hnf9B4f-nGw8Qto4BRl7u7tGxW7WU0u2r3bUHH5a_4al7ySE4LfbyseR2NkhCGu_i9NHPoHaVg6yNNgO2Y-s5BCT7gDx6iOdzSb_HPPMZ4a3VoJtWvtxALrCNcraRrkuRMju9Ka3slmJQHygoqETLGJmpehPvD27uQZ4HXf4qIvuBO1oICe2_nBOWzup_GsXwSRKSNdKFalTX4Z9zqZooyHrYmkOvrIqCYej0qH8TMbA1BOw5bkHuIsko4jeFj_0Jt-wGX0qT8Rqls1r0PnGFnhhwIJD9MyLHZn02zSvSPfcINYifrDpEPkJbOb6mnwxQxQbfGbqH8s5z4jS-5JZBJo2XGnRxvqgq-YRdv5a=w1694-h1270-no?authuser=0"
 ---
 
@@ -23,17 +23,17 @@ The next day, **it was announced that all bars and restaurants are to be closed 
 
 *Pawilony*, usually a bustling party area in the centre of Warsaw, felt deserted on a Friday night, 13th of March. The few bars that remained open were far from being filled to capacity. Majority of their customers were foreigners, perhaps visiting Warsaw for a weekend, not yet aware that their stay will not go according to plan.
 
-![Enjoying a beer](https://i.imgur.com/uMVsmyk.png)
+![Enjoying a beer](https://media.macandwen.com/images/posts/covid-19-poland/uMVsmyk.webp)
 *Probably the last beer sold in this bar...*
 
 Some restrictions were introduced for 10 days, others were supposed to last a fortnight. However, naive were the hopes that life would go back to normal after two weeks. All the measures were further extended, and new steps to prevent the disease from spreading were gradually added. 
 
-![Piwo u Prezesa](https://i.imgur.com/9xYxcPA.png)
+![Piwo u Prezesa](https://media.macandwen.com/images/posts/covid-19-poland/9xYxcPA.webp)
 *Last time meeting friends (in person)*
 
 ## End of March: Lockdown intensifies
 
-![Big queue to a supermarket](https://i.imgur.com/jGOh7Uu.jpg)
+![Big queue to a supermarket](https://media.macandwen.com/images/posts/covid-19-poland/jGOh7Uu.webp)
 *Queueing to enter a supermarket - not something you're used to do*
 
 Towards the end of March, several new measures were introduced:
@@ -47,7 +47,7 @@ Towards the end of March, several new measures were introduced:
 
 Below is a photo from the last bike trip we managed to do before it became illegal.
 
-![Climbing a tree](https://i.imgur.com/6zpboHP.png)
+![Climbing a tree](https://media.macandwen.com/images/posts/covid-19-poland/6zpboHP.webp)
 *A bike ride to Otwock and along Świder river is one of a fun thing to do while in Warsaw*
 
 ## eEaster
@@ -97,7 +97,7 @@ Soon after Easter the lockdown reached its peak. Once it was announced it would 
 
 On the 20th of April parks and forests were reopened, which marked an important first step in returning to normal life. Encouraged by nice weather, even more people started going out to the street, exercising, walking in parks. Limit on the number of people in shops was increased and the queues disappeared. More people would wear the masks on the necks rather on their mouth and nose. Still, Wendy got told off by a random woman on the street for not wearing a mask for a few minutes. It ain't easy ~~being~~ looking Chinese these days. (As a matter of fact, the regulations stated that those with breathing difficulties are exempt from the obligation and Wendy struggles with hay fever)
 
-![](https://i.imgur.com/cx8eTHj.png)
+![](https://media.macandwen.com/images/posts/covid-19-poland/cx8eTHj.webp)
 
 One-table terrace with take away pizza, falafel wrap and wine hidden in plastic glasses
 
@@ -105,7 +105,7 @@ One-table terrace with take away pizza, falafel wrap and wine hidden in plastic 
 
 We kept discovering new restaurants to take away, even drank some rakija shots in a Greek tavern. Small non-essentials shops were now open: clothing shops, games shops, etc. We met family, even got the chance to meet the grandparents and go for a weekend getaway to the countryside, Jauka, to breathe from the city center where the sun was shining and river walks were bustling of people. Also, good time to work the home-grown crops!
 
-![](https://i.imgur.com/HnmpkE0.png)
+![](https://media.macandwen.com/images/posts/covid-19-poland/HnmpkE0.webp)
 
 Very soon → Blueberries, tomatoes, lettuce...
 
@@ -119,26 +119,26 @@ Time in Poland was well spent, but after two months the urge to go back home was
 4. Driven to Berlin by a friend who picked us up on the other side of the bridge (thanks Marin!)
 5. Fly to London with the comfort of an empty airport and an unusually non-full Ryanair plane.
 
-![](https://i.imgur.com/c8DoaJF.jpg)
+![](https://media.macandwen.com/images/posts/covid-19-poland/c8DoaJF.webp)
 *Hands up if you ever crossed a border on foot*
 
-![](https://i.imgur.com/LHWcNDA.jpg)
+![](https://media.macandwen.com/images/posts/covid-19-poland/LHWcNDA.webp)
 *Better world awaits on the other side?*
 
 In Berlin, you couldn't tell there's a pandemic going on. Well, some restaurants were closed, other served take-away only; but who cares if you can get a delicious, just-out-of-the-oven Lahmacun from a Turkish man and a bottle of cold lager from a späti. 
 
-![](https://i.imgur.com/ygfv9YB.jpg)
+![](https://media.macandwen.com/images/posts/covid-19-poland/ygfv9YB.webp)
 *Strolling around Charlottenburg*
 
 ![](https://lh3.googleusercontent.com/g0lGOYIzwjCUj1pmHJIyl-4UFDYQKee6kjklU-sxs8H9mmrLa7kEwjesx8Y_2_595W6WsGVFGYYxYEwwV8VyGgm95J2Vf9JGgpqsZLdIulLhtRFjI7rcyHGQ6n2mOOeS3HaEDMtIJ0-faypQBQdTff248Cg8z8kMyH9wPC36CUjkdMiWf0-2dUIxMKG_GEY5sf2O4WN9rQzJL1_42MkKywJi55F49TvuELEHMgWx7kjREAfIJgf9RyNepLZzM_kSHZAe1ncgvbdTkzWicuDlXdYfghva-STsJoWekk_9guXRIY8DbNxT2K94jxkmS1thmB41b21HP8CvrWkqQxBVSoDHdd0AT3R50asa3l4IE26D76Q-Pa1XXjK8q0aZ1wQJ1Ejkzz3KdfYQ7j3COc8QcavgBgSyi9mauym5XRB3wyQzdCL_DGoe9IcUdh_RY4fHnfW9dwiMeGRdaQSF3-QVzS90CKY1aSBwxt0VSXTDkSUcW5XICC791_eBt0cDCj1ssF5AyW91wZTODGhj9hlAyX-vE-q-SBU2ATQkySfFNFcXchDv5xAoMMmgIbRCO-VUNE0HEbisLOysNVAhaPGsKRFs-if4V_i6JB9KUpjkkRWbUGF47ZoLCpP-sBvsCmyL_0oyUGgrRk5RaSaljX0wJWuILwvtFmAFOa-OiGK2Qk2h5VyUnAfGg3Ot=w296-h222-no?authuser=0)
 *Disclaimer: we were eating so masks are off... ;)*
 
-![g](https://i.imgur.com/oT8CCxQ.jpg)
+![g](https://media.macandwen.com/images/posts/covid-19-poland/oT8CCxQ.webp)
 *Airport was rather empty*
 
-![](https://i.imgur.com/XzZ8Rqx.jpg)
+![](https://media.macandwen.com/images/posts/covid-19-poland/XzZ8Rqx.webp)
 *Social distancing was not enforced on the airport bus*
 
 Overall, the journey was smooth and the airports, as well as public transport in London, REALLY empty. 
 
-![](https://i.imgur.com/E9kvHEq.jpg)
+![](https://media.macandwen.com/images/posts/covid-19-poland/E9kvHEq.webp)

@@ -1,8 +1,8 @@
 ---
 title: "Let's see if this works"
 publishdate: "2018-04-11"
-featured_image: "https://i.imgur.com/mz0L5x3.jpg"
-small_image: "https://i.imgur.com/FSMH6nN.jpg"
+featured_image: "https://media.macandwen.com/images/posts/lets-see-if-this-works/mz0L5x3.webp"
+small_image: "https://media.macandwen.com/images/posts/lets-see-if-this-works/FSMH6nN.webp"
 ---
 
 Quick introduction - this blog is aimed to keep track of our little adventures, show off our pictures and in the meantime, give you some tips we wish we knew beforehand. 

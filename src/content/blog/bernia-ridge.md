@@ -2,8 +2,8 @@
 title: "Traversing the Bernia Ridge"
 publishdate: "2020-11-03"
 date: "2020-09-11"
-featured_image: "https://i.imgur.com/8mdFdDl.jpg"
-small_image: "https://i.imgur.com/9ziHO3c.jpg"
+featured_image: "https://media.macandwen.com/images/posts/bernia-ridge/8mdFdDl.webp"
+small_image: "https://media.macandwen.com/images/posts/bernia-ridge/9ziHO3c.webp"
 summary: "A long, sustained scramble, with beautiful views throughout. A rope is needed (ideally, a skinny 50m) for abseils, there's one pitch of rock climbing (4+), bolted (~10 quickdraws needed). Nuts/cams not necessary. A few short, exposed sections, but mostly safe."
 ---
 
@@ -29,19 +29,19 @@ It's the first time we did that, so please be understanding. Anyway, for those w
 
 The standard starting point is a car park north of the ridge, near *Restaurant Serra Bernia*. It can be found on Google Maps (*Parking Sierra de Bernia*) and in most guidebooks. Coordinates are 38°40'19.0"N 0°02'46.6"W. The car park itself is reached by following a beautiful, winding road (CV-749) for around 15 km from Pinós. 
 
-![Two climbers looking at a map depicting Vuelta a Bernia prior to their scramble](https://i.imgur.com/LomAVyp.jpg)
+![Two climbers looking at a map depicting Vuelta a Bernia prior to their scramble](https://media.macandwen.com/images/posts/bernia-ridge/LomAVyp.webp)
 
 # Approach
 
 From the car park, follow a wide road east following signs for *Forat*. After 15-20 minutes, you'll reach a font, where water comes out of a rock. Feel free to have a drink and/or fill up your bottles. You'll then go up the stairs, towards the ridge, following signs for *Fort de Bernia*. The path gets more interesting from there on, with some grade 1 scrambling and pretty views. After another 20-30 minutes, as you reach the base of the ridge, you'll notice an opening in the rock. This is *Forat*, a famous (man-made) tunnel which allows you to ~~get~~ crawl to the other side and enjoy a stunning view. Entering the tunnel is not part of the scramble, but if you hadn't done it before, don't hesitate - it only takes 5 minutes or so, and is totally worth it. 
 
-![Two climbers traversing the slopes of Sierra Bernia, heading towards Forat](https://i.imgur.com/d7RbjDr.jpg)
+![Two climbers traversing the slopes of Sierra Bernia, heading towards Forat](https://media.macandwen.com/images/posts/bernia-ridge/d7RbjDr.webp)
 
-![Three climbers hanging out on the coast-facing side of Forat, with Benidorm and Puig Campana in the background](https://i.imgur.com/hNvWTq0.jpg)
+![Three climbers hanging out on the coast-facing side of Forat, with Benidorm and Puig Campana in the background](https://media.macandwen.com/images/posts/bernia-ridge/hNvWTq0.webp)
 
 From Forat, you want to continue upwards toward East Col (the part of the ridge where the scrambling officially starts) by following red marks. The first one might be somewhat difficult to find, but you need to go into the rocks and you'll see it. After initial bit of scrambling, a grassy patch follows, continuing on to a steep ascent that takes you to East Col.
 
-![A red arrow painted on rock at East Col showing a fork - left for East Summit; right for Bernia](https://i.imgur.com/RMaN3CU.jpg)
+![A red arrow painted on rock at East Col showing a fork - left for East Summit; right for Bernia](https://media.macandwen.com/images/posts/bernia-ridge/RMaN3CU.webp)
 *Distinctive feature of East Col is a red sign showing two possible ways*
 
 # The Scramble
@@ -52,22 +52,22 @@ East Col is considered as the starting point of the ridge scramble. From there, 
 
 You might be tempted to leave your equipment at the East Col, but we'd recommend bringing a rope, belay devices and even a few quickdraws. There are two abseils on the way back; one of them can easily be downclimbed, but the other is quite vertical and exposed - you'll feel safer attached to a rope. Route finding is relatively straightforward (red marks!), up until the end, when you might find yourself thinking there's no safe way to proceed. 
 
-![A faint path and a red line drawn, showing where to go](https://i.imgur.com/fwAFXWD.jpg)
+![A faint path and a red line drawn, showing where to go](https://media.macandwen.com/images/posts/bernia-ridge/fwAFXWD.webp)
 *Dashed line indicates the route proceeds behind rocks*
 
 At this point, you need to walk a little bit down the slope, from where you'll traverse towards a gap in the rock. If you look closely, you'll see red marks and a few bolts. The traverse is short but very exposed, so feel free to rope up if you're not an adrenaline junkie type. Once you reach the gap, another short, exposed section awaits, this time going up. Take you time, be careful and composed, check every hold twice (in general, you wanna be careful about loose rock throughout) and you'll be fine. The good news is that (i) once this section is negotiated, East Summit is stone's throw away, (ii) you can abseil on the way back. Enjoy the view from the summit and once you're ready, go back the same way to the East Col.
 
-![A concentrated climber making a tricky, exposed move, with another climber watching form behind](https://i.imgur.com/wgeqNAl.jpg)
+![A concentrated climber making a tricky, exposed move, with another climber watching form behind](https://media.macandwen.com/images/posts/bernia-ridge/wgeqNAl.webp)
 
 ## Abseils and easy scrambling
 
-![A climber abseiling in foreground, with another, smiling climber watching it underneath](https://i.imgur.com/e8yVB7C.jpg)
+![A climber abseiling in foreground, with another, smiling climber watching it underneath](https://media.macandwen.com/images/posts/bernia-ridge/e8yVB7C.webp)
 
 From East Col, a longish section of grade 1/2 scrambling follows, with multiple abseils here and there, culminating in a 20m long one - **a point of no return**. Good rope management and a not-too-long rope will save you time in this section. Eventually (it took us 3 hours from East Col, but we were pretty slow - it can be done in an hour), you'll reach **three fins**, a remarkable formation of three parallel rock walls. There, you wanna proceed uphill between the middle and right fins. Soon after reaching the high point, you should notice bolts on your right - this is the rock climbing pitch. 
 
-![Two climbers sitting side to side on a slab, looking toward a rocky formation resembling three fins](https://i.imgur.com/FitEv8Z.jpg)
+![Two climbers sitting side to side on a slab, looking toward a rocky formation resembling three fins](https://media.macandwen.com/images/posts/bernia-ridge/FitEv8Z.webp)
 
-![A rocky formation resembling fins, with red line showing the route](https://i.imgur.com/wa6yUn2.jpg)
+![A rocky formation resembling fins, with red line showing the route](https://media.macandwen.com/images/posts/bernia-ridge/wa6yUn2.webp)
 *The way near the fins*
 
 ## Climbing!
@@ -80,7 +80,7 @@ The bolted section ends on a ledge and is followed by a section of sustained, gr
 
 ## Bernia
 
-![Two climbers on top of Sierra Bernia](https://i.imgur.com/jzFdKuA.jpg)
+![Two climbers on top of Sierra Bernia](https://media.macandwen.com/images/posts/bernia-ridge/jzFdKuA.webp)
 
 Eventually, and perhaps unexpectedly, you'll reach the top of Bernia, where a thick, white post stands. This marks the end of the technical part; feel free to remove your helmet/harness/any other equipment, grab a snack and enjoy the view. 
 
@@ -94,14 +94,14 @@ Conquering *Cresta de Bernia* was an unforgettable adventure and by far the most
 
 As always, feel free to get in touch with us if you have any questions about Sierra de Bernia, or anything else outdoor-related for that matter. If you're a climbing beginner wishing to up your game, we'd be happy to take you to the mountains and help you achieve your goals. Happy climbing!
 
-![Two climbers walking on steep gravel; shot from behind](https://i.imgur.com/q2WC1FD.jpg)
+![Two climbers walking on steep gravel; shot from behind](https://media.macandwen.com/images/posts/bernia-ridge/q2WC1FD.webp)
 
-![A happy female climber during an abseil](https://i.imgur.com/8lXR8t2.jpg)
+![A happy female climber during an abseil](https://media.macandwen.com/images/posts/bernia-ridge/8lXR8t2.webp)
 
-![Two climbers chilling on a ridge, resting on a rock that provides them shade](https://i.imgur.com/Uk5aOZ2.jpg)
+![Two climbers chilling on a ridge, resting on a rock that provides them shade](https://media.macandwen.com/images/posts/bernia-ridge/Uk5aOZ2.webp)
 
-![Two climbers proceeding on an exposed section of a ridge](https://i.imgur.com/SVR0XVi.jpg)
+![Two climbers proceeding on an exposed section of a ridge](https://media.macandwen.com/images/posts/bernia-ridge/SVR0XVi.webp)
 
-![A climber walking in a gorge, surrounded by vegetation](https://i.imgur.com/HgkahUu.jpg)
+![A climber walking in a gorge, surrounded by vegetation](https://media.macandwen.com/images/posts/bernia-ridge/HgkahUu.webp)
 
 *Credits to Rob (@lighttrapper_photography) for amazing photos!*

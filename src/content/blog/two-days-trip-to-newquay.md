@@ -1,7 +1,7 @@
 ---
 title: "Backpacking from Newquay to Holywell"
 date: "2018-04-11"
-featured_image: "https://macandwentravelling.files.wordpress.com/2018/04/img_3805.jpg"
+featured_image: "https://media.macandwen.com/images/posts/two-days-trip-to-newquay/img_3805.webp"
 ---
 
 With the excuse of end-of-term and after successfully completing 10+ EXAMS (tough EE life), we headed to the west of UK in search of some waves.
@@ -17,12 +17,12 @@ After having some disgusting fish and chips in town (don't make our mistake - be
 ## Port Beach
 **Porth Beach** considered one of the most beautiful beaches in the UK and perfect place to chill with a beer!
 
-![IMG_3785.jpg](https://macandwentravelling.files.wordpress.com/2018/04/img_3785.jpg)
+![IMG_3785.jpg](https://media.macandwen.com/images/posts/two-days-trip-to-newquay/img_3785.webp)
 
 ## Tregurian Villas
 **Tregurrian Villas**, the longest beach in the area. Water was still a bit too cold ... but some snacks were appreciated. Oh, and we had a frisbee too!
 
-![IMG_3794.jpg](https://macandwentravelling.files.wordpress.com/2018/04/img_3794.jpg)
+![IMG_3794.jpg](https://media.macandwen.com/images/posts/two-days-trip-to-newquay/img_3794.webp)
 
 The hike took around 3 - 4 hours to our final destination... somewhere to sleep.
 
@@ -30,13 +30,13 @@ The hike took around 3 - 4 hours to our final destination... somewhere to sleep.
 
 As you may have noticed in the pics, our bags were a bit large as we were carrying mats plus sleeping bags, tents and the Tesco shopping! This is because our night plan was to **wild camp in Holywell Bay**. For those wild campers out there, even though in England and Wales you're in theory not allowed to do it (well, unless you ask the landowner for permission - good luck with finding them first... or unless you're in Dartmoor where wild camping is permitted), but you know as long as you do it out of the path, not disturbing others and not leaving trash behind, who can tell right?
 
-![IMG_3805.jpg](https://macandwentravelling.files.wordpress.com/2018/04/img_3805.jpg) *A pretty cool place to wake up in huh?*
+![IMG_3805.jpg](https://media.macandwen.com/images/posts/two-days-trip-to-newquay/img_3805.webp) *A pretty cool place to wake up in huh?*
 
 # Day 2 - Surfing in Hollywell Bay
 
 Woke up early morning, the night got a bit cold but the view as we left the tent was worth every single minus degree! Plus surfing beach was right on our doorstep (literally!). We **rented** the surfboards from the **van at the beach (~£8 per board and ~£4 per wetsuit)**, surprisingly cheaper than the ones in town.
 
-![IMG_3812.jpg](https://macandwentravelling.files.wordpress.com/2018/04/img_3812.jpg)
+![IMG_3812.jpg](https://media.macandwen.com/images/posts/two-days-trip-to-newquay/img_3812.webp)
 
 ## Train delayed on our return back to London
 A train needed to be caught at 5 pm so we took a bus back to Newquay (**£7 one way**, a bit of a rip-off in my opinion but well...) and made it just on time to the station :D Not so happy face, as the second train got **3 hours delayed**!!! But well, we got **a compensation of £20 each**, which pretty much covered the return fare... Upshot: remember to always claim -> _16 minutes delay is the minimum time to be entitled to a compensation and the percentage of compensation increases according to the delay time._

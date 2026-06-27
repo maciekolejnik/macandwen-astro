@@ -1,7 +1,7 @@
 ---
 title: "New decade, new blog"
 date: "2020-02-11"
-featured_image: "https://i.imgur.com/ScflpEs.jpg"
+featured_image: "https://media.macandwen.com/images/posts/new-decade-new-blog/ScflpEs.webp"
 ---
 
 If you've been following our [macandwentravelling](https://macandwentravelling.wordpress.com/) blog, you would've noticed it's been a little quiet in there since the end of 2018. With the onset of winter, weekend trips gave way to movie nights and museum visits, and there wasn't much to write about. Summer was short but intense, including a visit to Brazil and a road trip in Scotland (posts to come!). Then life got very busy, new job, new house, new routine - blogging took a backseat. We won't blame you if you thought *macandwentravelling* has died a slow, painful death. Well, in fact, it sort of has.

@@ -2,8 +2,8 @@
 title: "Cycling in the Jalón Valley"
 publishdate: "2021-01-11"
 date: "2020-12-29"
-featured_image: "https://i.imgur.com/9TWITEN.jpg"
-small_image: "https://i.imgur.com/EUXP0D0.jpg"
+featured_image: "https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/9TWITEN.webp"
+small_image: "https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/EUXP0D0.webp"
 summary: "Easy ride in a beautiful setting, featuring vineyards, olive & almond trees, orange groves, charming pueblos and (most likely) great weather. Big chunk of the route follows quiet service roads and there are two short sections of gravel. Benigembla works great as a lunch break.*"
 ---
 
@@ -35,18 +35,18 @@ Tip: if you're a cycling enthusiast (as in, not only riding but also following t
 
 Big thanks to Rob (@lighttrapper_photography) for guiding us on this ride and taking pictures (the better ones from below).
 
-![Church in Benissa](https://i.imgur.com/elR3yA2.jpg)
+![Church in Benissa](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/elR3yA2.webp)
 
-![cycling in jalon valley](https://i.imgur.com/qDTnZXm.jpg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/qDTnZXm.webp)
 
-![cycling in jalon valley](https://i.imgur.com/HTqWcQI.jpg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/HTqWcQI.webp)
 
-![cycling in jalon valley](https://i.imgur.com/rdun2St.jpg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/rdun2St.webp)
 
-![cycling in jalon valley](https://i.imgur.com/NIvfxjH.jpg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/NIvfxjH.webp)
 
-![cycling in jalon valley](https://i.imgur.com/WQw4uTb.jpgg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/WQw4uTb.webp)
 
-![cycling in jalon valley](https://i.imgur.com/XCUbeUK.jpg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/XCUbeUK.webp)
 
-![cycling in jalon valley](https://i.imgur.com/JgatEnS.jpg)
+![cycling in jalon valley](https://media.macandwen.com/images/posts/cycling-in-the-jallon-valley/JgatEnS.webp)

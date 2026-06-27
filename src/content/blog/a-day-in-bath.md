@@ -2,8 +2,8 @@
 title: "A day in Bath"
 publishdate: "2020-04-04"
 date: "2020-01-18"
-featured_image: "https://i.imgur.com/yAlIABu.jpg"
-small_image: "https://i.imgur.com/NPmCy95.jpg"
+featured_image: "https://media.macandwen.com/images/posts/a-day-in-bath/yAlIABu.webp"
+small_image: "https://media.macandwen.com/images/posts/a-day-in-bath/NPmCy95.webp"
 ---
 
 As most of our readers surely know, United Kingdom in not the sunniest place on the planet. Amount and frequency of rainfall differs greatly between areas, **ranging from** an unimpressive **580mm of average annual precipitation in London** (with a little over 100 rainy days per year on average) **to 3500mm** (and more than 220 wet days) **in a [small village](https://en.wikipedia.org/wiki/Seathwaite,_Allerdale) in Lake District.** To put that in context, Rome gets on average 800mm of rainfall per year, for New York it's over 1100mm, Paris is 640mm, Berlin - 590mm, and finally, Barcelona - 640mm. Sure, European cities with lower annual rainfall than London do exist, take Madrid (436mm) or Athens (365mm!) as examples, but, on the whole, **the numbers don't exactly fit the rainy reputation most of us hold of London**.
@@ -28,13 +28,13 @@ If you do decide to go to Bath, one of the decisions you'll surely have to make 
 
 First of all, the baths are very **well-preserved** - not just a bunch of ruins, as is often the case when it comes to Roman remains. Of course, not everything you'll see is original; in fact, everything above the level of bases of pillars surrounding the Great Bath (the main pool, seen in the background below) is a reconstruction. But, **along with an audioguide, a small museum and an optional free tour** (starts every hour, on the hour, from the Great Bath), it **gives you an good insight into Romans' life, their customs and traditions.**
 
-![https://i.imgur.com/xcnNFEx.jpg](https://i.imgur.com/xcnNFEx.jpg) *Audioguide included in the price*
+![https://media.macandwen.com/images/posts/a-day-in-bath/xcnNFEx.webp](https://media.macandwen.com/images/posts/a-day-in-bath/xcnNFEx.webp) *Audioguide included in the price*
 
 ## There are plenty of rooms to visit
 
 Now for the practicalities. Upon entry, you'll be offered an **audioguide** and then you'll set off on a tour. You will be following a **route** which starts on a **terrace** above the Great Bath, then goes inside into the **museum**, leads through some ruins (including carved stones from a pediment of a temple to the goddess Sulis Minerva) and finally **emerges by the Great Bath**, from where you can visit chambers of various dedication, ranging from changing rooms, through massaging rooms, all the way to a waxing room. Towards the end, **we recommend trying some mineral-rich (and safe to drink) water before exiting the complex.** Now, given this one way structure of the baths, it's important to manage your time well. We advise **not to spend too long in the museum** and try to get to the Great Bath within an hour, if not quicker, and explore this most interesting part of the complex.
 
-![https://i.imgur.com/e80QyOO.jpg](https://i.imgur.com/e80QyOO.jpg) *That's how underfloor heating worked in Roman times*
+![https://media.macandwen.com/images/posts/a-day-in-bath/e80QyOO.webp](https://media.macandwen.com/images/posts/a-day-in-bath/e80QyOO.webp) *That's how underfloor heating worked in Roman times*
 
 What surprised us most is a certain sophistication in some aspects of the Roman society - fancy tools for maintaining personal **hygiene**, compulsory **waxing of one's whole body** before immersing in the baths or **underfloor heating** (a *hypocaust*). In the museum, look out for **curse tablets**, a collection of Denari **coins,** a carving of "**Gorgon**" head in stone and a bronze head of Sulis Minerva. In the rooms surrounding the Great Bath, see if you can find... **fried eggs**.
 
@@ -42,13 +42,13 @@ What surprised us most is a certain sophistication in some aspects of the Roman 
 
 The Roman Baths in **the night brings you a different mood**; a beautiful filter appears as the lights illuminate at the mercy of the reflection of water. Also, the crowds start to disappear and you get to enjoy the beautiful architecture in a more quiet environment. If you can, schedule your visit to start shortly before dusk, so it ends in style! And **buy your tickets online to avoid queuing**.
 
-![https://i.imgur.com/PX2f5gz.jpg](https://i.imgur.com/PX2f5gz.jpg) *Plus, you get a beautiful view of the cathedral*
+![https://media.macandwen.com/images/posts/a-day-in-bath/PX2f5gz.webp](https://media.macandwen.com/images/posts/a-day-in-bath/PX2f5gz.webp) *Plus, you get a beautiful view of the cathedral*
 
 ## No swimming at the Roman Baths
 
 Before you set your hopes too high, we must warn you - there's **no swimming** in the Roman Baths - **the water contains harmful bacteria**. However, it wasn't always that way. Bathing was allowed up until October 1978, when a young girl died of meningitis following immersion in the main pool.
 
-![https://i.imgur.com/WSI52a0.jpg](https://i.imgur.com/WSI52a0.jpg) *The water is literally steaming*
+![https://media.macandwen.com/images/posts/a-day-in-bath/WSI52a0.webp](https://media.macandwen.com/images/posts/a-day-in-bath/WSI52a0.webp) *The water is literally steaming*
 
 Today, bathing enthusiasts head to Thermae Bath Spa, a fancy spa complex that re-opened in 2006 after a major refurbishment. It will cost you an arm and a leg, but then, it's the only natural hot spring in Britain. And the rooftop pool with views over the city looked delightful (We didn't go).
 
@@ -60,35 +60,35 @@ The tour will take you for a short walk around Bath, featuring all its main arch
 
 ## The Circus
 
-![https://i.imgur.com/T99Bkll.jpg](https://i.imgur.com/T99Bkll.jpg) *The Circus*
+![https://media.macandwen.com/images/posts/a-day-in-bath/T99Bkll.webp](https://media.macandwen.com/images/posts/a-day-in-bath/T99Bkll.webp) *The Circus*
 
 Our personal favourite, designed by a prominent Bath architect John Wood, the Elder in mid-18th century, The Circus is a set of three, almost identical, arc-shaped buildings, with a lawn and some very old trees in the middle. Look out for decorative emblems, sculpted in a horizontal belt above ground floor windows.
 
-![https://i.imgur.com/8Xo71si.jpg](https://i.imgur.com/8Xo71si.jpg) *Very cool trees in the middle of The Circus*
+![https://media.macandwen.com/images/posts/a-day-in-bath/8Xo71si.webp](https://media.macandwen.com/images/posts/a-day-in-bath/8Xo71si.webp) *Very cool trees in the middle of The Circus*
 
 ## The Royal Crescent
 
-![https://i.imgur.com/QwJ4Ezs.jpg](https://i.imgur.com/QwJ4Ezs.jpg) *(Part of) The Royal Crescent and a boundary between private lawn and public lawn*
+![https://media.macandwen.com/images/posts/a-day-in-bath/QwJ4Ezs.webp](https://media.macandwen.com/images/posts/a-day-in-bath/QwJ4Ezs.webp) *(Part of) The Royal Crescent and a boundary between private lawn and public lawn*
 
 Another great example of Georgian architecture in Bath is another arc-shaped building, a row of 30 terraced houses called The Royal Crescent. **In the centre of it, there's a fancy hotel (it's not easy to tell, however, since no signs are allowed, to preserve the uniform look of this historical building)** and the lawn in front of it is private. Fear not, though, in front of the private lawn, there's another lawn, much bigger, where you can chill, picnic, play football, sunbathe, throw you birthday party or practice handstands.
 
-![https://i.imgur.com/GexSdsO.jpg](https://i.imgur.com/GexSdsO.jpg)
+![https://media.macandwen.com/images/posts/a-day-in-bath/GexSdsO.webp](https://media.macandwen.com/images/posts/a-day-in-bath/GexSdsO.webp)
 
 ## The Bath Abbey
 
-![https://i.imgur.com/mRZGOc2.jpg](https://i.imgur.com/mRZGOc2.jpg) *Bath abbey as seen from the south*
+![https://media.macandwen.com/images/posts/a-day-in-bath/mRZGOc2.webp](https://media.macandwen.com/images/posts/a-day-in-bath/mRZGOc2.webp) *Bath abbey as seen from the south*
 
 An imposing parish church, founded in 7th century, rebuilt and restored a few times since then. Look out for sculptures on its west front (Jakob's ladder in particular) and a fan vaulting inside.
 
-![https://i.imgur.com/ELJTzEj.jpg](https://i.imgur.com/ELJTzEj.jpg) *Appreciating the vaulting of the ceiling*
+![https://media.macandwen.com/images/posts/a-day-in-bath/ELJTzEj.webp](https://media.macandwen.com/images/posts/a-day-in-bath/ELJTzEj.webp) *Appreciating the vaulting of the ceiling*
 
 ## Queens Square
 
 Along with the Circus and the Royal Crescent, Queens Square forms a triple jewel in Bath's crown. Apart from elegant, **Grade I listed** (i.e., recognised and protected) classical buildings (designed by none other than John Wood, the Elder), Queens Square carries additional historical significance - it was a **site of introduction of speculative development** to Bath. The basic idea will be familiar: you decide to erect your building without having any buyers for it, *speculating* that investors will emerge. In this case, the speculator was John Wood - he leased the land from Robert Gay (for £137 per year) and **designed the beautiful frontages seen below**, hoping to sub-let smaller plots to individual builders, offering reduced rent for the first two years as an incentive.
 
-![https://i.imgur.com/XBhBtdo.jpg](https://i.imgur.com/XBhBtdo.jpg) *The north side of Queens Square...(beautiful, ready to sell)*
+![https://media.macandwen.com/images/posts/a-day-in-bath/XBhBtdo.webp](https://media.macandwen.com/images/posts/a-day-in-bath/XBhBtdo.webp) *The north side of Queens Square...(beautiful, ready to sell)*
 
-![https://i.imgur.com/nzLIIqv.jpg](https://i.imgur.com/nzLIIqv.jpg) *... and the same building from the back (ugly, after being sold)*
+![https://media.macandwen.com/images/posts/a-day-in-bath/nzLIIqv.webp](https://media.macandwen.com/images/posts/a-day-in-bath/nzLIIqv.webp) *... and the same building from the back (ugly, after being sold)*
 
 At the time, Bath was expanding rapidly and accommodation was in need; people were willing to pay to **reserve accommodation before the work was complete, providing the builders with necessary funds to continue development**. Early days of capitalism...
 
@@ -96,27 +96,27 @@ At the time, Bath was expanding rapidly and accommodation was in need; people we
 
 By now, you probably get an idea that a big selling point of Bath is its architecture. The above structures are the finest examples, but there is much more to be seen. Walking around the city is a treat - **you're surrounded by uniform buildings constructed using creamy gold Bath stone, set in Georgian style.** The emphasis is on symmetry, simplicity, proportion and balance - as seen in ancient Greece or Rome. Plus, **the strict centre of the city is traffic-free**, granting you peace of mind during your exploration.
 
-![https://i.imgur.com/NPmCy95.jpg](https://i.imgur.com/NPmCy95.jpg)
+![https://media.macandwen.com/images/posts/a-day-in-bath/NPmCy95.webp](https://media.macandwen.com/images/posts/a-day-in-bath/NPmCy95.webp)
 
-![https://i.imgur.com/MhVVjWR.jpg](https://i.imgur.com/MhVVjWR.jpg) *Apparently, this is a part of Palladian design and has nothing to do with the [window tax](https://en.wikipedia.org/wiki/Window_tax)*
+![https://media.macandwen.com/images/posts/a-day-in-bath/MhVVjWR.webp](https://media.macandwen.com/images/posts/a-day-in-bath/MhVVjWR.webp) *Apparently, this is a part of Palladian design and has nothing to do with the [window tax](https://en.wikipedia.org/wiki/Window_tax)*
 
-![https://i.imgur.com/d94CilM.jpg](https://i.imgur.com/d94CilM.jpg)
+![https://media.macandwen.com/images/posts/a-day-in-bath/d94CilM.webp](https://media.macandwen.com/images/posts/a-day-in-bath/d94CilM.webp)
 
-![https://i.imgur.com/E1Emdtx.jpg](https://i.imgur.com/E1Emdtx.jpg)
+![https://media.macandwen.com/images/posts/a-day-in-bath/E1Emdtx.webp](https://media.macandwen.com/images/posts/a-day-in-bath/E1Emdtx.webp)
 
 ## The River Avon & Pulteney Bridge
 
 Time for a couple of fun facts. During your stroll, you'll surely come across a river. **River Avon. Or, shall we say, River River.** Since in an ancient Celtic language spoken in Britian a long time ago, *avon* stems from ***abona*, meaning *river***. Therefore, it should come as no surprise that there are nine rivers of that name in the British Isles, the one in Bath being second longest.
 
-![https://i.imgur.com/7AO9MpI.jpg](https://i.imgur.com/7AO9MpI.jpg) *Enjoying the sunshine*
+![https://media.macandwen.com/images/posts/a-day-in-bath/7AO9MpI.webp](https://media.macandwen.com/images/posts/a-day-in-bath/7AO9MpI.webp) *Enjoying the sunshine*
 
-![https://i.imgur.com/JNYrDg8.jpg](https://i.imgur.com/JNYrDg8.jpg)
+![https://media.macandwen.com/images/posts/a-day-in-bath/JNYrDg8.webp](https://media.macandwen.com/images/posts/a-day-in-bath/JNYrDg8.webp)
 
 The second interesting fact is that you may find yourself crossing the river... without actually realising you're crossing it. All thanks to the **Pulteney Bridge, which is one of four bridges in the world to have buildings across its full span on both sides** (others are in [Venice](https://en.wikipedia.org/wiki/Rialto_Bridge), [Florence](https://en.wikipedia.org/wiki/Ponte_Vecchio) and [a small city in central Germany](https://en.wikipedia.org/wiki/Kr%C3%A4merbr%C3%BCcke)).
 
-![https://i.imgur.com/LhqnFlO.jpg](https://i.imgur.com/LhqnFlO.jpg)
+![https://media.macandwen.com/images/posts/a-day-in-bath/LhqnFlO.webp](https://media.macandwen.com/images/posts/a-day-in-bath/LhqnFlO.webp)
 
-![https://i.imgur.com/6QnagrJ.jpg](https://i.imgur.com/6QnagrJ.jpg) *Yep! This is bridge*
+![https://media.macandwen.com/images/posts/a-day-in-bath/6QnagrJ.webp](https://media.macandwen.com/images/posts/a-day-in-bath/6QnagrJ.webp) *Yep! This is bridge*
 
 ## Food & Drink
 
@@ -130,8 +130,8 @@ Recall that Bath has a strong tradition as a spa town, welcoming rich people fro
 
 Bath is a very charming city, located in close proximity of London. It is small, but packs almost as many Grade I listed buildings as the capital. Make sure you go on a sunny day so that you can enjoy the river walk and appreciate the classical architecture. **And when you look at those creamy gold buildings, be aware that it took some effort to keep them appealing to the eye (see below)**.
 
-![https://i.imgur.com/zrvBLaX.jpg](https://i.imgur.com/zrvBLaX.jpg) *Bath limestone absorbs pollution produced by car exhaust like a sponge. Go Tesla!*
+![https://media.macandwen.com/images/posts/a-day-in-bath/zrvBLaX.webp](https://media.macandwen.com/images/posts/a-day-in-bath/zrvBLaX.webp) *Bath limestone absorbs pollution produced by car exhaust like a sponge. Go Tesla!*
 
 ## That's all for now folks. See you next time!
 
-![https://i.imgur.com/kVnuMsH.jpg](https://i.imgur.com/kVnuMsH.jpg) *It was sunny but cold! As you can see from the cars.*
+![https://media.macandwen.com/images/posts/a-day-in-bath/kVnuMsH.webp](https://media.macandwen.com/images/posts/a-day-in-bath/kVnuMsH.webp) *It was sunny but cold! As you can see from the cars.*

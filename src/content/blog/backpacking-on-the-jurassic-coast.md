@@ -1,12 +1,12 @@
 ---
 title: "Backpacking on the Jurassic Coast"
 date: "2018-06-27"
-featured_image: "https://macandwentravelling.files.wordpress.com/2018/06/img_1265-pano.jpg"
+featured_image: "https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1265-pano.webp"
 ---
 
 For the 2018 Spring Bank Holiday, we took off to the south of UK for some **backpacking, wild camping and a bit of climbing**. Our destination was the Jurassic Coast, which stretches for about 96 miles from Exmouth to Swanage and is known for its natural **rock formations** (such as Durdle Door), **cliffs**, **coves** and abundance of **fossils**. In fact, it is mainly due to that last aspect that Jurassic Coast was inscribed on the **UNESCO World Heritage List** in 2001, making it the first wholly natural World Heritage Site in the United Kingdom. Even today, 17 years on, only 31 sites in Britain have been recognised in that way. While for some the Jurassic Coast might just be a palaeontologist's paradise, we guarantee that even if analysing animals' bones isn't your thing, you are still likely to enjoy yourself here.
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5260120.jpg) *Don't look at Mati's biceps, look at the flowers!*
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5260120.webp) *Don't look at Mati's biceps, look at the flowers!*
 
 # Our Circular Route
 
@@ -16,21 +16,21 @@ One of the cool things about the Jurassic Coast is that there is a **footpath w
 
 That was probably the biggest positive surprise of the trip as far as natural attractions are concerned. It was really **wild** and **swampy** out there, we saw no humans for close to two hours and felt really connected to nature. What's more, we came across deers (a whole herd!), horses, cows, bulls and even baby foxes. We've never been to the Highlands of Scotland but that's pretty much how we imagine it.
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5260127.jpg) *Struggling through the swamps of Hartland Moor. Better stick to the path!*
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5260127.webp) *Struggling through the swamps of Hartland Moor. Better stick to the path!*
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5260132.jpg) *There were more...*
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5260132.webp) *There were more...*
 
 ## Corfe Castle, cute town with beer gardens
 
 This is the main historic site in the area and a destination of many tourists (1/4 million per year to be precise). This 11th century castle, or rather, **ruins** of a castle, overlook a really **cute village** of the same name. A good place to stop for a **pint** and/or lunch; both The Greyhound Inn and Bankes Arms Hotel have pleasant **beer gardens**. We went to the former and were slightly disappointed with the slow and unfriendly staff but the great live music compensated it - bank holiday perks. Regarding the castle itself, we didn't enter and don't think it's worth £10 per person (free for National Trust members though) - there are loads of better-preserved castles in the UK.
 
-![p5260176-effects](https://macandwentravelling.files.wordpress.com/2018/06/p5260176-effects.jpg) *Corfe Castle (town). Cool beer garden in left bottom corner*
+![p5260176-effects](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5260176-effects.webp) *Corfe Castle (town). Cool beer garden in left bottom corner*
 
 ## Purbeck Ridge for a free viewpoint of the Corfe Castle
 
 Another reason why we feel Corfe Castle is not worth the money is that you get a really nice view on it as soon as you get to the top of Purbeck Hills. It's a ridge that starts just east of the village and ends at the coast just north of Swanage; it makes for a really **pleasant 5 mile walk, with 360° views of the sea, Poole, Bournemouth and neighbouring villages**. To get there from Corfe Castle, you get to Sandy Hill Ln, walk below the railway tracks and then, shortly afterwards, take a footpath on the left. A steep climb up the stairs takes you right to the start of Purbeck Ridge, where you should take some time to enjoy the views.
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5260179.jpg) *Corfe Castle (castle) viewed from Purbeck Ridge. Bunch of ruins really*
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5260179.webp) *Corfe Castle (castle) viewed from Purbeck Ridge. Bunch of ruins really*
 
  
 
@@ -40,7 +40,7 @@ On paper, there's nothing special about this coastal town - a pier (with entranc
 
 ## Dancing Ledge, a multisport cliff
 
-![img_1254](https://macandwentravelling.files.wordpress.com/2018/06/img_1254.jpg) *Two levels clearly visible*
+![img_1254](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1254.webp) *Two levels clearly visible*
 
 Fun place. It's a broad, flat area of rock at the base of the cliff, with two levels, one just by the sea and the other one a few metres higher. Interestingly, getting from one to the other requires a tiny bit of climbing, nothing very tricky of course, but still. There might be an easy way at the far end of the area, but most people seem to scramble on the rocks. It's not a great place for sunbathing or chilling due to hard surface, but there are a lot of activities to be performed there:
 
@@ -48,33 +48,33 @@ Fun place. It's a broad, flat area of rock at the base of the cliff, with two le
 - **coasteering** - we never came across this sport (?) before, but it seems to combine swimming, jumping, diving, scrambling, caving, canyoning and whatever else you can do on a rocky coast. There were some organised groups doing that while we were there, we also heard it requires a license. Besides, you need some equipment, such as a wetsuit, water shoes and a life jacket. It looked a little lame when done in those big groups, but you gotta start somewhere...
 - **climbing** - Dancing ledge is one of the most popular climbing crags in the area, especially among beginners. Most routes start at the base of the cliffs and are bolted, but there's some closer to the sea, including hard-looking overhangs (bolted too). The easiest routes start on the lower level and lead up the little cliff to the higher level; top rope needs to be set up for those.
 
-![img_1253](https://macandwentravelling.files.wordpress.com/2018/06/img_1253.jpg) *Most climbing routes are on that cliff*
+![img_1253](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1253.webp) *Most climbing routes are on that cliff*
 
 Another rarity at Dancing Ledge is a swimming pool located in a rock basin on the lower level, disconnected from the sea. Popular mostly with kids and their fathers, not very tempting to enter, but an interesting sight.
 
-![img_1255](https://macandwentravelling.files.wordpress.com/2018/06/img_1255.jpg)
+![img_1255](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1255.webp)
 
 ## The Square & Compass (Top 5 UK pub)
 
 A must-go pub in Worth Matravers. If you approach it from the east, walking along the coast path, on a sunny weekend day, you should see it from the distance thanks to high numbers of people occupying its front yard. Fear not though - regardless of how busy it might seem, you will be able to find an empty spot on the grass or at one of the long tables they have there. A cool thing is that most of the tables and benches outside are made entirely from stone. Also, look out for a **dog** standing on top of the roof, looking like he (or she) is posing for photos - it's a local symbol, they even named one of the ciders after him/her. And yes, **cider** is the drink to go for there, they make it themselves and have a really wide variety, so regardless of whether you like it dry or sweet, cloudy or clear, sparkling or still, dark or light, weak or strong - you should be able to find something for yourself. And even if, like us, you're not a fan of cider in general, get a pint and try to enjoy it - there's probably few other places where you're more likely to appreciate it.
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5270191.jpg)
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5270191.webp)
 
 ## Hans Tout = breathtaking views
 
 Awesome scenic point on the way from Worth Matravers to Kimmeridge Bay - we'll let the photos below speak for themselves.
 
-![img_1265-pano](https://macandwentravelling.files.wordpress.com/2018/06/img_1265-pano.jpg)
+![img_1265-pano](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1265-pano.webp)
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5270196.jpg)
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5270196.webp)
 
 ## Kimmeridge Bay and the Clavell Tower
 
 Pretty bay with an average beach. There's vehicle access (£5 full day parking) and as a result many people come on the weekends and holidays. There's an interesting story involving the tower which overlooks the bay from the east side. It was built in 1830 as an observatory and folly. However, due to cliff erosion, **Clavell Tower**, as it's called, was in danger of falling into the sea. In August 2006, even though it wasn't used for any purpose, Landmark Trust decided to move it 25 m inland. Thing is, it's not easy to move an 11m tower; what they did is first took it apart, brick by brick, and then built it again in a better spot. It took two years and one million pounds, all so that it can stay empty for another hundreds of years. Well, the plan was apparently to rent it out to holidaymakers... good luck with that. It seemed empty when we were there.
 
-![img_1277](https://macandwentravelling.files.wordpress.com/2018/06/img_1277.jpg) *View from Kimmeridge Bay. Clavell Tower on the left*
+![img_1277](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1277.webp) *View from Kimmeridge Bay. Clavell Tower on the left*
 
-![img_1290](https://macandwentravelling.files.wordpress.com/2018/06/img_1290.jpg)
+![img_1290](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1290.webp)
 
 ## Climbing in Winspit Quarry after 3 days of backpacking, cos why not?
 
@@ -107,11 +107,11 @@ There's many good wild camping spots on the way - just make sure it's remote.
 - Day 2, on a beach on a little cape just west of Kimmeridge Bay (awesome spot), you can reach it by following the sea shore from the bay or following a sign "Danger of Erosion" from the military camp.
 
 
-![img_1284](https://macandwentravelling.files.wordpress.com/2018/06/img_1284.jpg) *Wild camping on the beach. Nice spot!*
+![img_1284](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1284.webp) *Wild camping on the beach. Nice spot!*
 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5270187.jpg)
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5270187.webp)
 
-![img_1248](https://macandwentravelling.files.wordpress.com/2018/06/img_1248.jpg) *Same spot 8 hours earlier. Fluorescent tent!*
+![img_1248](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/img_1248.webp) *Same spot 8 hours earlier. Fluorescent tent!*
 
 # See you in the next post! 
-![OLYMPUS DIGITAL CAMERA](https://macandwentravelling.files.wordpress.com/2018/06/p5260139.jpg) *Playing soldiers*
+![OLYMPUS DIGITAL CAMERA](https://media.macandwen.com/images/posts/backpacking-on-the-jurassic-coast/p5260139.webp) *Playing soldiers*

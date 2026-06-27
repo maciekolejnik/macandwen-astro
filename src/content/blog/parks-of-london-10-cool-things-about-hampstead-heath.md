@@ -1,8 +1,8 @@
 ---
 title: "Parks of London: 10 Cool Things about Hampstead Heath"
 date: "2018-09-01"
-featured_image: "https://i.imgur.com/ggxGr2c.jpg"
-small_image: "https://i.imgur.com/uA4FRD6.jpg"
+featured_image: "https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/ggxGr2c.webp"
+small_image: "https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/uA4FRD6.webp"
 ---
 
 Having recently visited and enjoyed Hampstead Heath (HH), we thought we'd share some photos and give you, Londoners, TEN REASONS to go there yourself.
@@ -11,11 +11,11 @@ Having recently visited and enjoyed Hampstead Heath (HH), we thought we'd share 
 
 We'll start with the thing you might already be aware of - Hampstead Heath boasts three swimming ponds (female, male and mixed), which are **open all year round** and **basically free** (you’re supposed to pay, but no one bothers); they have **lifeguards** (well, does anyone care about that?), **changing facilities**, **showers** (hot for ladies, cold otherwise) and **springboards** for diving.
 
-![https://i.imgur.com/7ptclX8.jpg](https://i.imgur.com/7ptclX8.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/7ptclX8.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/7ptclX8.webp)
 
 *6&#47;10 for style, 3&#47;10 for distancee*
 
-![https://i.imgur.com/stxsGlM.jpg](https://i.imgur.com/stxsGlM.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/stxsGlM.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/stxsGlM.webp)
 
 ## 2. Free Food
 
@@ -25,15 +25,15 @@ In particular, wild berries growing in the foresty parts of the park. They’re 
 
 There was this one article we read on the internet which ranked the best places for climbing in London: apart from the typical indoor climbing gyms such as Westway or The Castle, the list featured… trees in Hampstead Heath as 5th place! Now we know what they meant. Those trees seem to be made for climbing. They’re so expansive and branchy, climbing them feels like ascending a ladder. And provides a nice adrenaline boost.
 
-![https://i.imgur.com/c3iVuu7.jpg](https://i.imgur.com/c3iVuu7.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/c3iVuu7.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/c3iVuu7.webp)
 
 *Where’s Wally Maciek? (Hint: quite high)*
 
-![https://i.imgur.com/kBzAiMJ.jpg](https://i.imgur.com/kBzAiMJ.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/kBzAiMJ.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/kBzAiMJ.webp)
 
 *Even Wendy managed to climb a tree*
 
-![https://i.imgur.com/gEfNqpf.jpg](https://i.imgur.com/gEfNqpf.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/gEfNqpf.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/gEfNqpf.webp)
 
 *Those trees are located mostly in central and west parts of the park.*
 
@@ -45,17 +45,17 @@ At 320 hectares, Hampstead Heath is not the largest green space in London, but i
 
 While south part of the park is mainly grassland, suitable for a picnic, ball game, frisbee or simply hanging out in a bigger group of people, as you proceed north, you encounter dense forest with various types of vegetation, plenty of old trees and deadwood.
 
-![https://i.imgur.com/yjq2SOm.jpg](https://i.imgur.com/yjq2SOm.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/yjq2SOm.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/yjq2SOm.webp)
 
-![https://i.imgur.com/bV1RQC7.jpg](https://i.imgur.com/bV1RQC7.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/bV1RQC7.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/bV1RQC7.webp)
 
 ## 6. Vistas
 
 South part of the park features **Parliament Hill**, a sandy ridge that stretches from Hampstead on the west to Highgate on the east, reaches nearly 100m in height and is notable for its excellent views of **London skyline**, with Canary Wharf and City of London skyscrapers, St Paul’s Cathedral, BT Tower and Emirates Stadium, among others, visible. What’s more, parts of that panorama are **protected**, which means no buildings that would disturb that view are allowed to be built.
 
-![https://i.imgur.com/gwegVxx.jpg](https://i.imgur.com/gwegVxx.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/gwegVxx.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/gwegVxx.webp)
 
-![https://i.imgur.com/1uxoHdd.jpg](https://i.imgur.com/1uxoHdd.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/1uxoHdd.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/1uxoHdd.webp)
 
 ## 7. Gay Crusing
 
@@ -65,7 +65,7 @@ That’s an exciting one. Gay cruising involves searching about a public place i
 
 How about celebrating your birthday in a park? If you’re (un)lucky enough to be born in the summer: why not spend a day drinking beer, playing games, frying steaks and chatting to friends, all while enjoying great British weather, before hitting that club in the night? In our one-day visit, we saw at least 5 birthdays being celebrated around the area with pretty cool ideas such as stacking your can beers and converting it to a sword!
 
-![https://i.imgur.com/nANoi0Y.jpg](https://i.imgur.com/nANoi0Y.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/nANoi0Y.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/nANoi0Y.webp)
 
 *That’s how Wendy is gonna celebrate her bday next year!*
 
@@ -77,6 +77,6 @@ Finally, unlike Hyde Park, Regent’s Park, Green Park etc., HH is not too popul
 
 Quite an obvious point, but worth stressing; if you live in the capital, you have no excuses for not visiting Hampstead Heath - it’s right there, unlike other places we describe in the blog.
 
-![https://i.imgur.com/EpkDxQq.jpg](https://i.imgur.com/EpkDxQq.jpg)
+![https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/EpkDxQq.webp](https://media.macandwen.com/images/posts/parks-of-london-10-cool-things-about-hampstead-heath/EpkDxQq.webp)
 
 *40 minutes public transport from central London*

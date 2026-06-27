@@ -2,8 +2,8 @@
 title: "Cycling from Benidorm to Finestrat"
 publishdate: "2021-01-12"
 date: "2021-01-02"
-featured_image: "https://i.imgur.com/vhhAUFu.jpg"
-small_image: "https://i.imgur.com/eI1A5Jo.jpg"
+featured_image: "https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/vhhAUFu.webp"
+small_image: "https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/eI1A5Jo.webp"
 summary: "A pleasant, hilly, 30km ride that avoids busy roads. Tyres wider than 28mm with a bit of thread recommended since route features sections of gravel. Decent views throughout."
 ---
 
@@ -34,18 +34,18 @@ An enjoyable ride which can serve either as a few hours long afternoon/after wor
 
 The destination of this ride is Finestrat, a lovely mountainous *pueblo* located at the base of Puig Campana (second-highest peak in Alicante, a post about it coming soon). If time allows, have a stroll around its narrow streets, drink a caña in one of local bars and appreciate a view from one of scenic points found in this historic village.  
 
-![on the gravel cycling](https://i.imgur.com/H27Qm8b.jpg)
+![on the gravel cycling](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/H27Qm8b.webp)
 
-![with bike on a hill](https://i.imgur.com/dv3xipe.jpg)
+![with bike on a hill](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/dv3xipe.webp)
 
-![villaitana golf course](https://i.imgur.com/vNoQOxD.jpg)
+![villaitana golf course](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/vNoQOxD.webp)
 
-![cycling uphill with puig campana ahead](https://i.imgur.com/eI1A5Jo.jpg)
+![cycling uphill with puig campana ahead](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/eI1A5Jo.webp)
 
-![finestrat](https://i.imgur.com/JxheZtv.jpg)
+![finestrat](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/JxheZtv.webp)
 
-![finestrat](https://i.imgur.com/yz5WdkP.jpg)
+![finestrat](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/yz5WdkP.webp)
 
-![wendy in front of finestrat ayuntamiento](https://i.imgur.com/jO6vB6T.jpg)
+![wendy in front of finestrat ayuntamiento](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/jO6vB6T.webp)
 
-![finestrat](https://i.imgur.com/iZ5OWdq.jpg)
+![finestrat](https://media.macandwen.com/images/posts/cycling-in-costa-blanca-benidorm-to-finestrat-circular/iZ5OWdq.webp)

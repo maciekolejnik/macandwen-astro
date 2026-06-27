@@ -13,17 +13,24 @@ const posts = (await getCollection('blog'))
 
 <Layout title="Home" description="Mac & Wen — travel, hiking, and adventure blog.">
   <!-- Hero -->
-  <section class="bg-white border-b border-stone-200">
-    <div class="max-w-4xl mx-auto px-4 py-20 text-center">
-      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 mb-4">
+  <section class="relative h-[70vh] min-h-80 flex items-center justify-center overflow-hidden">
+    <img
+      src="https://media.macandwen.com/images/home/cover.jpeg"
+      alt="Mac & Wen cover"
+      class="absolute inset-0 w-full h-full object-cover"
+      fetchpriority="high"
+    />
+    <div class="absolute inset-0 bg-black/40"></div>
+    <div class="relative z-10 text-center px-4">
+      <h1 class="text-4xl sm:text-6xl font-bold tracking-tight text-white mb-4 drop-shadow-lg">
         Travel. Hike. Explore.
       </h1>
-      <p class="text-lg text-stone-500 max-w-xl mx-auto">
+      <p class="text-lg sm:text-xl text-white/80 max-w-xl mx-auto drop-shadow">
         Adventures from two people who can't stay in one place — hiking trails, city breaks, and everything in between.
       </p>
       <a
         href="/blog"
-        class="inline-block mt-8 px-6 py-3 bg-emerald-700 text-white text-sm font-semibold rounded-lg hover:bg-emerald-800 transition-colors"
+        class="inline-block mt-8 px-6 py-3 bg-white text-stone-900 text-sm font-semibold rounded-lg hover:bg-stone-100 transition-colors shadow-lg"
       >
         Read the blog
       </a>
