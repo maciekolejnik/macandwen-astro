@@ -1,0 +1,108 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  transparentHeader?: boolean;
+}
+
+const { title, description = 'Mac & Wen — travel, hiking, and adventure.', image, transparentHeader = false } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title} | Mac &amp; Wen</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    {image && <meta property="og:image" content={image} />}
+    <meta property="og:title" content={`${title} | Mac & Wen`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+
+    <link rel="icon" type="image/png" href="/favicon.png" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-stone-800 flex flex-col">
+    <header class:list={[
+      'w-full z-20',
+      transparentHeader
+        ? 'absolute top-0 left-0'
+        : 'bg-white border-b border-stone-200',
+    ]}>
+      <nav class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/" class:list={[
+          'text-xl font-bold tracking-tight transition-colors',
+          transparentHeader ? 'text-white hover:text-white/80' : 'text-stone-900 hover:text-emerald-700',
+        ]}>
+          Mac &amp; Wen
+        </a>
+        <ul class="flex items-center gap-4 sm:gap-6 text-sm font-medium">
+          <li>
+            <a href="/blog" class:list={[
+              'transition-colors',
+              transparentHeader ? 'text-white/90 hover:text-white' : 'text-stone-600 hover:text-emerald-700',
+            ]}>Blog</a>
+          </li>
+          <!-- Instagram -->
+          <li>
+            <a
+              href="https://www.instagram.com/macandwen/"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              class:list={[
+                'flex items-center justify-center w-8 h-8 rounded-full border transition-colors',
+                transparentHeader
+                  ? 'border-white/70 text-white bg-white/10 hover:bg-white/20 hover:border-white'
+                  : 'border-stone-300 text-stone-500 bg-stone-100 hover:bg-stone-200 hover:border-stone-400 hover:text-stone-800',
+              ]}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <circle cx="12" cy="12" r="4"/>
+                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/>
+              </svg>
+            </a>
+          </li>
+          <!-- YouTube -->
+          <li>
+            <a
+              href="https://www.youtube.com/@macandwen"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="YouTube"
+              class:list={[
+                'flex items-center justify-center w-8 h-8 rounded-full border transition-colors',
+                transparentHeader
+                  ? 'border-white/70 text-white bg-white/10 hover:bg-white/20 hover:border-white'
+                  : 'border-stone-300 text-stone-500 bg-stone-100 hover:bg-stone-200 hover:border-stone-400 hover:text-stone-800',
+              ]}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+                <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/>
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="bg-white border-t border-stone-200 mt-16">
+      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-stone-500">
+        &copy; {new Date().getFullYear()} Mac &amp; Wen. All rights reserved.
+      </div>
+    </footer>
+  </body>
+</html>
