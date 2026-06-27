@@ -1,17 +1,72 @@
 ---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
 
+const posts = (await getCollection('blog'))
+  .sort((a, b) => {
+    const dateA = new Date(a.data.publishdate ?? a.data.date ?? '1970-01-01');
+    const dateB = new Date(b.data.publishdate ?? b.data.date ?? '1970-01-01');
+    return dateB.getTime() - dateA.getTime();
+  })
+  .slice(0, 6);
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Home" description="Mac & Wen — travel, hiking, and adventure blog.">
+  <!-- Hero -->
+  <section class="bg-white border-b border-stone-200">
+    <div class="max-w-4xl mx-auto px-4 py-20 text-center">
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight text-stone-900 mb-4">
+        Travel. Hike. Explore.
+      </h1>
+      <p class="text-lg text-stone-500 max-w-xl mx-auto">
+        Adventures from two people who can't stay in one place — hiking trails, city breaks, and everything in between.
+      </p>
+      <a
+        href="/blog"
+        class="inline-block mt-8 px-6 py-3 bg-emerald-700 text-white text-sm font-semibold rounded-lg hover:bg-emerald-800 transition-colors"
+      >
+        Read the blog
+      </a>
+    </div>
+  </section>
+
+  <!-- Recent posts -->
+  <section class="max-w-4xl mx-auto px-4 py-16">
+    <h2 class="text-2xl font-bold text-stone-900 mb-8">Recent posts</h2>
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      {posts.map(post => {
+        const displayDate = post.data.publishdate ?? post.data.date;
+        return (
+          <a href={`/blog/${post.id}`} class="group block bg-white rounded-xl overflow-hidden border border-stone-200 hover:border-emerald-400 transition-colors shadow-sm hover:shadow-md">
+            <div class="aspect-video overflow-hidden bg-stone-100">
+              <img
+                src={post.data.featured_image}
+                alt={post.data.title}
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
+            </div>
+            <div class="p-4">
+              {displayDate && (
+                <p class="text-xs text-stone-400 mb-1">
+                  {new Date(displayDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </p>
+              )}
+              <h3 class="font-semibold text-stone-900 group-hover:text-emerald-700 transition-colors leading-snug">
+                {post.data.title}
+              </h3>
+              {post.data.summary && (
+                <p class="mt-2 text-sm text-stone-500 line-clamp-2">{post.data.summary}</p>
+              )}
+            </div>
+          </a>
+        );
+      })}
+    </div>
+    <div class="mt-10 text-center">
+      <a href="/blog" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800 transition-colors">
+        View all posts →
+      </a>
+    </div>
+  </section>
+</Layout>

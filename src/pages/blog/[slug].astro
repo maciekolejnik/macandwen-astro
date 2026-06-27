@@ -1,0 +1,54 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const displayDate = post.data.publishdate ?? post.data.date;
+---
+
+<Layout
+  title={post.data.title}
+  description={post.data.summary}
+  image={post.data.featured_image}
+>
+  <article class="max-w-3xl mx-auto px-4 py-12">
+    <a href="/blog" class="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-emerald-700 transition-colors mb-8">
+      ← All posts
+    </a>
+
+    <header class="mb-8">
+      {displayDate && (
+        <p class="text-sm text-stone-400 mb-3">
+          {new Date(displayDate).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+      )}
+      <h1 class="text-3xl sm:text-4xl font-bold text-stone-900 leading-tight mb-6">
+        {post.data.title}
+      </h1>
+      <div class="rounded-xl overflow-hidden aspect-video bg-stone-100">
+        <img
+          src={post.data.featured_image}
+          alt={post.data.title}
+          class="w-full h-full object-cover"
+        />
+      </div>
+    </header>
+
+    <div class="prose prose-stone prose-lg max-w-none
+      prose-headings:font-bold prose-headings:text-stone-900
+      prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline
+      prose-img:rounded-lg prose-img:shadow-md">
+      <Content />
+    </div>
+  </article>
+</Layout>

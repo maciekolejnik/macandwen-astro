@@ -17,8 +17,7 @@ When it comes to total wine production, Italy and France beat Spain, which does 
 
 Another very important factor that you must be aware of to make informed decisions in restaurants and stores is the length of the **ageing process**. It’s the time that wine spends in barrels and bottles following fermentation but prior to being consumed, during which various chemical processes enrich its bouquet, allowing a wine specialist to tick more categories on their wine aroma wheel (such as the one depicted below). Now, this is a complex process that requires plenty of storage space, maintenance of adequate climatic conditions, constant monitoring and preservation (unwanted chemicals tend to accumulate in barrels which need to be regularly emptied and refilled as a result). Timing is key - age your wine too long and you’ll end up with a decrepit, acidic beverage that no one will want to drink. No wonder then that majority of wine consumed around the world undergoes no ageing. 
 
-<a title="Aromaster / aromaster.com, CC BY-SA 3.0 &lt;https://creativecommons.org/licenses/by-sa/3.0&gt;, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Wine_Aroma_Wheel.jpg"><img width="1024" alt="Wine Aroma Wheel" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Wine_Aroma_Wheel.jpg/1024px-Wine_Aroma_Wheel.jpg"></a>
-*Wine Aroma Wheel*
+![wine aroma wheel](Wine_Aroma_Wheel.jpg)*Wine Aroma Wheel*
 
 In any case, what you need to know is that there are three categories distinguished - (i) *crianza*, characterised by minimum 2 years of ageing, at least one of which must be in a barrel, (ii) *reserva*, with three-years-long ageing (min. 1 in a barrel) and (iii) *gran reserva*, which must be aged for at least 5 years, two of which are in a barrel. In absence of any of these on a wine’s label, you can safely assume it’s not been aged, which could be considered the fourth, and biggest by volume, category.
 
@@ -85,7 +84,7 @@ We will definitely be coming back to La Rioja to explore other parts of this cha
 
 In any case, it feels great to do some *turismo de interior*, i.e., exploration of Spain’s inland. Most tourists, and locals as well to be fair, stick to the coast, which leads to the phenomenon known as *España vacia* (eng. *empty Spain*). The emptiness refers to the inner regions which, truth be told, are often less hospitable due to mountainous terrain and extreme temperatures. Madrid is one exception to this trend; Zaragoza is another one. Still, this exodus means that 90% of Spaniards live in Madrid or near the coast, which in total make up 30% of Spain’s territory, leaving the other 70% inhabited by just under five million people.
 
-<a title="dieghernan, CC BY-SA 4.0 &lt;https://creativecommons.org/licenses/by-sa/4.0&gt;, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Population_per_km2_in_Spain_(2011).svg"><img width="1024" alt="Population per km2 in Spain (2011)" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Population_per_km2_in_Spain_%282011%29.svg/1024px-Population_per_km2_in_Spain_%282011%29.svg.png"></a>
+![spain population](Population_per_km2_in_Spain.svg.png)
 *Population per square kilometer visualised*
 
 As a result, inner Spanish communities such as *Castilla - La Mancha* or *Castilla y León* lag the rest of the country in terms of development, facilities and job opportunities, driving even more people (especially young) away in a self-propelling cycle. Hence, by spending some time (and money!) in these forgotten regions, you’re doing something good - supporting local, neglected communities and counteracting the worrying trend described above.

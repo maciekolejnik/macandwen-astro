@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { title, description = 'Mac & Wen — travel, hiking, and adventure.', image } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title} | Mac &amp; Wen</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    {image && <meta property="og:image" content={image} />}
+    <meta property="og:title" content={`${title} | Mac & Wen`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-stone-800 flex flex-col">
+    <header class="bg-white border-b border-stone-200">
+      <nav class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+        <a href="/" class="text-xl font-bold tracking-tight text-stone-900 hover:text-emerald-700 transition-colors">
+          Mac &amp; Wen
+        </a>
+        <ul class="flex gap-6 text-sm font-medium text-stone-600">
+          <li><a href="/blog" class="hover:text-emerald-700 transition-colors">Blog</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main class="flex-1">
+      <slot />
+    </main>
+
+    <footer class="bg-white border-t border-stone-200 mt-16">
+      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-stone-500">
+        &copy; {new Date().getFullYear()} Mac &amp; Wen. All rights reserved.
+      </div>
+    </footer>
+  </body>
+</html>
