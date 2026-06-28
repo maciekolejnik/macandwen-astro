@@ -19,13 +19,11 @@ summary: "Easy ride in a beautiful setting, featuring vineyards, olive & almond 
 
 ## Strava
 
-<div class="strava-container">
-<iframe height='405' width='590' frameborder='0' allowtransparency='true' scrolling='yes' src='https://www.strava.com/activities/4535503858/embed/8a0f087c605f571564b66ec7565a92db43c36d82'></iframe>
-</div>
+<div class="strava-embed-placeholder" data-embed-type="activity" data-embed-id="4535503858" data-style="standard" data-from-embed="false" data-token="KLsox7cBcfarexdmLD8PS1BcZ1b5R3lsp2626afHTvQ"></div><script src="https://strava-embeds.com/embed.js"></script>
 
 ## Video
 
-{{< youtube Ckuke_o3ORU >}}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Ckuke_o3ORU?si=6uCaSOZFbJEX85hr" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Description
 
