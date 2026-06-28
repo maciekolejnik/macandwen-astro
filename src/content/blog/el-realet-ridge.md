@@ -16,9 +16,7 @@ El Realet is the first section of the majestic Castellets Ridge, a very distinct
 
 ## Strava
 
-<div class="strava-container">
-<iframe height='405' width='590' frameborder='0' allowtransparency='true' scrolling='yes' src="https://www.strava.com/activities/4742283908/embed/19a4366a421f3e829ed69ae85d4ba33f732af25c"></iframe>
-</div>
+<div class="strava-embed-placeholder" data-embed-type="activity" data-embed-id="4742282839" data-style="standard" data-from-embed="false" data-token="xmpEyQkMGvX1NUP0KR4Vw_mklTasR-oa4vkb4HRndX0"></div><script src="https://strava-embeds.com/embed.js"></script>
 
 Few things to note (they will make more sense after you read the post below): 
 
@@ -32,9 +30,9 @@ Few things to note (they will make more sense after you read the post below):
 We actually made two videos: 
 
 - a short one for people who just wanna see what we've been up to:  
-{{< youtube DCHku20TDjY >}}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/DCHku20TDjY?si=m9ksi8PvasJw41Ex" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 - a longer one for climbers who wanna tackle El Realet Ridge themselves:
-{{< youtube F7UXuIhBT0U >}}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/F7UXuIhBT0U?si=AP3P1-SyNg7kQr1M" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Equipment
 

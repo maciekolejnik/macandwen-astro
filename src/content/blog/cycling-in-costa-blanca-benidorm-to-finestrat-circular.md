@@ -20,13 +20,11 @@ summary: "A pleasant, hilly, 30km ride that avoids busy roads. Tyres wider than 
 
 ## Strava
 
-<div class="strava-container">
-<iframe height='405' width='590' frameborder='0' allowtransparency='true' scrolling='yes' src='https://www.strava.com/activities/4556043262/embed/8d67addaf2706295e533cabddefb694ac088d7ec'></iframe>
-</div>
+<div class="strava-embed-placeholder" data-embed-type="activity" data-embed-id="4556043262" data-style="standard" data-from-embed="false" data-token="7bPiKLVJmqtu_hr8kclHuS7UJFkbvkVUm73seOTfHcQ"></div><script src="https://strava-embeds.com/embed.js"></script>
 
 ## Video
 
-{{< youtube ZGtu_oox3zg >}}
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ZGtu_oox3zg?si=1TyTOjePi4YpCf9U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Description
 
