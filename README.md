@@ -1,43 +1,67 @@
-# Astro Starter Kit: Minimal
+# Mac & Wen
+
+Travel and outdoor blog at [macandwen.com](https://macandwen.com) — hiking,
+climbing, cycling and trips.
+
+## Stack
+
+| | |
+| --- | --- |
+| [Astro](https://docs.astro.build) | Site framework. Blog posts are markdown in `src/content/blog/`, rendered as static pages. |
+| [Tailwind CSS](https://tailwindcss.com) | Styling, via the Vite plugin |
+| [Cloudflare Workers](https://developers.cloudflare.com/workers/) | Hosting, through `@astrojs/cloudflare` |
+| [Cloudflare D1](https://developers.cloudflare.com/d1/) + [Drizzle](https://orm.drizzle.team) | SQLite database and typed queries |
+| [better-auth](https://www.better-auth.com) | Sign-in with Google |
+| [Vitest](https://vitest.dev) | Tests, run inside the Workers runtime |
+
+Pages are prerendered at build time unless they need a signed-in user, which
+keeps the blog fast. Details in `docs/features/`.
+
+## Running locally
+
+Requires Node 26 (see `.nvmrc`).
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+cp .dev.vars.example .dev.vars   # then fill in the values below
+npm run db:migrate:local         # create the local database
+npm run dev                      # http://localhost:4321
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+`.dev.vars` holds local secrets and is never committed:
 
-## 🚀 Project Structure
+- `BETTER_AUTH_SECRET` — any random string, `openssl rand -base64 32`
+- `BETTER_AUTH_URL` — `http://localhost:4321`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` — from a Google Cloud OAuth
+  client, with `http://localhost:4321/api/auth/callback/google` registered as a
+  redirect URI
 
-Inside of your Astro project, you'll see the following folders and files:
+Everything runs on your machine: the dev server uses the real Cloudflare runtime
+locally, and the database is a local SQLite file under `.wrangler/`. Nothing
+touches production. The blog itself works without any of the auth setup — you
+only need the Google credentials to sign in.
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+## Commands
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+| Command | Action |
+| --- | --- |
+| `npm run dev` | Dev server on `localhost:4321` |
+| `npm test` | Run tests |
+| `npm run astro check` | Type check |
+| `npm run build` | Production build to `./dist/` |
+| `npm run preview` | Serve the build locally |
+| `npm run db:generate` | Write a migration after changing the schema |
+| `npm run db:migrate:local` | Apply migrations to the local database |
+| `npm run db:migrate:remote` | Apply migrations to production |
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+CI runs type check, tests and build on every pull request.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Writing a post
 
-## 🧞 Commands
+Add a markdown file to `src/content/blog/`. The filename becomes the URL, and
+the frontmatter fields are defined in `src/content.config.ts`.
 
-All commands are run from the root of the project, from a terminal:
+## Contributing
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Each feature gets its own git worktree so parallel work never shares a checkout
+— see `AGENTS.md`, which is also the brief for AI coding agents.
