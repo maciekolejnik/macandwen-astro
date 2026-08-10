@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # local Cloudflare secrets
 .dev.vars
+
+# generated Worker types (recreated by npm install)
+worker-configuration.d.ts
