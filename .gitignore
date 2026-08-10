@@ -28,6 +28,3 @@ pnpm-debug.log*
 
 # local Cloudflare secrets
 .dev.vars
-
-# generated worker types
-worker-configuration.d.ts
