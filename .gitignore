@@ -25,3 +25,9 @@ pnpm-debug.log*
 
 # Cloudflare Wrangler local state
 .wrangler/
+
+# local Cloudflare secrets
+.dev.vars
+
+# generated worker types
+worker-configuration.d.ts
