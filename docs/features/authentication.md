@@ -81,6 +81,21 @@ http://localhost:4321/api/auth/callback/google
 https://<your-domain>/api/auth/callback/google
 ```
 
+## Tests
+
+`test/auth.test.ts` runs against real D1 in workerd (`npm test`). It covers
+session handling, the Google authorize URL, that password sign-in stays off, and
+that a user cannot set their own `role`.
+
+Google's actual token exchange is not tested — that would test Google and
+better-auth, and needs real credentials. So `test/helpers.ts` seeds a user and a
+session row directly, signing the cookie the way better-auth does, since the
+library rejects unsigned session cookies.
+
+The two role tests work as a pair: one asserts setting `role` is refused, the
+other asserts an ordinary field still updates. Without the second, the first
+would pass even if the endpoint broke entirely.
+
 ## Adding another provider
 
 Add it under `socialProviders` in `src/lib/auth.ts`, add its credentials, and

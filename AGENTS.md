@@ -28,7 +28,22 @@ astro dev --background
 
 Manage it with `astro dev stop`, `astro dev status`, and `astro dev logs`.
 
-Check work with `npx astro check` (types) and `npm run build`.
+Check work with `npx astro check` (types), `npm test`, and `npm run build` — the
+same three steps CI runs.
+
+## Tests
+
+`vitest` with `@cloudflare/vitest-pool-workers`, so tests run inside workerd
+against a real D1 database rather than mocks. Files live in `test/`.
+
+```sh
+npm test                 # once
+npx vitest               # watch
+```
+
+`test/helpers.ts` seeds a signed-in user directly, since a real Google sign-in
+cannot run in tests. Coverage is the auth layer only — see
+`docs/features/authentication.md`.
 
 ## Database & Auth
 
