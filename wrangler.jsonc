@@ -12,7 +12,7 @@
 		{
 			"binding": "DB",
 			"database_name": "macandwen",
-			"database_id": "REPLACE_WITH_D1_DATABASE_ID",
+			"database_id": "35da7507-38c7-4e19-8ca1-a520306d08fe",
 			"migrations_dir": "migrations"
 		}
 	],
