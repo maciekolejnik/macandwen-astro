@@ -52,9 +52,13 @@ only need the Google credentials to sign in.
 | `npm run preview` | Serve the build locally |
 | `npm run db:generate` | Write a migration after changing the schema |
 | `npm run db:migrate:local` | Apply migrations to the local database |
-| `npm run db:migrate:remote` | Apply migrations to production |
+| `npm run db:migrate:remote` | Apply migrations to production (CI does this on merge) |
 
-CI runs type check, tests and build on every pull request.
+CI runs type check, tests and build on every pull request. On merge to `main`,
+it also applies any new migrations to the production database. Deploys are
+handled separately by Cloudflare's Git integration, so a migration must be
+backwards compatible with the currently deployed code — add columns and tables,
+and leave removals until after the code that used them is gone.
 
 ## Writing a post
 

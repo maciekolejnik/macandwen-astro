@@ -23,7 +23,7 @@ to Neon, so avoid depending on SQLite-only behaviour in query code.
 | Path | Role |
 | --- | --- |
 | `src/lib/db/schema.ts` | Drizzle schema — the single source of truth |
-| `migrations/` | Generated SQL, applied by Wrangler |
+| `migrations/` | Generated SQL plus `meta/` state, applied by Wrangler |
 | `drizzle.config.ts` | Points drizzle-kit at the schema and output |
 
 ## Changing the schema
@@ -33,8 +33,15 @@ Edit `src/lib/db/schema.ts`, then:
 ```sh
 npm run db:generate       # write a SQL migration from the schema diff
 npm run db:migrate:local  # apply to the local database
-npm run db:migrate:remote # apply to production
 ```
+
+Commit the whole of `migrations/` — both the `.sql` files and `meta/`. The
+`meta/` directory is how drizzle-kit knows the current schema state:
+`_journal.json` indexes the migrations in order, and each `NNNN_snapshot.json`
+describes the schema after that migration. `db:generate` diffs the schema
+against the newest snapshot, so if `meta/` is missing or stale it assumes an
+empty database and regenerates `CREATE TABLE` statements for tables that
+already exist.
 
 Migrations are ordinary SQL files under `migrations/`. Review the generated file
 before applying it — SQLite cannot alter most columns in place, so drizzle-kit
@@ -69,6 +76,28 @@ Keep that file's options in step with `src/lib/auth.ts`, since they determine th
 generated tables. The command overwrites the schema, so reapply local additions
 such as `user.role` afterwards, then run `npm run db:generate`.
 
+## Applying to production
+
+CI applies migrations automatically. The `migrate` job in
+`.github/workflows/ci.yml` runs `npm run db:migrate:remote` on every push to
+`main`, after type check, tests and build have passed. It is skipped on pull
+requests, and a concurrency group keeps two merges from migrating at once.
+Wrangler detects CI and skips its confirmation prompt.
+
+The job needs two repository secrets: `CLOUDFLARE_API_TOKEN` (a custom token
+with **Account → D1 → Edit**) and `CLOUDFLARE_ACCOUNT_ID`.
+
+Applying a migration means reading the `d1_migrations` table in the target
+database, running the files not listed there in order, and recording each one.
+It is idempotent, so re-running does nothing.
+
+**Migrations must be backwards compatible.** Deploys come from Cloudflare's Git
+integration, which is a separate pipeline from CI, so the two race — the new
+Worker can go live before or after the migration lands. Add columns and tables
+freely, but split anything destructive across two merges: ship the code that
+stops using a column first, then drop it. `npm run db:migrate:remote` still
+works locally if a migration ever needs applying by hand.
+
 ## Querying
 
 Bindings are only available per request, via `cloudflare:workers`:
@@ -84,7 +113,10 @@ const db = drizzle(env.DB, { schema });
 ## Local data
 
 Each git worktree keeps its own database under `.wrangler/` (gitignored), so run
-`npm run db:migrate:local` in a fresh worktree. To inspect it:
+`npm run db:migrate:local` in a fresh worktree. Nothing needs installing: D1 is
+SQLite, and Wrangler runs the Worker in a local runtime with SQLite built in, so
+the database is just a file under `.wrangler/state/`. Delete that directory to
+start over. To inspect it:
 
 ```sh
 npx wrangler d1 execute macandwen --local --command "SELECT * FROM user"
@@ -96,3 +128,6 @@ npx wrangler d1 execute macandwen --local --command "SELECT * FROM user"
 npx wrangler d1 create macandwen   # copy the id into wrangler.jsonc
 npm run db:migrate:remote
 ```
+
+That first remote apply is manual because the database has to exist before CI
+can migrate it. Afterwards, leave it to CI.
