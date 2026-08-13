@@ -35,14 +35,74 @@ if (!user) {
     >
       Sign out
     </button>
+
+    <section class="mt-16 border-t border-stone-200 pt-8">
+      <h2 class="text-lg font-semibold text-stone-900">Delete account</h2>
+      <p class="mt-2 max-w-prose text-sm text-stone-600">
+        Permanently removes your name, email, picture and the tokens Google
+        issued, along with any lists attached to your account. This cannot be
+        undone. See <a href="/privacy" class="text-emerald-700 hover:underline">privacy</a>
+        for what is stored.
+      </p>
+
+      <p
+        id="delete-error"
+        role="alert"
+        hidden
+        class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+      </p>
+
+      <button
+        id="delete-account"
+        class="mt-4 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60"
+      >
+        Delete account
+      </button>
+    </section>
   </div>
 </Layout>
 
 <script>
-  import { signOut } from '../lib/auth-client';
+  import { signOut, deleteUser } from '../lib/auth-client';
 
   document.getElementById('signout')?.addEventListener('click', async () => {
     await signOut();
     window.location.href = '/';
+  });
+
+  const button = document.getElementById('delete-account') as HTMLButtonElement | null;
+  const errorBox = document.getElementById('delete-error');
+
+  function showError(message: string) {
+    if (!errorBox) return;
+    errorBox.textContent = message;
+    errorBox.hidden = false;
+  }
+
+  button?.addEventListener('click', async () => {
+    const confirmed = window.confirm(
+      'Permanently delete your account? This cannot be undone.',
+    );
+    if (!confirmed) return;
+
+    button.disabled = true;
+    if (errorBox) errorBox.hidden = true;
+
+    const { error } = await deleteUser({ callbackURL: '/' });
+
+    if (!error) {
+      window.location.href = '/';
+      return;
+    }
+
+    button.disabled = false;
+    // Without a password to re-check, better-auth requires a session younger
+    // than `freshAge`, so this is the expected path for a long-signed-in visitor.
+    showError(
+      error.status === 400
+        ? 'For your security, please sign out and sign in again, then delete your account.'
+        : 'Something went wrong deleting your account. Please try again.',
+    );
   });
 </script>
