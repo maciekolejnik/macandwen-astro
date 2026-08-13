@@ -87,9 +87,19 @@ the committed schema, so a better-auth upgrade that expects a new column shows
 up as a failed build with a diff. Without it, nothing re-runs the generator on
 install and the first sign of trouble would be a 500 in production.
 
-The CLI is published separately from the library and lags behind it, so
-`scripts/schema.mjs` pins the version. Bump that pin deliberately, and expect
-to generate a migration when you do.
+**What the check cannot tell you.** The CLI is published separately from the
+library and lags it — `@better-auth/cli` was at 1.4.21 when `better-auth` was
+at 1.6.26 — and it brings its own copy of the library, which is what defines
+the tables it emits. So the check compares the schema against the version
+pinned in `scripts/schema.mjs`, not against the version the app actually runs.
+The two agree today, but a column introduced by a release newer than that pin
+will not be detected until the pin moves.
+
+Upgrading `better-auth` is therefore two steps, not one: bump the dependency,
+then raise the pin to the matching CLI release once it exists and run
+`npm run db:schema:generate`. A migration may fall out of it. Pinning is still
+better than tracking latest, which would fail the build on unrelated CLI
+releases, but it is the reason the pin should not be left to rot.
 
 ## Applying to production
 

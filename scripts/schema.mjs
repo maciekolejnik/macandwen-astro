@@ -7,9 +7,12 @@
  * better-auth upgrade expects columns the database does not have. With
  * `--write` it updates the schema in place.
  *
- * The CLI is published separately from the library and lags behind it, so the
- * version is pinned here rather than tracking latest: an unrelated CLI release
- * would otherwise fail the check.
+ * The CLI is published separately from the library, lags behind it, and brings
+ * its own copy of it - that copy is what defines the tables it emits. So this
+ * pin, not the version in package.json, decides what the check compares
+ * against. After upgrading better-auth, raise this to the matching CLI release
+ * and regenerate; a newer library's columns are invisible until then. Tracking
+ * latest instead would break the build on unrelated CLI releases.
  */
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, copyFileSync } from 'node:fs';
