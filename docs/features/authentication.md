@@ -117,9 +117,8 @@ signed-out visitors.
 ## Configuration
 
 Set in `.dev.vars` locally (see `.dev.vars.example`) and as Wrangler secrets in
-production; `BETTER_AUTH_URL` is a plain var in `wrangler.jsonc`. The secret
-names are also listed under `secrets.required` there, so `wrangler types` emits
-them even on CI, where `.dev.vars` does not exist.
+production; `BETTER_AUTH_URL` is a plain var in `wrangler.jsonc`, which
+`.dev.vars` overrides locally so sign-in points at `localhost`.
 
 | Name | Notes |
 | --- | --- |

@@ -19,9 +19,6 @@
 	"vars": {
 		"BETTER_AUTH_URL": "https://macandwen.com"
 	},
-	"secrets": {
-		"required": ["BETTER_AUTH_SECRET", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
-	},
 	"observability": {
 		"enabled": true
 	}
