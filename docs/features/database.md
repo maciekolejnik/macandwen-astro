@@ -98,7 +98,7 @@ freely, but split anything destructive across two merges: ship the code that
 stops using a column first, then drop it. `npm run db:migrate:remote` still
 works locally if a migration ever needs applying by hand.
 
-## Querying
+## Querying from code
 
 Bindings are only available per request, via `cloudflare:workers`:
 
@@ -110,19 +110,61 @@ import * as schema from '../lib/db/schema';
 const db = drizzle(env.DB, { schema });
 ```
 
+## Querying by hand
+
+`wrangler d1 execute` runs SQL against either database. `--remote` is
+production and `--local` is the file under `.wrangler/`:
+
+```sh
+npx wrangler d1 execute macandwen --remote --command "SELECT id, email, role FROM user"
+```
+
+That flag is the only thing separating a harmless test from a production write,
+and leaving it off silently hits the local database instead — which usually
+looks like the change simply not working. Useful additions: `--json` for output
+that is readable when rows are wide, `--file ./script.sql` to run several
+statements, and `-y` to skip the confirmation.
+
+Making someone an admin is the standard case, since `role` is deliberately not
+settable through the API. The row only exists once they have signed in:
+
+```sh
+npx wrangler d1 execute macandwen --remote \
+  --command "UPDATE user SET role='admin' WHERE email='you@example.com'"
+```
+
+Check it afterwards, because a mistyped email updates nothing and still reports
+success. The Cloudflare dashboard has an equivalent console under Workers &
+Pages → D1 → macandwen, which is nicer for browsing.
+
+Only ever use this for data. Schema changes belong in a migration — running
+`ALTER TABLE` here drifts production away from `src/lib/db/schema.ts` and the
+drizzle snapshots, and the next generated migration will conflict.
+
+If a statement does damage, D1 keeps 30 days of history:
+
+```sh
+npx wrangler d1 time-travel info macandwen
+npx wrangler d1 time-travel restore macandwen --timestamp <iso-timestamp>
+```
+
 ## Local data
 
 Each git worktree keeps its own database under `.wrangler/` (gitignored), so run
 `npm run db:migrate:local` in a fresh worktree. Nothing needs installing: D1 is
 SQLite, and Wrangler runs the Worker in a local runtime with SQLite built in, so
 the database is just a file under `.wrangler/state/`. Delete that directory to
-start over. To inspect it:
+start over. To inspect it, or to rehearse anything destructive before running it
+against production:
 
 ```sh
 npx wrangler d1 execute macandwen --local --command "SELECT * FROM user"
 ```
 
 ## First-time setup
+
+Already done for `macandwen` — kept for reference if another database is ever
+added.
 
 ```sh
 npx wrangler d1 create macandwen   # copy the id into wrangler.jsonc
