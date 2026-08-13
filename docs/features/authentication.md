@@ -14,6 +14,56 @@ stores or resets credentials. Library: [better-auth](https://www.better-auth.com
 | `src/components/AuthNav.astro` | Header entry: "Sign in" or the user's name |
 | `src/pages/login.astro`, `src/pages/account.astro` | Sign-in and account screens |
 
+## What signing in writes to the database
+
+The schema is in `docs/features/database.md`; this is how the four tables are
+used for one person.
+
+Signing in is an OAuth round trip. better-auth generates a random `state` and
+PKCE verifier, stores them in **`verification`**, and redirects to Google.
+Google comes back to `/api/auth/callback/google`, and the state row is looked
+up, deleted, and rejected if missing or expired — that is the CSRF defence.
+The code is then exchanged for tokens and the profile is read from the
+`id_token`.
+
+| Table | Written when | Lifetime |
+| --- | --- | --- |
+| `user` | First sign-in only | Permanent |
+| `account` | First sign-in, then updated on every later one | Permanent |
+| `session` | Every sign-in | Until expiry or sign-out |
+| `verification` | Start of each sign-in, deleted at the callback | Seconds |
+
+**`user`** is created once. `email` is uniquely indexed, so a later sign-in
+matches the existing row instead of duplicating it, and the person keeps the
+same `user.id` forever.
+
+**`account`** holds the link to the Google identity, keyed by
+`provider_id='google'` plus `account_id` (Google's `sub`). Later sign-ins update
+the same row with fresh tokens rather than adding rows. A second provider would
+add a second row against the same `user_id`.
+
+**`session`** gets a new row per sign-in: a random `token` behind a unique
+index, `expires_at` 30 days out, and the `ip_address` / `user_agent` that
+created it. The cookie carries only the signed token, never user data.
+
+**`verification`** holds nothing but in-flight OAuth state. It is not linked to
+a user, because it is keyed by state before anyone is identified.
+
+Sessions are removed on sign-out, and expired ones are cleaned up lazily: a
+request presenting an expired token has the row deleted as a side effect of the
+lookup. Nothing sweeps the table on a timer, so sessions of users who simply
+stop visiting stay until they return. That is fine at this scale, but it is why
+larger deployments add a cleanup job.
+
+Deleting a user cascades to their `account` and `session` rows.
+
+## Staying signed in
+
+`session.expiresIn` is 30 days and `updateAge` is 1 day, so a session read more
+than a day after its last write has `expires_at` pushed out again. The window
+rolls forward and active readers are never logged out; someone away for a month
+signs in again.
+
 ## How a request sees the user
 
 Middleware resolves the session once per request and exposes it:
