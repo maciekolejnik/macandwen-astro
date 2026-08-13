@@ -9,11 +9,13 @@ export default defineConfig({
   plugins: [
     cloudflareTest({
       miniflare: {
+        // Keep in sync with wrangler.jsonc.
         compatibilityDate: '2026-06-27',
-        compatibilityFlags: ['nodejs_compat'],
+        compatibilityFlags: ['global_fetch_strictly_public', 'nodejs_compat'],
         d1Databases: ['DB'],
         bindings: {
           TEST_MIGRATIONS: migrations,
+          // Stand-ins for the vars and secrets the Worker is given in production.
           BETTER_AUTH_URL: 'http://localhost:4321',
           BETTER_AUTH_SECRET: 'test-secret-value-at-least-32-characters',
           GOOGLE_CLIENT_ID: 'test-google-client-id',

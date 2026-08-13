@@ -3,15 +3,40 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from '@better-auth/drizzle-adapter';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from './db/schema';
-import { authOptions } from './auth-options';
 
 function createAuth() {
   return betterAuth({
-    ...authOptions(env),
+    baseURL: env.BETTER_AUTH_URL,
+    secret: env.BETTER_AUTH_SECRET,
     database: drizzleAdapter(drizzle(env.DB, { schema }), {
       provider: 'sqlite',
       schema,
     }),
+    emailAndPassword: {
+      enabled: false,
+    },
+    user: {
+      additionalFields: {
+        role: {
+          type: 'string',
+          defaultValue: 'user',
+          // Never settable from the client - only via a direct DB update.
+          input: false,
+          // Emits `notNull()`; safe because defaultValue is applied first.
+          required: true,
+        },
+      },
+    },
+    socialProviders: {
+      google: {
+        clientId: env.GOOGLE_CLIENT_ID,
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+      },
+    },
+    session: {
+      expiresIn: 60 * 60 * 24 * 30,
+      updateAge: 60 * 60 * 24,
+    },
   });
 }
 

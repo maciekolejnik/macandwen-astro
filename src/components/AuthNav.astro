@@ -11,10 +11,13 @@ const linkClass = transparentHeader
 ---
 
 <!--
-  Resolved on the client so that this works on prerendered pages too,
-  which never hit the Cloudflare runtime.
+  Renders as "Sign in" and is upgraded to the account link on the client, so
+  that this works on prerendered pages too, which never hit the Cloudflare
+  runtime. The signed-out state is the default rather than a hidden one: if the
+  script never runs, the link still works, and /login redirects an already
+  signed-in visitor to /account.
 -->
-<a href="/login" data-auth-nav class="transition-colors opacity-0" class:list={[linkClass]}>
+<a href="/login" data-auth-nav class="transition-colors" class:list={[linkClass]}>
   Sign in
 </a>
 
@@ -30,8 +33,7 @@ const linkClass = transparentHeader
         link.textContent = data.user.name?.split(' ')[0] || 'Account';
       }
     } catch {
-      // Fall back to the "Sign in" link.
+      // Leave the "Sign in" link as rendered.
     }
-    link.classList.remove('opacity-0');
   }
 </script>

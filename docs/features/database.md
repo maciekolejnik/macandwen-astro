@@ -23,9 +23,7 @@ to Neon, so avoid depending on SQLite-only behaviour in query code.
 | Path | Role |
 | --- | --- |
 | `src/lib/db/schema.ts` | Drizzle schema — the single source of truth |
-| `src/lib/auth-options.ts` | better-auth options, shared by the app and the CLI |
-| `better-auth.config.ts` | Entry point for the schema generator |
-| `scripts/schema.mjs` | Regenerates and checks the schema |
+| `test/schema.test.ts` | Checks the schema still covers what better-auth expects |
 | `migrations/` | Generated SQL plus `meta/` state, applied by Wrangler |
 | `drizzle.config.ts` | Points drizzle-kit at the schema and output |
 
@@ -53,53 +51,33 @@ already been applied; add a new one.
 
 ## The auth tables
 
-`user`, `session`, `account` and `verification` are not written by hand. The
-better-auth CLI generates them from the auth configuration, and they have to
-keep matching what the library expects at runtime — it queries columns like
-`session.token` and `account.provider_id` by name, so a mismatch is a request
-failing in production rather than a type error.
+`user`, `session`, `account` and `verification` belong to better-auth. It
+queries columns like `session.token` and `account.provider_id` by name, so a
+schema that has drifted from what the library expects is a request failing in
+production rather than a type error.
 
 Which columns are needed depends on the configuration, not just the library
-version. Enabling a provider, turning on passwords or adding a plugin all
-change the answer. So the options live in `src/lib/auth-options.ts`, shared by
-two callers: `src/lib/auth.ts`, which adds the D1 database, and
-`better-auth.config.ts`, which adds a dummy one for the CLI. The CLI needs an
-exported `auth` instance and cannot run `src/lib/auth.ts` directly, because
-that reads bindings from `cloudflare:workers`. Sharing the options means the
-generated schema always reflects the real configuration instead of a copy that
-quietly drifts.
+version: enabling a provider, turning on passwords or adding a plugin all
+change the answer. `user.role` is here because `src/lib/auth.ts` declares it as
+an additional field. Its `required: true` is what produces `notNull()`; it
+cannot reject a sign-in, since better-auth applies `defaultValue` before
+checking whether a field is required.
 
-To regenerate after changing the auth config or upgrading the library:
+Because the schema is committed by hand, `test/schema.test.ts` guards it: it
+asks the installed better-auth what columns it expects — from the options the
+app actually runs with — and fails if the schema is missing any. It follows the
+version in `package.json`, so an upgrade that adds a column fails CI with the
+table named, rather than surfacing as a 500 later.
+
+The generated schema was produced by `@better-auth/cli generate`. It is not
+wired into the project, because the CLI ships its own bundled copy of
+better-auth and has lagged the library by months, so it would have validated
+against a version this app does not run. If a future upgrade does add a column,
+add it to `src/lib/db/schema.ts` and run:
 
 ```sh
-npm run db:schema:generate   # rewrite src/lib/db/schema.ts
-npm run db:generate          # write a migration for any difference
+npm run db:generate       # write a migration for the difference
 ```
-
-`user.role` is included, because `auth-options.ts` declares it as an additional
-field — nothing has to be reapplied by hand afterwards. Its `required: true`
-is what produces `notNull()`; it cannot reject a sign-in, since better-auth
-applies `defaultValue` before checking whether a field is required.
-
-Regenerating is otherwise a no-op, and CI checks exactly that. `npm run
-db:schema:check` regenerates into a temporary file and fails if it differs from
-the committed schema, so a better-auth upgrade that expects a new column shows
-up as a failed build with a diff. Without it, nothing re-runs the generator on
-install and the first sign of trouble would be a 500 in production.
-
-**What the check cannot tell you.** The CLI is published separately from the
-library and lags it — `@better-auth/cli` was at 1.4.21 when `better-auth` was
-at 1.6.26 — and it brings its own copy of the library, which is what defines
-the tables it emits. So the check compares the schema against the version
-pinned in `scripts/schema.mjs`, not against the version the app actually runs.
-The two agree today, but a column introduced by a release newer than that pin
-will not be detected until the pin moves.
-
-Upgrading `better-auth` is therefore two steps, not one: bump the dependency,
-then raise the pin to the matching CLI release once it exists and run
-`npm run db:schema:generate`. A migration may fall out of it. Pinning is still
-better than tracking latest, which would fail the build on unrelated CLI
-releases, but it is the reason the pin should not be left to rot.
 
 ## Applying to production
 

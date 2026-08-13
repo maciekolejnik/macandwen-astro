@@ -7,8 +7,7 @@ stores or resets credentials. Library: [better-auth](https://www.better-auth.com
 
 | Path | Role |
 | --- | --- |
-| `src/lib/auth.ts` | Server auth instance, binding D1 to the shared options |
-| `src/lib/auth-options.ts` | The options themselves, also read by the schema generator |
+| `src/lib/auth.ts` | Server auth instance: options plus the D1 database |
 | `src/lib/auth-client.ts` | Browser client (`signIn`, `signOut`, `getSession`) |
 | `src/pages/api/auth/[...all].ts` | Catch-all route; better-auth owns every `/api/auth/*` endpoint |
 | `src/middleware.ts` | Sets `Astro.locals.user` and `Astro.locals.session` |
@@ -82,7 +81,10 @@ export const prerender = false;
 
 Blog pages stay prerendered for speed. That is why the header uses
 `AuthNav.astro`, which fetches the session from the browser instead — a static
-page cannot know who is visiting at build time.
+page cannot know who is visiting at build time. It renders the signed-out
+"Sign in" link by default and only upgrades it once a session comes back, so
+the link still works if the script never runs; `/login` redirects an already
+signed-in visitor on to `/account`.
 
 ## Two constraints worth knowing
 
@@ -108,14 +110,16 @@ npx wrangler d1 execute macandwen --remote \
   --command "UPDATE user SET role='admin' WHERE email='you@example.com'"
 ```
 
-It is declared in `src/lib/auth-options.ts` rather than added to the schema by
-hand, so regenerating the schema keeps it. Admin-owned records are the public
-defaults shown to signed-out visitors.
+It is declared as an additional field in `src/lib/auth.ts` rather than added to
+the schema by hand. Admin-owned records are the public defaults shown to
+signed-out visitors.
 
 ## Configuration
 
 Set in `.dev.vars` locally (see `.dev.vars.example`) and as Wrangler secrets in
-production; `BETTER_AUTH_URL` is a plain var in `wrangler.jsonc`.
+production; `BETTER_AUTH_URL` is a plain var in `wrangler.jsonc`. The secret
+names are also listed under `secrets.required` there, so `wrangler types` emits
+them even on CI, where `.dev.vars` does not exist.
 
 | Name | Notes |
 | --- | --- |
@@ -151,7 +155,7 @@ would pass even if the endpoint broke entirely.
 
 ## Adding another provider
 
-Add it under `socialProviders` in `src/lib/auth-options.ts`, add its credentials,
-and register the matching `/api/auth/callback/<provider>` URI. No schema change
-is needed — the `account` table already links several providers to one user — but
-run `npm run db:schema:check`, since some providers and plugins do add columns.
+Add it under `socialProviders` in `src/lib/auth.ts`, add its credentials, and
+register the matching `/api/auth/callback/<provider>` URI. No schema change is
+normally needed — the `account` table already links several providers to one
+user — and `test/schema.test.ts` will tell you if one does add a column.
