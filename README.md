@@ -51,6 +51,8 @@ only need the Google credentials to sign in.
 | `npm run build` | Production build to `./dist/` |
 | `npm run preview` | Serve the build locally |
 | `npm run db:generate` | Write a migration after changing the schema |
+| `npm run db:schema:check` | Verify the auth schema matches better-auth |
+| `npm run db:schema:generate` | Regenerate the auth schema |
 | `npm run db:migrate:local` | Apply migrations to the local database |
 | `npm run db:migrate:remote` | Apply migrations to production (CI does this on merge) |
 
