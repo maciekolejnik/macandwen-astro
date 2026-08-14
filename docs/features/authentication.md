@@ -57,6 +57,18 @@ larger deployments add a cleanup job.
 
 Deleting a user cascades to their `account` and `session` rows.
 
+## Deleting an account
+
+`user.deleteUser` is enabled, so visitors can erase themselves from `/account`
+rather than emailing to ask. The button calls `deleteUser()` from the client and
+the cascade above removes the Google tokens along with the profile.
+
+Better-auth normally re-checks a password before deleting. Nobody here has one,
+so the only remaining guard is session freshness: the session must be younger
+than `freshAge`, which defaults to a day. An older one is rejected with a `400`,
+and the account page turns that into a prompt to sign in again. That status is
+asserted in `test/delete-user.test.ts`, since the wording depends on it.
+
 ## Staying signed in
 
 `session.expiresIn` is 30 days and `updateAge` is 1 day, so a session read more

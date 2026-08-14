@@ -26,6 +26,13 @@ function createAuth() {
           required: true,
         },
       },
+      // Lets people erase their own account, which cascades to their `account`
+      // and `session` rows. Without a password to re-check, better-auth instead
+      // requires a session younger than `session.freshAge`, so a long-signed-in
+      // visitor is asked to sign in again first.
+      deleteUser: {
+        enabled: true,
+      },
     },
     socialProviders: {
       google: {

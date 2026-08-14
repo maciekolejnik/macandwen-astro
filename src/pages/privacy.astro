@@ -1,0 +1,145 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const contact = 'macnwen@gmail.com';
+const updated = 'August 2026';
+---
+
+<Layout
+  title="Privacy"
+  description="What Mac & Wen collects when you sign in, why, and how to have it deleted."
+>
+  <article class="max-w-3xl mx-auto px-4 py-16">
+    <h1 class="text-4xl font-bold text-stone-900 mb-2">Privacy</h1>
+    <p class="text-stone-500 mb-10">Last updated {updated}</p>
+
+    <div class="prose prose-stone max-w-none
+      prose-headings:font-bold prose-headings:text-stone-900
+      prose-a:text-emerald-700 prose-a:no-underline hover:prose-a:underline">
+
+      <p>
+        Mac &amp; Wen is a personal travel blog. You can read all of it without
+        signing in, and if you do, we collect nothing about you — there are no
+        analytics, no advertising and no tracking cookies anywhere on the site.
+      </p>
+
+      <p>
+        Signing in with Google is optional, and only needed to manage your own
+        packing lists. This page explains what that stores. For anything below,
+        write to <a href={`mailto:${contact}`}>{contact}</a>.
+      </p>
+
+      <h2>Who is responsible</h2>
+      <p>
+        Mac &amp; Wen runs this site and decides how the data described here is
+        used — the "controller", in the words of the GDPR. Contact:{' '}
+        <a href={`mailto:${contact}`}>{contact}</a>.
+      </p>
+
+      <h2>What is stored when you sign in</h2>
+      <p>Google tells us, and we keep:</p>
+      <ul>
+        <li>your name and email address</li>
+        <li>a link to your Google profile picture</li>
+        <li>the identifier Google uses for your account</li>
+      </ul>
+      <p>Signing in also creates a record containing:</p>
+      <ul>
+        <li>the IP address and browser the sign-in came from</li>
+        <li>a session token, which is what keeps you signed in</li>
+        <li>the times your account and session were created and last updated</li>
+        <li>
+          the access tokens Google issues, so the sign-in can be completed and
+          renewed without asking you again
+        </li>
+      </ul>
+      <p>
+        We never see or store your Google password. Signing in happens on
+        Google's own pages.
+      </p>
+
+      <h2>Why it is stored</h2>
+      <p>
+        To sign you in, keep you signed in, greet you by name, and attach your
+        packing lists to your account. That is all of it — the data is not
+        profiled, analysed, sold, or used to send you anything. There is no
+        mailing list.
+      </p>
+      <p>
+        The lawful basis is that you asked for an account and this data is what
+        providing it requires. If you would rather not, simply don't sign in;
+        the blog works exactly the same either way.
+      </p>
+
+      <h2>Who else can see it</h2>
+      <ul>
+        <li>
+          <strong>Google</strong> — because you chose to sign in with them.
+          Their handling of your Google account is covered by{' '}
+          <a href="https://policies.google.com/privacy" rel="noopener noreferrer" target="_blank">
+            Google's privacy policy</a>.
+        </li>
+        <li>
+          <strong>Cloudflare</strong> — hosts the site and the database on our
+          behalf, and processes it only for that purpose.
+        </li>
+      </ul>
+      <p>
+        Nobody else. The data is stored in Cloudflare's Western Europe region
+        and is not transferred elsewhere by us.
+      </p>
+
+      <h2>How long it is kept</h2>
+      <p>
+        Your account details are kept until you delete your account. Sessions
+        expire 30 days after they are created, and are removed when you sign
+        out, when an expired one is next presented, or when the account is
+        deleted.
+      </p>
+
+      <h2>Deleting your account</h2>
+      <p>
+        Go to <a href="/account">your account</a> and choose "Delete account".
+        This immediately and permanently removes your details, your sessions and
+        the tokens from Google. It cannot be undone, and nothing is kept behind.
+      </p>
+      <p>
+        For security you need to have signed in within the past day to do this.
+        If you are asked to, sign out and back in, then try again.
+      </p>
+      <p>
+        Deleting your account here does not change anything on Google's side.
+        You can review which apps have access in your{' '}
+        <a href="https://myaccount.google.com/permissions" rel="noopener noreferrer" target="_blank">
+          Google account settings</a>.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>
+        You can ask for a copy of your data, ask for it to be corrected or
+        erased, object to it being used, or ask for it in a portable form. Email{' '}
+        <a href={`mailto:${contact}`}>{contact}</a> and you will get an answer
+        within a month. Deletion you can do yourself, immediately, on the
+        account page.
+      </p>
+      <p>
+        If you think your data is being handled wrongly, you can complain to
+        your national data protection authority.
+      </p>
+
+      <h2>Cookies</h2>
+      <p>
+        One cookie, set only after you sign in, holding the session token that
+        keeps you signed in. It is removed when you sign out. There are no
+        analytics or advertising cookies, which is why this site has no cookie
+        banner.
+      </p>
+
+      <h2>Changes</h2>
+      <p>
+        If what we collect changes, this page changes with it and the date at
+        the top is updated.
+      </p>
+    </div>
+  </article>
+</Layout>
