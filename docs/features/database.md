@@ -23,6 +23,7 @@ to Neon, so avoid depending on SQLite-only behaviour in query code.
 | Path | Role |
 | --- | --- |
 | `src/lib/db/schema.ts` | Drizzle schema — the single source of truth |
+| `src/lib/db/client.ts` | Lazily built Drizzle client over the `DB` binding |
 | `test/schema.test.ts` | Checks the schema still covers what better-auth expects |
 | `migrations/` | Generated SQL plus `meta/` state, applied by Wrangler |
 | `drizzle.config.ts` | Points drizzle-kit at the schema and output |
@@ -176,3 +177,14 @@ npm run db:migrate:remote
 
 That first remote apply is manual because the database has to exist before CI
 can migrate it. Afterwards, leave it to CI.
+
+## The application tables
+
+`packing_list`, `packing_list_item` and `packing_list_favourite` are this
+site's own, and live below the better-auth tables in `src/lib/db/schema.ts` so
+a regeneration of the auth half stays easy to diff. They are described in
+[packing-lists.md](./packing-lists.md).
+
+Query code for them belongs in a module per feature — `src/lib/db/packing-lists.ts`
+— rather than in pages or API routes, so access rules are written once and can
+be tested without a request.
