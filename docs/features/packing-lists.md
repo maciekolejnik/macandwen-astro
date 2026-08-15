@@ -5,8 +5,8 @@ one signed-in user and either private or public. Public lists are readable by
 everyone, including signed-out visitors, and any signed-in user can favourite
 one; the public listing is ranked by how many favourites a list has.
 
-This document covers the data layer. The HTTP and UI layers arrive in later
-changes and are described here as they land.
+This document covers the data and HTTP layers. The UI arrives in later changes
+and is described here as it lands.
 
 ## Tables
 
@@ -88,3 +88,36 @@ by calling a different function.
 covers ordering, normalisation and limits, the access rules above, favourite
 counting and idempotency, and the cascade behaviour on both list and user
 deletion.
+
+## HTTP API
+
+| Route | Method | Answers |
+| --- | --- | --- |
+| `/api/packing-lists` | `POST` | `201 { id }` |
+| `/api/packing-lists/[id]` | `PATCH` | `200 { id }` |
+| `/api/packing-lists/[id]` | `DELETE` | `200 { id }` |
+
+All three are `prerender = false` and require a session; without one they answer
+`401`. Failures are always `{ error }` with a message written for a visitor to
+read, so the UI can show it as-is.
+
+`PATCH` sends the whole list, matching the data layer's replace-everything
+update. A list that does not exist and one owned by somebody else both answer
+`404` with an identical body, so the routes cannot be used to discover which
+ids are real.
+
+Layering: the routes shape-check the body's types, `normaliseInput` owns the
+content rules, and `PackingListValidationError` carries the difference between
+a bad request and a genuine failure — without it, a rejected title would be a
+`500`.
+
+Bodies must arrive as JSON, content type included. `text/plain` would make a
+cross-origin `POST` a "simple" request that skips the CORS preflight; insisting
+on JSON forces one. The session cookie's `SameSite=Lax` stops that attack too,
+but neither should be the only thing in the way. `PATCH` and `DELETE` are never
+simple requests, so they are always preflighted.
+
+`test/packing-lists-api.test.ts` drives each route through the real middleware
+and a real signed cookie, covering the success path, anonymous callers,
+malformed and mistyped bodies, the content-type rule, and that another user's
+list is indistinguishable from a missing one.
