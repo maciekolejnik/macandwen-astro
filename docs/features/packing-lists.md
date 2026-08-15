@@ -189,3 +189,16 @@ the counter and "Clear ticks" button stay hidden.
 
 When trips arrive, durable ticks belong there, against a trip's copy of a list,
 and this module can be deleted without regret.
+
+## A note on wording
+
+The visitor-facing verb is **save** — "Most saved first", "Saved by 3 people" —
+because it describes what the button does, where "favourite" describes a
+feeling. The database, the query module and the API keep `favourite` in their
+names: renaming a table and its columns to follow a wording choice would be
+churn with no benefit, and the two never appear together.
+
+If the copy is ever revisited, keep the two consistent within their own layer
+rather than half-renaming across both. The star icon is the remaining mismatch;
+a bookmark would suit "save" better, and that is worth settling when the button
+becomes clickable.

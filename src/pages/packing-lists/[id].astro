@@ -43,7 +43,7 @@ const formatDate = (date: Date) =>
         {list.isOwn ? 'Yours' : `By ${list.ownerName}`} &middot; updated {formatDate(list.updatedAt)}
         {list.isPublic && (
           <>
-            {' '}&middot; {list.favouriteCount} {list.favouriteCount === 1 ? 'favourite' : 'favourites'}
+            {' '}&middot; saved by {list.favouriteCount} {list.favouriteCount === 1 ? 'person' : 'people'}
           </>
         )}
       </p>
@@ -88,7 +88,7 @@ const formatDate = (date: Date) =>
 
           <p class="mt-3 text-xs text-stone-400">
             Ticks are kept on this device for a week after you last open this
-            list. They are not saved to your account.
+            list. They are not stored on your account.
           </p>
         </>
       ) : (
