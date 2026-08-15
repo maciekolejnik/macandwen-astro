@@ -144,6 +144,39 @@ describe('auth endpoints', () => {
 });
 
 /**
+ * `AuthNav` is a server island, so its request is the only thing that renders
+ * the signed-in nav on an otherwise prerendered page. It must resolve a session
+ * like any other route, and its response must not be cached — it varies per
+ * visitor and Astro's island endpoint sets no cache headers of its own.
+ */
+describe('server islands', () => {
+  const islandPath = '/_server-islands/AuthNav';
+
+  it('resolves a session for a server island request', async () => {
+    const user = await signedInUser();
+
+    const { locals } = await runMiddleware({
+      cookie: user.headers.cookie,
+      pathname: islandPath,
+    });
+
+    expect(locals.user?.id).toBe(user.id);
+  });
+
+  it('marks the island response as uncacheable', async () => {
+    const { response } = await runMiddleware({ pathname: islandPath });
+
+    expect(response.headers.get('cache-control')).toBe('private, no-store');
+  });
+
+  it('leaves other responses untouched', async () => {
+    const { response } = await runMiddleware({ pathname: '/account' });
+
+    expect(response.headers.get('cache-control')).toBeNull();
+  });
+});
+
+/**
  * Unlike the cases above, a transient D1 failure has no unmocked equivalent —
  * dropping the table fakes one by corrupting the schema, which is a different
  * fault and leaves the database broken for later tests. This stubs the binding

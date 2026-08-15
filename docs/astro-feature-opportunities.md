@@ -65,17 +65,15 @@ every page, `<script>` blocks need to be re-run per navigation (or use
 `transition:persist`), and the `AuthNav` session lookup would fire on each
 navigation unless the result is cached.
 
-## Server Islands
+## Server Islands — adopted
 
-`AuthNav.astro` currently renders "Sign in" statically and upgrades itself with
-a client-side `getSession()` call. A server island (`<AuthNav server:defer />`)
-would let the nav render on the server with the real session, streamed in after
-the static shell, keeping the page prerendered and cacheable while removing the
-flash of the wrong state. This is the idiomatic Astro answer to exactly the
-problem the current comment in `AuthNav.astro` describes.
+`AuthNav.astro` is now a server island (`server:defer`), rendered in the Worker
+with the real session while the surrounding page stays prerendered. See
+`docs/features/authentication.md`. The client-side `getSession()` upgrade it
+replaced is gone.
 
-Trade-off: it costs a Worker request per page view, whereas the current approach
-costs one client fetch. Worth measuring before switching.
+Trade-off accepted: one Worker request per page view, in exchange for no auth
+code in the browser bundle and no flash of the wrong state.
 
 ## Astro Actions
 
@@ -117,5 +115,4 @@ are the plausible candidates. Even then, prefer a vanilla `<script>` first;
 2. `@astrojs/rss` and `@astrojs/sitemap`, plus setting `site`.
 3. A `404.astro`.
 4. View transitions with shared-element morphs on post images.
-5. Revisit `imageService: 'cloudflare'` and server islands once there is real
-   traffic data.
+5. Revisit `imageService: 'cloudflare'` once there is real traffic data.

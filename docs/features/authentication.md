@@ -11,7 +11,8 @@ stores or resets credentials. Library: [better-auth](https://www.better-auth.com
 | `src/lib/auth-client.ts` | Browser client (`signIn`, `signOut`, `getSession`) |
 | `src/pages/api/auth/[...all].ts` | Catch-all route; better-auth owns every `/api/auth/*` endpoint |
 | `src/middleware.ts` | Sets `Astro.locals.user` and `Astro.locals.session` |
-| `src/components/AuthNav.astro` | Header entry: "Sign in" or the user's name |
+| `src/components/AuthNav.astro` | Header entry, rendered as a server island: "Sign in" or the user's name |
+| `src/components/AuthNavLink.astro` | The nav anchor itself, shared by the island and its static fallback |
 | `src/pages/login.astro`, `src/pages/account.astro` | Sign-in and account screens |
 
 ## What signing in writes to the database
@@ -96,12 +97,25 @@ leaves the request signed out rather than letting the error surface. It runs on
 every non-prerendered request, so an uncaught failure would otherwise be a 500
 even on pages that never read `Astro.locals.user`.
 
-Blog pages stay prerendered for speed. That is why the header uses
-`AuthNav.astro`, which fetches the session from the browser instead — a static
-page cannot know who is visiting at build time. It renders the signed-out
-"Sign in" link by default and only upgrades it once a session comes back, so
-the link still works if the script never runs; `/login` redirects an already
-signed-in visitor on to `/account`.
+Blog pages stay prerendered for speed, so the header cannot know who is
+visiting at build time. `AuthNav.astro` solves that as a **server island**: it
+is marked `server:defer` in `Layout.astro`, so Astro leaves a placeholder in the
+static HTML and renders the component in the Worker on demand, at
+`/_server-islands/AuthNav`. That request goes through the middleware like any
+other, so the component simply reads `Astro.locals.user` — no client-side
+session fetch, and no auth code in the browser bundle.
+
+The `fallback` slot is baked into the prerendered HTML and is a working
+"Sign in" link on its own, so the nav still functions if the island request
+never lands; `/login` redirects an already signed-in visitor on to `/account`.
+
+The island response varies per visitor and Astro sets no cache headers on it,
+so the middleware adds `Cache-Control: private, no-store` for
+`/_server-islands/*`. The trade-off is one Worker request per page view, which
+is what buys a correct header on a fully cacheable page.
+
+`AuthNavLink.astro` holds the anchor markup so the island and its fallback
+cannot drift apart.
 
 ## Two constraints worth knowing
 
