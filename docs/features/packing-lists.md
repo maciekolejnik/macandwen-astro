@@ -5,8 +5,8 @@ one signed-in user and either private or public. Public lists are readable by
 everyone, including signed-out visitors, and any signed-in user can favourite
 one; the public listing is ranked by how many favourites a list has.
 
-This document covers the data and HTTP layers. The UI arrives in later changes
-and is described here as it lands.
+This document covers the data, HTTP and read-UI layers. Editing, favouriting
+and filtering arrive in later changes and are described here as they land.
 
 ## Tables
 
@@ -121,3 +121,32 @@ simple requests, so they are always preflighted.
 and a real signed cookie, covering the success path, anonymous callers,
 malformed and mistyped bodies, the content-type rule, and that another user's
 list is indistinguishable from a missing one.
+
+## Pages
+
+| Path | Shows |
+| --- | --- |
+| `/packing-lists` | The visitor's own lists, then public lists ranked by favourites |
+| `/packing-lists/[id]` | One list and its items |
+
+Both set `prerender = false`, since both read the session. They are rendered in
+the Worker, so the lists are queried in the same request that returns the HTML
+and never travel as JSON — which is why there is no `GET` route.
+
+A signed-out visitor sees the public section and a prompt to sign in. A
+signed-in one also gets a "Your lists" section, private lists included; their
+own public lists appear in both, because the public section is a ranking and
+leaving them out would misreport it.
+
+A list that does not exist and a private one belonging to somebody else render
+the same not-found page with a `404`, matching the API's refusal to confirm
+which ids are real.
+
+`src/lib/packing-lists-view.ts` assembles what the index shows, so the rules
+about who sees what are testable without rendering anything;
+`test/packing-lists-view.test.ts` covers them. The pages themselves stay thin
+enough that `astro check` and the build are adequate cover.
+
+The star on a card is decorative for now — it shows how many people favourited
+a list and whether the visitor is one of them. Making it clickable is the next
+change.

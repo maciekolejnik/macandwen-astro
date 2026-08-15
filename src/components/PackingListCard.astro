@@ -1,0 +1,54 @@
+---
+import type { PackingListSummary } from '../lib/db/packing-lists';
+
+interface Props {
+  list: PackingListSummary;
+  /** The owner section already says whose lists these are. */
+  showOwner?: boolean;
+}
+
+const { list, showOwner = true } = Astro.props;
+
+const items = `${list.itemCount} ${list.itemCount === 1 ? 'item' : 'items'}`;
+---
+
+<a
+  href={`/packing-lists/${list.id}`}
+  class="group flex flex-col rounded-xl border border-stone-200 bg-white p-5 shadow-sm transition-colors hover:border-emerald-400 hover:shadow-md"
+>
+  <div class="flex items-start justify-between gap-3">
+    <h3 class="font-semibold leading-snug text-stone-900 transition-colors group-hover:text-emerald-700">
+      {list.title}
+    </h3>
+    {list.isOwn && !list.isPublic && (
+      <span class="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600">
+        Private
+      </span>
+    )}
+  </div>
+
+  <p class="mt-2 flex items-center gap-3 text-xs text-stone-500">
+    <span>{items}</span>
+    {list.isPublic && (
+      <span class="flex items-center gap-1" title={`${list.favouriteCount} favourited`}>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill={list.isFavourite ? 'currentColor' : 'none'}
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class={list.isFavourite ? 'text-amber-500' : ''}
+          aria-hidden="true"
+        >
+          <path d="M12 17.3l-6.2 3.6 1.6-7L2 9.2l7.1-.6L12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7z" />
+        </svg>
+        {list.favouriteCount}
+      </span>
+    )}
+    {showOwner && !list.isOwn && <span>by {list.ownerName}</span>}
+  </p>
+</a>
