@@ -1,0 +1,23 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PackingListForm from '../../components/PackingListForm.astro';
+
+// Reads the session, so it cannot be prerendered.
+export const prerender = false;
+
+if (!Astro.locals.user) {
+  return Astro.redirect('/login?redirectTo=/packing-lists/new');
+}
+---
+
+<Layout title="New packing list" description="Make a packing list.">
+  <div class="mx-auto max-w-2xl px-4 py-12">
+    <a href="/packing-lists" class="text-sm text-stone-500 transition-colors hover:text-emerald-700">
+      &larr; All packing lists
+    </a>
+
+    <h1 class="mt-4 text-3xl font-bold text-stone-900">New packing list</h1>
+
+    <PackingListForm />
+  </div>
+</Layout>

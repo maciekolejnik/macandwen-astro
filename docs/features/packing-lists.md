@@ -5,7 +5,7 @@ one signed-in user and either private or public. Public lists are readable by
 everyone, including signed-out visitors, and any signed-in user can favourite
 one; the public listing is ranked by how many favourites a list has.
 
-This document covers the data, HTTP and read-UI layers. Editing, favouriting
+This document covers the data, HTTP and UI layers. Saving other people's lists
 and filtering arrive in later changes and are described here as they land.
 
 ## Tables
@@ -128,6 +128,8 @@ list is indistinguishable from a missing one.
 | --- | --- |
 | `/packing-lists` | The visitor's own lists, then public lists ranked by favourites |
 | `/packing-lists/[id]` | One list and its items |
+| `/packing-lists/new` | The editor, empty |
+| `/packing-lists/[id]/edit` | The editor, loaded — owner only |
 
 Both set `prerender = false`, since both read the session. They are rendered in
 the Worker, so the lists are queried in the same request that returns the HTML
@@ -202,3 +204,47 @@ If the copy is ever revisited, keep the two consistent within their own layer
 rather than half-renaming across both. The star icon is the remaining mismatch;
 a bookmark would suit "save" better, and that is worth settling when the button
 becomes clickable.
+
+## The editor
+
+`src/components/PackingListForm.astro` serves both creating and editing; the
+only differences are where it submits and whether a delete button appears.
+Handing it a list switches it to `PATCH`, which suits an update that replaces
+everything anyway.
+
+It is a plain form with a `<script>`, not a framework island — the project has
+no UI framework, and adding one to reorder list rows would ship a runtime to do
+what the DOM already does. The script is still bundled and typechecked.
+
+Details worth knowing:
+
+- Row buttons are handled by one listener on the container, so rows added later
+  need no wiring.
+- Enter inserts a row directly below the current one, the way a notes app does.
+  Remembering something halfway down a list therefore means typing it where it
+  belongs, rather than appending it and moving it up — which is most of what
+  reordering was for. From a blank row it moves on instead, so holding Enter
+  cannot stack up blanks.
+- Backspace in an empty row deletes it and puts the cursor at the end of the
+  row above. That is the way out of a row added by mistake, and what lets Enter
+  afford to be eager.
+- The arrow buttons remain for genuine reordering. They work by keyboard and on
+  touch, which drag-and-drop would not without considerably more code; dragging
+  is polish worth adding only if arrows prove annoying in practice.
+- Removing the last row immediately adds a blank one back, so the list can never
+  become a dead end with nothing to type into.
+- Both pages guard access server-side: `/new` redirects a signed-out visitor to
+  sign in, and `/[id]/edit` renders the same not-found page as the detail view
+  for a list that is missing *or* somebody else's. The API enforces this again
+  regardless.
+- `src/lib/packing-list-limits.ts` exists so the browser can share the length
+  limits without importing Drizzle and the D1 binding with them.
+
+### Astro's origin check
+
+Astro rejects a cross-site `DELETE` (and other non-`GET` requests) with a `403`
+before the route runs, using the `Origin` header. That is a third CSRF layer
+beneath `SameSite=Lax` and the required JSON content type, and it is worth
+knowing about when testing by hand: `curl` sends no `Origin`, so a bare
+`curl -X DELETE` answers `403` where a browser succeeds. Add
+`-H "Origin: http://localhost:4321"` to reproduce what the form does.
