@@ -95,7 +95,8 @@ const items = list?.items.map((item) => item.text) ?? [];
     </button>
 
     <p class="mt-2 text-xs text-stone-400">
-      Press Enter in an item to add the next one. Blank items are dropped.
+      Press Enter to add an item below, Backspace in an empty one to remove it.
+      Blank items are dropped.
     </p>
   </fieldset>
 
@@ -182,7 +183,8 @@ const items = list?.items.map((item) => item.text) ?? [];
       });
     };
 
-    const addRow = (focus = true) => {
+    /** Adds a blank row, after `after` when given and at the end otherwise. */
+    const addRow = (focus = true, after?: HTMLLIElement) => {
       const template = rows.querySelector<HTMLLIElement>('[data-item-row]');
       const row = template
         ? (template.cloneNode(true) as HTMLLIElement)
@@ -191,7 +193,12 @@ const items = list?.items.map((item) => item.text) ?? [];
       const input = row.querySelector<HTMLInputElement>('[data-item-input]')!;
       input.value = '';
 
-      rows.appendChild(row);
+      if (after?.nextElementSibling) {
+        rows.insertBefore(row, after.nextElementSibling);
+      } else {
+        rows.appendChild(row);
+      }
+
       paint();
       if (focus) input.focus();
 
@@ -249,22 +256,61 @@ const items = list?.items.map((item) => item.text) ?? [];
       paint();
     });
 
-    // Enter would otherwise submit the form, which is rarely what is meant
-    // halfway through writing a list.
+    /*
+     * Enter inserts a row directly below the current one, the way a notes app
+     * does, so remembering something halfway down a list means typing it where
+     * it belongs rather than appending and then moving it up. It would
+     * otherwise submit a half-written list.
+     *
+     * Backspace in an empty row deletes it, which is the matching way out of a
+     * row added by mistake — and the reason Enter can afford to be eager.
+     */
     rows.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter') return;
-
       const target = event.target as HTMLElement;
       if (!target.matches('[data-item-input]')) return;
 
-      event.preventDefault();
-      const row = target.closest<HTMLLIElement>('[data-item-row]');
-      const next = row?.nextElementSibling?.querySelector<HTMLInputElement>(
-        '[data-item-input]',
-      );
+      const input = target as HTMLInputElement;
+      const row = input.closest<HTMLLIElement>('[data-item-row]');
+      if (!row) return;
 
-      if (next) next.focus();
-      else addRow();
+      if (event.key === 'Enter') {
+        event.preventDefault();
+
+        // From a blank row, move on rather than stacking up more blank rows.
+        if (!input.value.trim()) {
+          const next = row.nextElementSibling?.querySelector<HTMLInputElement>(
+            '[data-item-input]',
+          );
+          next?.focus();
+          return;
+        }
+
+        addRow(true, row);
+        return;
+      }
+
+      if (
+        event.key === 'Backspace' &&
+        input.value === '' &&
+        itemRows().length > 1
+      ) {
+        event.preventDefault();
+
+        const previous = row.previousElementSibling?.querySelector<HTMLInputElement>(
+          '[data-item-input]',
+        );
+        const next = row.nextElementSibling?.querySelector<HTMLInputElement>(
+          '[data-item-input]',
+        );
+
+        row.remove();
+        paint();
+
+        const focused = previous ?? next;
+        focused?.focus();
+        // Land at the end of the text, where typing carries on naturally.
+        focused?.setSelectionRange(focused.value.length, focused.value.length);
+      }
     });
 
     form.addEventListener('submit', async (event) => {

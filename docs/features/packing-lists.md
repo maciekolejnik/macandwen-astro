@@ -220,8 +220,17 @@ Details worth knowing:
 
 - Row buttons are handled by one listener on the container, so rows added later
   need no wiring.
-- Enter inside an item moves to the next one, or adds a row at the end, rather
-  than submitting a half-written list.
+- Enter inserts a row directly below the current one, the way a notes app does.
+  Remembering something halfway down a list therefore means typing it where it
+  belongs, rather than appending it and moving it up — which is most of what
+  reordering was for. From a blank row it moves on instead, so holding Enter
+  cannot stack up blanks.
+- Backspace in an empty row deletes it and puts the cursor at the end of the
+  row above. That is the way out of a row added by mistake, and what lets Enter
+  afford to be eager.
+- The arrow buttons remain for genuine reordering. They work by keyboard and on
+  touch, which drag-and-drop would not without considerably more code; dragging
+  is polish worth adding only if arrows prove annoying in practice.
 - Removing the last row immediately adds a blank one back, so the list can never
   become a dead end with nothing to type into.
 - Both pages guard access server-side: `/new` redirects a signed-out visitor to
