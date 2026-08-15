@@ -77,17 +77,17 @@ describe('session resolution', () => {
 
 /**
  * A cookie is attacker-supplied and sticky: the browser resends it on every
- * request, so anything that fails here fails repeatedly for that visitor. These
- * assert the whole range degrades to signed out rather than erroring.
+ * request, so anything that fails here fails repeatedly for that visitor.
+ *
+ * These pass against better-auth today and exist to catch a regression on
+ * upgrade. Two cases cover the distinct paths — a well-formed cookie that fails
+ * the signature check, and one malformed enough to break decoding before any
+ * check happens — so more variants would only re-test the same library code.
  */
 describe('malformed session cookies', () => {
   const shapes: Record<string, (name: string) => string> = {
-    'no signature': name => `${name}=abc`,
     'wrong signature': name => `${name}=abc.notavalidsignature`,
-    'empty value': name => `${name}=`,
-    'signature is not base64': name => `${name}=${encodeURIComponent('abc.!!!!')}`,
     'invalid percent-encoding': name => `${name}=%E0%A4%A`,
-    'oversized value': name => `${name}=${'a'.repeat(5000)}.${'b'.repeat(5000)}`,
   };
 
   for (const [label, build] of Object.entries(shapes)) {

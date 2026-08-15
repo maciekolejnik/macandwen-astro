@@ -171,7 +171,7 @@ would pass even if the endpoint broke entirely.
 
 `test/middleware.test.ts` covers `src/middleware.ts`: that `locals` defaults to
 signed out, is populated for a valid session, is left alone for `/api/auth/*`,
-and survives a range of malformed session cookies. Those cookie cases pass
+and survives malformed session cookies. Those cookie cases pass
 against better-auth today and exist to catch a regression on upgrade, since a
 cookie is attacker-supplied and resent on every request.
 
