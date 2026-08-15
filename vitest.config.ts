@@ -24,6 +24,14 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      // `astro:middleware` is a virtual module supplied by Astro's Vite plugin,
+      // which does not run under the workers pool. See the shim for why this is
+      // faithful to Astro's own implementation.
+      'astro:middleware': path.join(import.meta.dirname, 'test/astro-middleware.ts'),
+    },
+  },
   test: {
     setupFiles: ['./test/setup.ts'],
   },
