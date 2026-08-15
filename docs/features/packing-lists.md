@@ -150,3 +150,36 @@ enough that `astro check` and the build are adequate cover.
 The star on a card is decorative for now — it shows how many people favourited
 a list and whether the visitor is one of them. Making it clickable is the next
 change.
+
+## Ticking items off
+
+The detail page renders each item as a checkbox, and the ticks are kept in
+`localStorage` for 24 hours — not in the database.
+
+That is a deliberate limit rather than a shortcut. A packing list is a
+*template*; ticking one is a single occasion of using it, which belongs to a
+trip. Until trips exist, ticks are per-device scratch state, so the store that
+fits is the one already in the browser: instant, available signed-out, and
+costing no request per checkbox. Workers KV was the alternative — the `SESSION`
+binding is already there — but it is eventually consistent with edge caching,
+which is the wrong model for reading back what you just clicked.
+
+`src/lib/packing-ticks.ts` holds the rules and takes a `Storage` rather than
+touching `localStorage` itself, which is what makes them testable:
+
+- Ticks expire 24 hours after the last change, and expired entries are deleted
+  on read rather than merely ignored.
+- Ticks are stored as item ids, so ticks for items since removed from the list
+  simply disappear.
+- Anything unreadable is treated as no ticks: this is scratch state, and a
+  corrupt entry should reset quietly rather than break the page.
+- A full or blocked storage never stops a box being ticked; the tick just does
+  not outlive the page.
+- Every page view prunes expired entries for *all* lists, so abandoned ones
+  cannot pile up in a visitor's browser.
+
+Without JavaScript the checkboxes still tick — they just do not persist, and
+the counter and "Clear ticks" button stay hidden.
+
+When trips arrive, durable ticks belong there, against a trip's copy of a list,
+and this module can be deleted without regret.

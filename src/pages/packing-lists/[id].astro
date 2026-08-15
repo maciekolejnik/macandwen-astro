@@ -49,14 +49,48 @@ const formatDate = (date: Date) =>
       </p>
 
       {list.items.length > 0 ? (
-        <ul class="mt-8 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white">
-          {list.items.map((item) => (
-            <li class="flex items-center gap-3 px-5 py-3 text-stone-800">
-              <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true"></span>
-              {item.text}
-            </li>
-          ))}
-        </ul>
+        <>
+          <p
+            id="packed-count"
+            class="mt-8 text-sm font-medium text-stone-500"
+            data-total={list.items.length}
+            hidden
+          >
+          </p>
+
+          <ul
+            id="packing-items"
+            data-list-id={list.id}
+            class="mt-3 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white"
+          >
+            {list.items.map((item) => (
+              <li>
+                <label class="flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors hover:bg-stone-50">
+                  <input
+                    type="checkbox"
+                    value={item.id}
+                    class="h-4 w-4 shrink-0 rounded border-stone-300 text-emerald-600 accent-emerald-600"
+                  />
+                  <span class="text-stone-800 transition-colors">{item.text}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+
+          <button
+            id="reset-ticks"
+            type="button"
+            hidden
+            class="mt-4 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-xs font-medium text-stone-600 transition-colors hover:bg-stone-100"
+          >
+            Clear ticks
+          </button>
+
+          <p class="mt-3 text-xs text-stone-400">
+            Ticks are kept on this device for a day. They are not saved to your
+            account.
+          </p>
+        </>
       ) : (
         <p class="mt-8 rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-500">
           This list has no items yet.
@@ -80,3 +114,68 @@ const formatDate = (date: Date) =>
     </div>
   </Layout>
 )}
+
+<script>
+  import {
+    loadTicks,
+    pruneExpiredTicks,
+    saveTicks,
+  } from '../../lib/packing-ticks';
+
+  const list = document.getElementById('packing-items');
+  const listId = list?.dataset.listId;
+  const counter = document.getElementById('packed-count');
+  const reset = document.getElementById('reset-ticks');
+
+  if (list && listId && counter instanceof HTMLElement && reset) {
+    const boxes = [
+      ...list.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+    ];
+
+    // Only ever removes entries, so it is safe to run on every page view.
+    pruneExpiredTicks(localStorage);
+
+    const ticked = loadTicks(
+      localStorage,
+      listId,
+      boxes.map((box) => box.value),
+    );
+
+    const paint = () => {
+      let packed = 0;
+
+      for (const box of boxes) {
+        const label = box.closest('label');
+        label?.classList.toggle('text-stone-400', box.checked);
+        label?.querySelector('span')?.classList.toggle('line-through', box.checked);
+        if (box.checked) packed += 1;
+      }
+
+      counter.textContent = `${packed} of ${boxes.length} packed`;
+      counter.hidden = false;
+      reset.hidden = packed === 0;
+    };
+
+    for (const box of boxes) {
+      box.checked = ticked.has(box.value);
+
+      box.addEventListener('change', () => {
+        if (box.checked) ticked.add(box.value);
+        else ticked.delete(box.value);
+
+        saveTicks(localStorage, listId, ticked);
+        paint();
+      });
+    }
+
+    reset.addEventListener('click', () => {
+      ticked.clear();
+      for (const box of boxes) box.checked = false;
+
+      saveTicks(localStorage, listId, ticked);
+      paint();
+    });
+
+    paint();
+  }
+</script>
