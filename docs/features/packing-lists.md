@@ -5,8 +5,8 @@ one signed-in user and either private or public. Public lists are readable by
 everyone, including signed-out visitors, and any signed-in user can favourite
 one; the public listing is ranked by how many favourites a list has.
 
-This document covers the data and HTTP layers. The UI arrives in later changes
-and is described here as it lands.
+This document covers the data, HTTP and read-UI layers. Editing, favouriting
+and filtering arrive in later changes and are described here as they land.
 
 ## Tables
 
@@ -121,3 +121,84 @@ simple requests, so they are always preflighted.
 and a real signed cookie, covering the success path, anonymous callers,
 malformed and mistyped bodies, the content-type rule, and that another user's
 list is indistinguishable from a missing one.
+
+## Pages
+
+| Path | Shows |
+| --- | --- |
+| `/packing-lists` | The visitor's own lists, then public lists ranked by favourites |
+| `/packing-lists/[id]` | One list and its items |
+
+Both set `prerender = false`, since both read the session. They are rendered in
+the Worker, so the lists are queried in the same request that returns the HTML
+and never travel as JSON — which is why there is no `GET` route.
+
+A signed-out visitor sees the public section and a prompt to sign in. A
+signed-in one also gets a "Your lists" section, private lists included; their
+own public lists appear in both, because the public section is a ranking and
+leaving them out would misreport it.
+
+A list that does not exist and a private one belonging to somebody else render
+the same not-found page with a `404`, matching the API's refusal to confirm
+which ids are real.
+
+`src/lib/packing-lists-view.ts` assembles what the index shows, so the rules
+about who sees what are testable without rendering anything;
+`test/packing-lists-view.test.ts` covers them. The pages themselves stay thin
+enough that `astro check` and the build are adequate cover.
+
+The star on a card is decorative for now — it shows how many people favourited
+a list and whether the visitor is one of them. Making it clickable is the next
+change.
+
+## Ticking items off
+
+The detail page renders each item as a checkbox, and the ticks are kept in
+`localStorage` — not in the database — for a week after the list was last
+opened.
+
+That is a deliberate limit rather than a shortcut. A packing list is a
+*template*; ticking one is a single occasion of using it, which belongs to a
+trip. Until trips exist, ticks are per-device scratch state, so the store that
+fits is the one already in the browser: instant, available signed-out, and
+costing no request per checkbox. Workers KV was the alternative — the `SESSION`
+binding is already there — but it is eventually consistent with edge caching,
+which is the wrong model for reading back what you just clicked.
+
+`src/lib/packing-ticks.ts` holds the rules and takes a `Storage` rather than
+touching `localStorage` itself, which is what makes them testable:
+
+- The expiry window slides: reading renews the entry, so a list still being
+  packed keeps its ticks however long the trip runs, while one opened once and
+  abandoned still clears itself. A fixed lifetime measured from when the ticks
+  were made is wrong at every value, which is why the window is not a setting —
+  noticing that somebody came back beats asking them to predict a trip length
+  before ticking a box.
+- Expired entries are deleted on read rather than merely ignored.
+- Ticks are stored as item ids, so ticks for items since removed from the list
+  simply disappear.
+- Anything unreadable is treated as no ticks: this is scratch state, and a
+  corrupt entry should reset quietly rather than break the page.
+- A full or blocked storage never stops a box being ticked; the tick just does
+  not outlive the page.
+- Every page view prunes expired entries for *all* lists, so abandoned ones
+  cannot pile up in a visitor's browser.
+
+Without JavaScript the checkboxes still tick — they just do not persist, and
+the counter and "Clear ticks" button stay hidden.
+
+When trips arrive, durable ticks belong there, against a trip's copy of a list,
+and this module can be deleted without regret.
+
+## A note on wording
+
+The visitor-facing verb is **save** — "Most saved first", "Saved by 3 people" —
+because it describes what the button does, where "favourite" describes a
+feeling. The database, the query module and the API keep `favourite` in their
+names: renaming a table and its columns to follow a wording choice would be
+churn with no benefit, and the two never appear together.
+
+If the copy is ever revisited, keep the two consistent within their own layer
+rather than half-renaming across both. The star icon is the remaining mismatch;
+a bookmark would suit "save" better, and that is worth settling when the button
+becomes clickable.
