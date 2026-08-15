@@ -18,11 +18,12 @@ describe('packing lists index view', () => {
     });
 
     const view = await loadIndex();
-    const publicIds = view.public.map((list) => list.id);
+    const browseIds = view.browse.map((list) => list.id);
 
     expect(view.own).toEqual([]);
-    expect(publicIds).toContain(pub);
-    expect(publicIds).not.toContain(priv);
+    expect(view.saved).toEqual([]);
+    expect(browseIds).toContain(pub);
+    expect(browseIds).not.toContain(priv);
   });
 
   it('shows a signed-in visitor their own lists, private included', async () => {
@@ -36,10 +37,10 @@ describe('packing lists index view', () => {
     const view = await loadIndex(user.id);
 
     expect(view.own.map((list) => list.id)).toContain(priv);
-    expect(view.public.map((list) => list.id)).not.toContain(priv);
+    expect(view.browse.map((list) => list.id)).not.toContain(priv);
   });
 
-  it('keeps the visitor\u2019s own public lists in the public ranking', async () => {
+  it('keeps the visitor\u2019s own public lists out of the browse section', async () => {
     const user = await signedInUser();
     const pub = await create(user.id, {
       title: 'Shared',
@@ -50,7 +51,25 @@ describe('packing lists index view', () => {
     const view = await loadIndex(user.id);
 
     expect(view.own.map((list) => list.id)).toContain(pub);
-    expect(view.public.map((list) => list.id)).toContain(pub);
+    expect(view.browse.map((list) => list.id)).not.toContain(pub);
+  });
+
+  it('moves a saved list into its own section and out of browse', async () => {
+    const owner = await signedInUser();
+    const fan = await signedInUser();
+    const list = await create(owner.id, {
+      title: 'Shared',
+      isPublic: true,
+      items: ['One'],
+    });
+    await setFavourite(list, fan.id, true);
+
+    const view = await loadIndex(fan.id);
+
+    expect(view.saved.map((entry) => entry.id)).toEqual([list]);
+    expect(view.browse.map((entry) => entry.id)).not.toContain(list);
+    expect(view.saved[0].favouriteCount).toBe(1);
+    expect(view.saved[0].isFavourite).toBe(true);
   });
 
   it('never leaks another user\u2019s private list', async () => {
@@ -65,12 +84,13 @@ describe('packing lists index view', () => {
     const view = await loadIndex(stranger.id);
 
     expect(view.own).toEqual([]);
-    expect(view.public.map((list) => list.id)).not.toContain(priv);
+    expect(view.browse.map((list) => list.id)).not.toContain(priv);
   });
 
-  it('orders the public section by favourites and carries the counts', async () => {
+  it('orders the browse section by saves and carries the counts', async () => {
     const owner = await signedInUser();
     const fan = await signedInUser();
+    const visitor = await signedInUser();
     const quiet = await create(owner.id, {
       title: 'Quiet',
       isPublic: true,
@@ -83,13 +103,12 @@ describe('packing lists index view', () => {
     });
     await setFavourite(loved, fan.id, true);
 
-    const view = await loadIndex(fan.id);
-    const shown = view.public.filter((list) => [quiet, loved].includes(list.id));
+    const view = await loadIndex(visitor.id);
+    const shown = view.browse.filter((list) => [quiet, loved].includes(list.id));
 
     expect(shown.map((list) => list.id)).toEqual([loved, quiet]);
     expect(shown[0].favouriteCount).toBe(1);
-    expect(shown[0].isFavourite).toBe(true);
+    expect(shown[0].isFavourite).toBe(false);
     expect(shown[0].itemCount).toBe(2);
-    expect(shown[1].isFavourite).toBe(false);
   });
 });

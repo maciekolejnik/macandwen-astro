@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { getDb } from './client';
 import {
   ITEM_MAX_LENGTH,
@@ -309,9 +309,12 @@ export async function remove(id: string, userId: string): Promise<boolean> {
 }
 
 /**
- * Only public lists can be favourited — a private list is invisible to anyone
- * but its owner, so a favourite on one could only come from a guessed id.
- * Returns `null` when the list cannot be favourited.
+ * Only public lists can be saved — a private list is invisible to anyone but
+ * its owner, so a save on one could only come from a guessed id — and not by
+ * their own owner, who has them under "Your lists" already and would otherwise
+ * be able to lift their own lists up the public ranking.
+ *
+ * Returns `null` when the list cannot be saved.
  */
 export async function setFavourite(
   listId: string,
@@ -321,7 +324,13 @@ export async function setFavourite(
   const [target] = await getDb()
     .select({ id: packingList.id })
     .from(packingList)
-    .where(and(eq(packingList.id, listId), eq(packingList.isPublic, true)))
+    .where(
+      and(
+        eq(packingList.id, listId),
+        eq(packingList.isPublic, true),
+        ne(packingList.userId, userId),
+      ),
+    )
     .limit(1);
 
   if (!target) return null;

@@ -231,6 +231,18 @@ describe('packing lists', () => {
     expect(await setFavourite(crypto.randomUUID(), fan.id, true)).toBeNull();
   });
 
+  it('refuses to let an owner save their own list', async () => {
+    const owner = await signedInUser();
+    const id = await create(owner.id, {
+      title: 'Mine',
+      isPublic: true,
+      items: [],
+    });
+
+    expect(await setFavourite(id, owner.id, true)).toBeNull();
+    expect(await listFavourites(owner.id)).toEqual([]);
+  });
+
   it('lists only the viewer their own favourites', async () => {
     const owner = await signedInUser();
     const fan = await signedInUser();
