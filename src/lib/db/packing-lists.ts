@@ -1,6 +1,11 @@
 import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import { getDb } from './client';
 import {
+  ITEM_MAX_LENGTH,
+  MAX_ITEMS,
+  TITLE_MAX_LENGTH,
+} from '../packing-list-limits';
+import {
   packingList,
   packingListFavourite,
   packingListItem,
@@ -31,10 +36,12 @@ export type PackingListInput = {
   items: string[];
 };
 
-/** Longer values are a mistake or an abuse, not a packing list. */
-export const TITLE_MAX_LENGTH = 120;
-export const ITEM_MAX_LENGTH = 200;
-export const MAX_ITEMS = 500;
+// Defined in their own module so the browser can import them without Drizzle.
+export {
+  ITEM_MAX_LENGTH,
+  MAX_ITEMS,
+  TITLE_MAX_LENGTH,
+} from '../packing-list-limits';
 
 const favouriteCount = sql<number>`(
   select count(*) from ${packingListFavourite}

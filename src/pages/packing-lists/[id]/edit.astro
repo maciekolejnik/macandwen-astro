@@ -1,0 +1,58 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import PackingListForm from '../../../components/PackingListForm.astro';
+import { getById } from '../../../lib/db/packing-lists';
+
+// Reads the session, so it cannot be prerendered.
+export const prerender = false;
+
+const user = Astro.locals.user;
+
+if (!user) {
+  return Astro.redirect(
+    `/login?redirectTo=/packing-lists/${Astro.params.id}/edit`,
+  );
+}
+
+const list = await getById(Astro.params.id!, user.id);
+
+// Only the owner may edit. A list belonging to somebody else is answered
+// exactly as a missing one, matching the API and the detail page.
+const editable = list?.isOwn ? list : null;
+
+if (!editable) {
+  Astro.response.status = 404;
+}
+---
+
+{editable ? (
+<Layout title={`Edit ${editable.title}`}>
+  <div class="mx-auto max-w-2xl px-4 py-12">
+    <a
+      href={`/packing-lists/${editable.id}`}
+      class="text-sm text-stone-500 transition-colors hover:text-emerald-700"
+    >
+      &larr; Back to list
+    </a>
+
+    <h1 class="mt-4 text-3xl font-bold text-stone-900">Edit packing list</h1>
+
+    <PackingListForm list={editable} />
+  </div>
+</Layout>
+) : (
+<Layout title="Packing list not found">
+  <div class="mx-auto max-w-2xl px-4 py-20 text-center">
+    <h1 class="text-3xl font-bold text-stone-900">Packing list not found</h1>
+    <p class="mt-3 text-stone-600">
+      It may have been deleted, or it may not be yours to edit.
+    </p>
+    <a
+      href="/packing-lists"
+      class="mt-8 inline-block rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      All packing lists
+    </a>
+  </div>
+</Layout>
+)}

@@ -1,0 +1,347 @@
+---
+import type { PackingListDetail } from '../lib/db/packing-lists';
+import { ITEM_MAX_LENGTH, TITLE_MAX_LENGTH } from '../lib/packing-list-limits';
+
+interface Props {
+  /** Absent when creating; the form posts instead of patching. */
+  list?: PackingListDetail;
+}
+
+const { list } = Astro.props;
+
+const isEdit = Boolean(list);
+// One blank row to write in, so an empty form is not a dead end.
+const items = list?.items.map((item) => item.text) ?? [];
+---
+
+<form
+  id="packing-list-form"
+  data-list-id={list?.id}
+  method="post"
+  action={isEdit ? `/api/packing-lists/${list!.id}` : '/api/packing-lists'}
+  class="mt-8"
+  novalidate
+>
+  <p
+    id="form-error"
+    role="alert"
+    hidden
+    class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
+  </p>
+
+  <label class="block">
+    <span class="text-sm font-medium text-stone-700">Title</span>
+    <input
+      id="list-title"
+      name="title"
+      type="text"
+      required
+      maxlength={TITLE_MAX_LENGTH}
+      value={list?.title ?? ''}
+      placeholder="Alpine day hike"
+      class="mt-2 w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+    />
+  </label>
+
+  <fieldset class="mt-8">
+    <legend class="text-sm font-medium text-stone-700">Items</legend>
+
+    <ul id="item-rows" class="mt-2 space-y-2">
+      {items.map((text) => (
+        <li class="flex items-center gap-2" data-item-row>
+          <input
+            type="text"
+            value={text}
+            maxlength={ITEM_MAX_LENGTH}
+            placeholder="Something to bring"
+            data-item-input
+            class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+          <button
+            type="button"
+            data-move-up
+            aria-label="Move item up"
+            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
+          </button>
+          <button
+            type="button"
+            data-move-down
+            aria-label="Move item down"
+            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </button>
+          <button
+            type="button"
+            data-remove-item
+            aria-label="Remove item"
+            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
+        </li>
+      ))}
+    </ul>
+
+    <button
+      type="button"
+      id="add-item"
+      class="mt-3 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      Add item
+    </button>
+
+    <p class="mt-2 text-xs text-stone-400">
+      Press Enter in an item to add the next one. Blank items are dropped.
+    </p>
+  </fieldset>
+
+  <label class="mt-8 flex items-start gap-3">
+    <input
+      id="list-public"
+      name="isPublic"
+      type="checkbox"
+      checked={list?.isPublic ?? false}
+      class="mt-1 h-4 w-4 shrink-0 rounded border-stone-300 accent-emerald-600"
+    />
+    <span class="text-sm text-stone-700">
+      <span class="font-medium">Share publicly</span>
+      <span class="mt-0.5 block text-stone-500">
+        Anyone can find and save a public list. Private lists are visible only
+        to you.
+      </span>
+    </span>
+  </label>
+
+  <div class="mt-10 flex items-center gap-3">
+    <button
+      type="submit"
+      id="save-list"
+      class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
+    >
+      {isEdit ? 'Save changes' : 'Create list'}
+    </button>
+    <a
+      href={isEdit ? `/packing-lists/${list!.id}` : '/packing-lists'}
+      class="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      Cancel
+    </a>
+
+    {isEdit && (
+      <button
+        type="button"
+        id="delete-list"
+        class="ml-auto rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60"
+      >
+        Delete list
+      </button>
+    )}
+  </div>
+</form>
+
+<script>
+  import { ITEM_MAX_LENGTH } from '../lib/packing-list-limits';
+
+  const form = document.getElementById('packing-list-form') as HTMLFormElement | null;
+  const rows = document.getElementById('item-rows');
+  const addItem = document.getElementById('add-item');
+  const title = document.getElementById('list-title') as HTMLInputElement | null;
+  const isPublic = document.getElementById('list-public') as HTMLInputElement | null;
+  const save = document.getElementById('save-list') as HTMLButtonElement | null;
+  const remove = document.getElementById('delete-list') as HTMLButtonElement | null;
+  const errorBox = document.getElementById('form-error');
+
+  if (form && rows && addItem && title && isPublic && save) {
+    const listId = form.dataset.listId;
+
+    const showError = (message: string) => {
+      if (!errorBox) return;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      errorBox.scrollIntoView({ block: 'nearest' });
+    };
+
+    const clearError = () => {
+      if (errorBox) errorBox.hidden = true;
+    };
+
+    const itemRows = () => [...rows.querySelectorAll<HTMLLIElement>('[data-item-row]')];
+
+    /** The move buttons at the ends have nowhere to go, so they are disabled. */
+    const paint = () => {
+      const all = itemRows();
+
+      all.forEach((row, index) => {
+        row.querySelector<HTMLButtonElement>('[data-move-up]')!.disabled = index === 0;
+        row.querySelector<HTMLButtonElement>('[data-move-down]')!.disabled =
+          index === all.length - 1;
+      });
+    };
+
+    const addRow = (focus = true) => {
+      const template = rows.querySelector<HTMLLIElement>('[data-item-row]');
+      const row = template
+        ? (template.cloneNode(true) as HTMLLIElement)
+        : buildRow();
+
+      const input = row.querySelector<HTMLInputElement>('[data-item-input]')!;
+      input.value = '';
+
+      rows.appendChild(row);
+      paint();
+      if (focus) input.focus();
+
+      return row;
+    };
+
+    /** Only needed when the list starts empty and there is nothing to clone. */
+    function buildRow() {
+      const row = document.createElement('li');
+      row.className = 'flex items-center gap-2';
+      row.setAttribute('data-item-row', '');
+      row.innerHTML = `
+        <input type="text" maxlength="${ITEM_MAX_LENGTH}" placeholder="Something to bring" data-item-input
+          class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+        <button type="button" data-move-up aria-label="Move item up"
+          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
+        </button>
+        <button type="button" data-move-down aria-label="Move item down"
+          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </button>
+        <button type="button" data-remove-item aria-label="Remove item"
+          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+        </button>`;
+
+      return row;
+    }
+
+    if (itemRows().length === 0) addRow(false);
+    paint();
+
+    addItem.addEventListener('click', () => addRow());
+
+    // One listener on the container, so rows added later need no wiring.
+    rows.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest('button');
+      const row = (event.target as HTMLElement).closest<HTMLLIElement>('[data-item-row]');
+      if (!button || !row) return;
+
+      if (button.hasAttribute('data-remove-item')) {
+        row.remove();
+        if (itemRows().length === 0) addRow(false);
+      } else if (button.hasAttribute('data-move-up')) {
+        const previous = row.previousElementSibling;
+        if (previous) rows.insertBefore(row, previous);
+      } else if (button.hasAttribute('data-move-down')) {
+        const next = row.nextElementSibling;
+        // Moving the next row up is the same swap, and needs no reference to
+        // whatever follows it.
+        if (next) rows.insertBefore(next, row);
+      }
+
+      paint();
+    });
+
+    // Enter would otherwise submit the form, which is rarely what is meant
+    // halfway through writing a list.
+    rows.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+
+      const target = event.target as HTMLElement;
+      if (!target.matches('[data-item-input]')) return;
+
+      event.preventDefault();
+      const row = target.closest<HTMLLIElement>('[data-item-row]');
+      const next = row?.nextElementSibling?.querySelector<HTMLInputElement>(
+        '[data-item-input]',
+      );
+
+      if (next) next.focus();
+      else addRow();
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearError();
+
+      const items = itemRows()
+        .map((row) => row.querySelector<HTMLInputElement>('[data-item-input]')!.value)
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0);
+
+      if (!title.value.trim()) {
+        showError('A packing list needs a title');
+        title.focus();
+        return;
+      }
+
+      save.disabled = true;
+
+      try {
+        const response = await fetch(form.action, {
+          method: listId ? 'PATCH' : 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            title: title.value,
+            isPublic: isPublic.checked,
+            items,
+          }),
+        });
+
+        const payload = (await response.json().catch(() => null)) as
+          | { id?: string; error?: string }
+          | null;
+
+        if (!response.ok) {
+          save.disabled = false;
+          showError(payload?.error ?? 'Something went wrong. Please try again.');
+          return;
+        }
+
+        window.location.href = `/packing-lists/${listId ?? payload?.id ?? ''}`;
+      } catch {
+        save.disabled = false;
+        showError('Could not reach the server. Please try again.');
+      }
+    });
+
+    remove?.addEventListener('click', async () => {
+      if (!listId) return;
+
+      const confirmed = window.confirm(
+        'Delete this packing list? This cannot be undone.',
+      );
+      if (!confirmed) return;
+
+      clearError();
+      remove.disabled = true;
+
+      try {
+        const response = await fetch(`/api/packing-lists/${listId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          remove.disabled = false;
+          const payload = (await response.json().catch(() => null)) as
+            | { error?: string }
+            | null;
+          showError(payload?.error ?? 'Could not delete this list.');
+          return;
+        }
+
+        window.location.href = '/packing-lists';
+      } catch {
+        remove.disabled = false;
+        showError('Could not reach the server. Please try again.');
+      }
+    });
+  }
+</script>
