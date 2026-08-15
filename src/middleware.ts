@@ -22,5 +22,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     console.error('Failed to resolve session', error);
   }
 
-  return next();
+  const response = await next();
+
+  // Astro sets no cache headers on server island responses, and this one varies
+  // per visitor, so make sure nothing between here and the browser keeps it.
+  if (context.url.pathname.startsWith('/_server-islands/')) {
+    response.headers.set('cache-control', 'private, no-store');
+  }
+
+  return response;
 });

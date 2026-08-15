@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import AuthNav from '../components/AuthNav.astro';
+import AuthNavLink from '../components/AuthNavLink.astro';
 
 interface Props {
   title: string;
@@ -52,7 +53,22 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
             ]}>Blog</a>
           </li>
           <li>
-            <AuthNav transparentHeader={transparentHeader} />
+            <!--
+              Deferred to the Worker so the session is read server-side while
+              the page around it stays prerendered and cacheable. The fallback
+              is baked into the static HTML and is a working "Sign in" link in
+              its own right, so the nav still functions if the island request
+              never lands; `/login` redirects an already signed-in visitor to
+              `/account`.
+            -->
+            <AuthNav transparentHeader={transparentHeader} server:defer>
+              <AuthNavLink
+                slot="fallback"
+                href="/login"
+                label="Sign in"
+                transparentHeader={transparentHeader}
+              />
+            </AuthNav>
           </li>
           <!-- Instagram -->
           <li>

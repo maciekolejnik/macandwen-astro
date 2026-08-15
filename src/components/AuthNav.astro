@@ -1,39 +1,19 @@
 ---
+import AuthNavLink from './AuthNavLink.astro';
+
 interface Props {
   transparentHeader?: boolean;
 }
 
 const { transparentHeader = false } = Astro.props;
 
-const linkClass = transparentHeader
-  ? 'text-white/90 hover:text-white'
-  : 'text-stone-600 hover:text-emerald-700';
+// Rendered as a server island, so this runs in the Worker on every page view
+// with the visitor's cookies attached, even when the surrounding page is
+// prerendered. `Astro.locals` is populated by `src/middleware.ts`.
+const user = Astro.locals.user;
+const firstName = user?.name?.split(' ')[0];
 ---
 
-<!--
-  Renders as "Sign in" and is upgraded to the account link on the client, so
-  that this works on prerendered pages too, which never hit the Cloudflare
-  runtime. The signed-out state is the default rather than a hidden one: if the
-  script never runs, the link still works, and /login redirects an already
-  signed-in visitor to /account.
--->
-<a href="/login" data-auth-nav class="transition-colors" class:list={[linkClass]}>
-  Sign in
-</a>
-
-<script>
-  import { getSession } from '../lib/auth-client';
-
-  const link = document.querySelector<HTMLAnchorElement>('[data-auth-nav]');
-  if (link) {
-    try {
-      const { data } = await getSession();
-      if (data?.user) {
-        link.href = '/account';
-        link.textContent = data.user.name?.split(' ')[0] || 'Account';
-      }
-    } catch {
-      // Leave the "Sign in" link as rendered.
-    }
-  }
-</script>
+{user
+  ? <AuthNavLink href="/account" label={firstName || 'Account'} transparentHeader={transparentHeader} />
+  : <AuthNavLink href="/login" label="Sign in" transparentHeader={transparentHeader} />}
