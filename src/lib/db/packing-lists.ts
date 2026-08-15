@@ -185,21 +185,34 @@ export async function getById(
   return { ...summary, items };
 }
 
+/**
+ * Distinguishable from a genuine failure so callers can answer 400 rather than
+ * 500, and so the message is safe to show a visitor — every one is written for
+ * them to read.
+ */
+export class PackingListValidationError extends Error {
+  readonly name = 'PackingListValidationError';
+}
+
+function invalid(message: string): never {
+  throw new PackingListValidationError(message);
+}
+
 export function normaliseInput(input: PackingListInput) {
   const title = input.title.trim();
   const items = input.items
     .map((item) => item.trim())
     .filter((item) => item.length > 0);
 
-  if (!title) throw new Error('A packing list needs a title');
+  if (!title) invalid('A packing list needs a title');
   if (title.length > TITLE_MAX_LENGTH) {
-    throw new Error(`Title must be ${TITLE_MAX_LENGTH} characters or fewer`);
+    invalid(`Title must be ${TITLE_MAX_LENGTH} characters or fewer`);
   }
   if (items.length > MAX_ITEMS) {
-    throw new Error(`A packing list can hold at most ${MAX_ITEMS} items`);
+    invalid(`A packing list can hold at most ${MAX_ITEMS} items`);
   }
   if (items.some((item) => item.length > ITEM_MAX_LENGTH)) {
-    throw new Error(`Items must be ${ITEM_MAX_LENGTH} characters or fewer`);
+    invalid(`Items must be ${ITEM_MAX_LENGTH} characters or fewer`);
   }
 
   return { title, isPublic: input.isPublic, items };
