@@ -11,7 +11,17 @@
  * `localStorage` directly, so the rules below can be tested.
  */
 
-export const TICK_TTL_MS = 24 * 60 * 60 * 1000;
+/**
+ * How long ticks survive *without being looked at*. The window slides: opening
+ * a list renews it, so a fortnight-long trip keeps its ticks for as long as it
+ * is being packed, while a list opened once and abandoned still clears itself.
+ *
+ * That is why this is not a setting. A fixed lifetime measured from when the
+ * ticks were made is wrong at every value — too short for a long trip, too long
+ * for a forgotten one — and asking someone to predict their trip length before
+ * ticking a box is a worse answer than simply noticing they came back.
+ */
+export const TICK_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const PREFIX = 'packing-ticks:';
 
@@ -41,8 +51,9 @@ function isStoredTicks(value: unknown): value is StoredTicks {
 /**
  * Ticks for `listId`, limited to `itemIds` and dropped once past the TTL.
  *
- * Anything unreadable is treated as absent: this is scratch state, so a corrupt
- * or hand-edited entry should quietly reset rather than break the page.
+ * Reading renews the entry, which is what makes the window slide. Anything
+ * unreadable is treated as absent: this is scratch state, so a corrupt or
+ * hand-edited entry should quietly reset rather than break the page.
  */
 export function loadTicks(
   storage: Storage,
@@ -66,8 +77,13 @@ export function loadTicks(
   }
 
   const known = new Set(itemIds);
+  const ticked = new Set(parsed.items.filter((id) => known.has(id)));
 
-  return new Set(parsed.items.filter((id) => known.has(id)));
+  // Renew on read, so a list in active use keeps its ticks. Writing back the
+  // filtered set also drops ticks for items the list no longer has.
+  saveTicks(storage, listId, ticked, now);
+
+  return ticked;
 }
 
 /** Saves ticks, removing the entry entirely once nothing is ticked. */

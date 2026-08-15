@@ -154,7 +154,8 @@ change.
 ## Ticking items off
 
 The detail page renders each item as a checkbox, and the ticks are kept in
-`localStorage` for 24 hours — not in the database.
+`localStorage` — not in the database — for a week after the list was last
+opened.
 
 That is a deliberate limit rather than a shortcut. A packing list is a
 *template*; ticking one is a single occasion of using it, which belongs to a
@@ -167,8 +168,13 @@ which is the wrong model for reading back what you just clicked.
 `src/lib/packing-ticks.ts` holds the rules and takes a `Storage` rather than
 touching `localStorage` itself, which is what makes them testable:
 
-- Ticks expire 24 hours after the last change, and expired entries are deleted
-  on read rather than merely ignored.
+- The expiry window slides: reading renews the entry, so a list still being
+  packed keeps its ticks however long the trip runs, while one opened once and
+  abandoned still clears itself. A fixed lifetime measured from when the ticks
+  were made is wrong at every value, which is why the window is not a setting —
+  noticing that somebody came back beats asking them to predict a trip length
+  before ticking a box.
+- Expired entries are deleted on read rather than merely ignored.
 - Ticks are stored as item ids, so ticks for items since removed from the list
   simply disappear.
 - Anything unreadable is treated as no ticks: this is scratch state, and a

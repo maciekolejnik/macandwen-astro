@@ -61,13 +61,25 @@ describe('packing ticks', () => {
     expect(loadTicks(storage, 'other-list', ITEMS)).toEqual(new Set());
   });
 
-  it('forgets ticks once the day is up', () => {
+  it('renews the entry on read, so a list in use keeps its ticks', () => {
     const now = Date.now();
     saveTicks(storage, LIST, ['item-a'], now);
 
-    expect(loadTicks(storage, LIST, ITEMS, now + TICK_TTL_MS - 1)).toEqual(
+    // Opened a day before expiry, then again a day after the original one.
+    const revisit = now + TICK_TTL_MS - 1;
+    expect(loadTicks(storage, LIST, ITEMS, revisit)).toEqual(
       new Set(['item-a']),
     );
+    expect(loadTicks(storage, LIST, ITEMS, now + TICK_TTL_MS + 1)).toEqual(
+      new Set(['item-a']),
+    );
+  });
+
+  it('still forgets a list nobody comes back to', () => {
+    const now = Date.now();
+    saveTicks(storage, LIST, ['item-a'], now);
+
+    // No visit in between, so nothing renews the window.
     expect(loadTicks(storage, LIST, ITEMS, now + TICK_TTL_MS + 1)).toEqual(
       new Set(),
     );
@@ -82,10 +94,12 @@ describe('packing ticks', () => {
     expect(storage.length).toBe(0);
   });
 
-  it('ignores ticks for items the list no longer has', () => {
+  it('ignores ticks for items the list no longer has, and forgets them', () => {
     saveTicks(storage, LIST, ['item-a', 'item-gone']);
 
     expect(loadTicks(storage, LIST, ITEMS)).toEqual(new Set(['item-a']));
+    // The renewing write drops the stale id rather than carrying it forever.
+    expect(storage.getItem(`packing-ticks:${LIST}`)).not.toContain('item-gone');
   });
 
   it('clears the entry when the last tick is removed', () => {
