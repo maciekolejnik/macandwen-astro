@@ -91,6 +91,11 @@ is built once and has no request to read cookies from:
 export const prerender = false;
 ```
 
+If the session lookup fails — a D1 error, say — the middleware logs it and
+leaves the request signed out rather than letting the error surface. It runs on
+every non-prerendered request, so an uncaught failure would otherwise be a 500
+even on pages that never read `Astro.locals.user`.
+
 Blog pages stay prerendered for speed. That is why the header uses
 `AuthNav.astro`, which fetches the session from the browser instead — a static
 page cannot know who is visiting at build time. It renders the signed-out
@@ -163,6 +168,29 @@ library rejects unsigned session cookies.
 The two role tests work as a pair: one asserts setting `role` is refused, the
 other asserts an ordinary field still updates. Without the second, the first
 would pass even if the endpoint broke entirely.
+
+`test/middleware.test.ts` covers `src/middleware.ts`: that `locals` defaults to
+signed out, is populated for a valid session, is left alone for `/api/auth/*`,
+and survives a range of malformed session cookies. Those cookie cases pass
+against better-auth today and exist to catch a regression on upgrade, since a
+cookie is attacker-supplied and resent on every request.
+
+Two things make the middleware awkward to test, both handled in
+`vitest.config.ts`:
+
+- It imports `astro:middleware`, a virtual module from Astro's Vite plugin,
+  which does not run under the workers pool. `test/astro-middleware.ts` shims
+  it; Astro's `defineMiddleware` is the identity function, so nothing changes.
+  Aliasing the real `astro/middleware` barrel instead pulls in `es-module-lexer`,
+  which needs Wasm that workerd disallows.
+- Astro builds the real `APIContext` from a routed request, so the test supplies
+  only the three fields the middleware reads and casts. Everything past that —
+  the cookie HMAC, the session lookup, D1 — is real.
+
+The failure test is the one place something is stubbed: `env.DB.prepare` is made
+to throw, because a transient D1 outage has no unmocked equivalent. Dropping the
+table also works but fakes a different fault and leaves the schema broken for
+later files, as `applyD1Migrations` will not recreate what it has already run.
 
 ## Adding another provider
 

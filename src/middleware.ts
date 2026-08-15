@@ -10,10 +10,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return next();
   }
 
-  const result = await getAuth().api.getSession({ headers: context.request.headers });
+  try {
+    const result = await getAuth().api.getSession({ headers: context.request.headers });
 
-  context.locals.user = result?.user ?? null;
-  context.locals.session = result?.session ?? null;
+    context.locals.user = result?.user ?? null;
+    context.locals.session = result?.session ?? null;
+  } catch (error) {
+    // Runs on every non-prerendered request, so an uncaught failure here would
+    // be a 500 even on pages that never read the session. Signed out is the
+    // safe answer when the session cannot be resolved.
+    console.error('Failed to resolve session', error);
+  }
 
   return next();
 });
