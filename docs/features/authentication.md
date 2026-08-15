@@ -157,8 +157,16 @@ https://<your-domain>/api/auth/callback/google
 ## Tests
 
 `test/auth.test.ts` runs against real D1 in workerd (`npm test`). It covers
-session handling, the Google authorize URL, that password sign-in stays off, and
-that a user cannot set their own `role`.
+session handling, the Google authorize URL, that password sign-in stays off,
+that a user cannot set their own `role`, and which post-sign-in redirect targets
+are accepted.
+
+`/login` passes its `redirectTo` query parameter to `signIn.social` as
+`callbackURL`, so an attacker-chosen value reaches the redirect that runs after
+Google returns. better-auth refuses off-site values, checking them against
+`trustedOrigins`, which defaults to `baseURL` — we never set it, and should not
+widen it without reading those tests. Setting `advanced.disableOriginCheck` has
+the same effect and is caught too.
 
 Google's actual token exchange is not tested — that would test Google and
 better-auth, and needs real credentials. So `test/helpers.ts` seeds a user and a

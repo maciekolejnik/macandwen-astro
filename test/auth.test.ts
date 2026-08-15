@@ -78,6 +78,52 @@ describe('google sign-in', () => {
   });
 });
 
+/**
+ * `/login` reads `redirectTo` from the query string and hands it to
+ * `signIn.social` as `callbackURL`, so an attacker-chosen value reaches the
+ * post-sign-in redirect — the shape of an open redirect, which is worth phishing
+ * because the link the victim clicks is genuinely ours.
+ *
+ * better-auth already refuses these, validating against `trustedOrigins`, which
+ * defaults to `baseURL` even though we never set it. So these guard two things
+ * that would silently reopen it: widening `trustedOrigins` or setting
+ * `disableOriginCheck` in `src/lib/auth.ts` (the absolute case catches either),
+ * and better-auth's own handling of a path that only looks relative.
+ */
+describe('post-sign-in redirect targets', () => {
+  async function signInWith(callbackURL: string) {
+    return request('/sign-in/social', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: BASE_URL },
+      body: JSON.stringify({ provider: 'google', callbackURL }),
+    });
+  }
+
+  async function expectRefused(callbackURL: string) {
+    const response = await signInWith(callbackURL);
+
+    expect(response.status).toBe(403);
+    const { code } = await response.json<{ code: string }>();
+    expect(code).toBe('INVALID_CALLBACK_URL');
+  }
+
+  it('refuses an off-site callbackURL', async () => {
+    await expectRefused('https://evil.com');
+  });
+
+  // Protocol-relative: a browser reads this as off-site, so a check that only
+  // asks whether it starts with `/` would let it through.
+  it('refuses a callbackURL that only looks relative', async () => {
+    await expectRefused('//evil.com');
+  });
+
+  it('allows a relative path on our own site', async () => {
+    const response = await signInWith('/account?from=test');
+
+    expect(response.status).toBe(200);
+  });
+});
+
 describe('password sign-in is disabled', () => {
   it('refuses email and password sign-up', async () => {
     const response = await request('/sign-up/email', {
