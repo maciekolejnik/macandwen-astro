@@ -25,8 +25,25 @@ Everything cascades on delete: removing a user removes their lists and their
 favourites, and removing a list removes its items and the favourites pointing
 at it.
 
-Indexes cover the three read paths: lists by owner, public lists by recency,
-and favourites by list (the ranking's counting key).
+There are three read paths, and each has an index behind it:
+
+| Path | Served by |
+| --- | --- |
+| A user's own lists | `packing_list_userId_idx` |
+| Public lists, ranked by favourites | `packing_list_public_createdAt_idx` for the `is_public` filter, `packing_list_favourite_listId_idx` for the counting |
+| A user's favourited lists | the `(user_id, list_id)` primary key, whose index is usable on the `user_id` prefix |
+
+Verified with `EXPLAIN QUERY PLAN`. On the favourites path SQLite drives from
+the public-list index and probes favourites, rather than starting from the
+user's own — usually few — favourite rows; with no `ANALYZE` statistics it has
+no reason to prefer either. It costs nothing at this size, but it is the first
+thing to look at if that listing ever slows down.
+
+The public ranking orders by favourite count, with recency only as a tiebreak,
+so no index can supply that order — it is counted and sorted per query. That is
+comfortably cheap at this size; if it ever stops being so, the answer is a
+denormalised `favourite_count` column on `packing_list`, indexed alongside
+`is_public`, updated as favourites change.
 
 ## Access rules
 
