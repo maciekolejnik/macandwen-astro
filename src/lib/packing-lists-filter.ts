@@ -42,6 +42,15 @@ export function wireFilters() {
     if (element) sections.set(key, element);
   }
 
+  // Taken once, before anything is moved. Reading the position out of the DOM
+  // on each pass would mean the first relevance sort overwrote the order the
+  // server rendered, leaving nothing to go back to when the box is cleared.
+  const rendered = new WeakMap<HTMLElement, number>();
+  for (const section of sections.values()) {
+    const cards = section.querySelectorAll<HTMLElement>('[data-list-card]');
+    cards.forEach((card, index) => rendered.set(card, index));
+  }
+
   const readFilters = (): Filters => {
     const ticked = boxes
       .filter((box) => box.checked)
@@ -79,7 +88,7 @@ export function wireFilters() {
         card.hidden = !shown || score === null;
         if (!card.hidden) visible += 1;
 
-        return { card, index, score };
+        return { card, index: rendered.get(card) ?? index, score };
       });
 
       // Reordering by relevance while searching, back to the server's order
