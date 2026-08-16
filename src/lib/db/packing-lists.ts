@@ -193,6 +193,24 @@ export async function getById(
 }
 
 /**
+ * An `in (...)` binds one variable per id, and SQLite caps a statement at 100
+ * on D1, so any query over a page's worth of lists has to be split. The id
+ * lists here come from whatever the site has grown to, not from a caller's
+ * choice, so the ceiling would otherwise be reached by simply having enough
+ * lists. Kept below the cap to leave room for the query's other bindings.
+ */
+const IDS_PER_QUERY = 90;
+
+function chunked<T>(values: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < values.length; i += size) {
+    chunks.push(values.slice(i, i + size));
+  }
+
+  return chunks;
+}
+
+/**
  * The item texts of several lists at once, keyed by list id.
  *
  * The index needs them to search inside lists, and one query for the whole page
@@ -205,16 +223,22 @@ export async function itemTextsFor(
   const texts = new Map<string, string[]>(ids.map((id) => [id, []]));
   if (ids.length === 0) return texts;
 
-  const rows = await getDb()
-    .select({
-      listId: packingListItem.listId,
-      text: packingListItem.text,
-    })
-    .from(packingListItem)
-    .where(inArray(packingListItem.listId, ids))
-    .orderBy(asc(packingListItem.listId), asc(packingListItem.position));
+  const batches = await Promise.all(
+    chunked(ids, IDS_PER_QUERY).map((chunk) =>
+      getDb()
+        .select({
+          listId: packingListItem.listId,
+          text: packingListItem.text,
+        })
+        .from(packingListItem)
+        .where(inArray(packingListItem.listId, chunk))
+        .orderBy(asc(packingListItem.listId), asc(packingListItem.position)),
+    ),
+  );
 
-  for (const row of rows) texts.get(row.listId)?.push(row.text);
+  for (const rows of batches) {
+    for (const row of rows) texts.get(row.listId)?.push(row.text);
+  }
 
   return texts;
 }
@@ -419,15 +443,19 @@ export async function favouritedAmong(
 ): Promise<Set<string>> {
   if (listIds.length === 0) return new Set();
 
-  const rows = await getDb()
-    .select({ listId: packingListFavourite.listId })
-    .from(packingListFavourite)
-    .where(
-      and(
-        eq(packingListFavourite.userId, viewerId),
-        inArray(packingListFavourite.listId, listIds),
-      ),
-    );
+  const batches = await Promise.all(
+    chunked(listIds, IDS_PER_QUERY).map((chunk) =>
+      getDb()
+        .select({ listId: packingListFavourite.listId })
+        .from(packingListFavourite)
+        .where(
+          and(
+            eq(packingListFavourite.userId, viewerId),
+            inArray(packingListFavourite.listId, chunk),
+          ),
+        ),
+    ),
+  );
 
-  return new Set(rows.map((row) => row.listId));
+  return new Set(batches.flat().map((row) => row.listId));
 }

@@ -4,6 +4,7 @@ import {
   create,
   favouritedAmong,
   getById,
+  itemTextsFor,
   listFavourites,
   listOwned,
   listPublic,
@@ -384,5 +385,44 @@ describe('packing lists', () => {
     await env.DB.prepare('DELETE FROM user WHERE id = ?').bind(owner.id).run();
     expect(await countRows('packing_list', 'user_id', owner.id)).toBe(0);
     expect(await countRows('packing_list_item', 'list_id', id)).toBe(0);
+  });
+
+  // The index hands these every list on the page, so the count is whatever the
+  // site has grown to rather than anything a caller chose.
+  it('reads item texts for more lists than a statement can bind', async () => {
+    const owner = await signedInUser();
+    const ids = [];
+    for (let i = 0; i < 150; i += 1) {
+      ids.push(
+        await create(owner.id, {
+          title: `List ${i}`,
+          isPublic: true,
+          items: [`Item ${i}`],
+        }),
+      );
+    }
+
+    const texts = await itemTextsFor(ids);
+
+    expect(texts.size).toBe(150);
+    expect(texts.get(ids[149])).toEqual(['Item 149']);
+  });
+
+  it('reads favourites among more lists than a statement can bind', async () => {
+    const owner = await signedInUser();
+    const fan = await signedInUser();
+    const ids = [];
+    for (let i = 0; i < 150; i += 1) {
+      ids.push(
+        await create(owner.id, {
+          title: `List ${i}`,
+          isPublic: true,
+          items: [],
+        }),
+      );
+    }
+    await setFavourite(ids[149], fan.id, true);
+
+    expect(await favouritedAmong(fan.id, ids)).toEqual(new Set([ids[149]]));
   });
 });
