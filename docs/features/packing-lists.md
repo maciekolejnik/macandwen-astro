@@ -264,6 +264,13 @@ Details worth knowing:
   regardless.
 - `src/lib/packing-list-limits.ts` exists so the browser can share the length
   limits without importing Drizzle and the D1 binding with them.
+- A row is `PackingListItemRow.astro`, rendered once per existing item and once
+  more inside a `<template>`. The client script clones the template for every
+  row it adds, so the markup exists in one place instead of being repeated as an
+  HTML string in the script — two copies in two languages that had to be kept in
+  step by hand. Astro inlines the script into the page now that it imports
+  nothing, which costs a request less and a shared cache entry more; at this
+  size neither matters.
 
 ### Astro's origin check
 
