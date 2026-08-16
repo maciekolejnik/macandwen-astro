@@ -276,9 +276,10 @@ knowing about when testing by hand: `curl` sends no `Origin`, so a bare
 
 ## Rate limiting
 
-**Not implemented yet.** Nothing currently caps how many lists a user can
-create; a script with a valid session could fill the database. This section is
-the agreed plan.
+The WAF rule below is **in place**. The per-user limit is **not implemented
+yet** — nothing currently caps how many lists one account can create, and a
+script with a valid session could fill the database. This section is the agreed
+plan for it.
 
 **The limit is 50 lists per user per rolling 24 hours.** Far past any honest
 use — a busy day of trip planning is a handful — and low enough that a runaway
@@ -321,10 +322,15 @@ Two things this deliberately does *not* do:
 
 ### The WAF rule
 
-A rate limiting rule at the zone catches floods before they reach the Worker,
-and costs no code. The free plan allows one rule, counted by IP, and its
-expression may only use **Path** and Verified Bot — method matching needs a
-Business plan.
+**Configured.** A rate limiting rule at the zone catches floods before they
+reach the Worker, and costs no code. It is not a substitute for the check above:
+its counters are per data centre and it knows nothing about users, so it stops a
+flood while the 50-a-day limit is what bounds the database.
+
+It lives in the Cloudflare dashboard rather than in this repository, which is
+why it is written down here — nothing in a checkout would otherwise reveal that
+it exists. The free plan allows one rule, counted by IP, and its expression may
+only use **Path** and Verified Bot; method matching needs a Business plan.
 
 That restriction turns out not to matter. `/api/packing-lists` has no `GET`
 routes at all: reads happen server-side while rendering a page, so every request
@@ -332,7 +338,7 @@ that path ever sees is a write. Matching the path alone is therefore exactly as
 precise as matching the method would be.
 
 Cloudflare dashboard → **macandwen.com** → **Security** → **WAF** →
-**Rate limiting rules** → **Create rule**:
+**Rate limiting rules**:
 
 | Field | Value |
 | --- | --- |
@@ -353,8 +359,7 @@ Notes worth having before touching it:
   it. Twenty writes in ten seconds is far above what the editor can produce,
   since it submits once per save.
 - **Counters are per data centre** and lag by a second or two, so the rule
-  stops a flood rather than enforcing an exact number. The 50-a-day check in
-  `create` is what actually bounds the database.
+  stops a flood rather than enforcing an exact number.
 - **Verify it with Security → Events**, filtered by the rule name, rather than
   by trying to trip it from a browser — a block is invisible to the page beyond
   a failed request.
