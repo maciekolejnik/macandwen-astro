@@ -322,31 +322,40 @@ Two things this deliberately does *not* do:
 ### The WAF rule
 
 A rate limiting rule at the zone catches floods before they reach the Worker,
-and costs no code. The free plan allows one rule.
+and costs no code. The free plan allows one rule, counted by IP, and its
+expression may only use **Path** and Verified Bot — method matching needs a
+Business plan.
+
+That restriction turns out not to matter. `/api/packing-lists` has no `GET`
+routes at all: reads happen server-side while rendering a page, so every request
+that path ever sees is a write. Matching the path alone is therefore exactly as
+precise as matching the method would be.
 
 Cloudflare dashboard → **macandwen.com** → **Security** → **WAF** →
 **Rate limiting rules** → **Create rule**:
 
 | Field | Value |
 | --- | --- |
-| Name | `api-writes` |
-| Expression | `(starts_with(http.request.uri.path, "/api/") and http.request.method ne "GET")` |
+| Name | `packing-list-writes` |
+| Expression | `starts_with(http.request.uri.path, "/api/packing-lists")` |
 | Characteristics | IP (the only choice on the free plan) |
 | Rate | 20 requests per 10 seconds |
 | Action | Block, for 10 seconds |
 
 Notes worth having before touching it:
 
-- **Keep it to writes.** Matching every request would count page loads and
-  assets, and the numbers stop meaning anything.
+- **Do not widen it to `/api/`.** That would catch `/api/auth/*`, where the
+  OAuth callback and session lookups are `GET`s that a path-only rule cannot
+  tell apart from abuse. Signing in is Google-only, so there is no password to
+  brute-force and little to protect there anyway.
 - **The IP is shared.** Mobile carriers and offices put many people behind one
   address, so the limit has to be generous enough that a household never trips
-  it. 20 writes in 10 seconds is far above what the editor can produce, since it
-  submits once per save.
-- **`/api/auth/*` is included** by that expression, which is intended: sign-in
-  attempts are worth limiting too. Check the number is not so tight that a
-  legitimate retry after a failed sign-in gets blocked.
-- **Verify it with Security → Events**, filtering by the rule name, rather than
+  it. Twenty writes in ten seconds is far above what the editor can produce,
+  since it submits once per save.
+- **Counters are per data centre** and lag by a second or two, so the rule
+  stops a flood rather than enforcing an exact number. The 50-a-day check in
+  `create` is what actually bounds the database.
+- **Verify it with Security → Events**, filtered by the rule name, rather than
   by trying to trip it from a browser — a block is invisible to the page beyond
   a failed request.
 - It applies at the edge only. Local development and `wrangler dev` see nothing
