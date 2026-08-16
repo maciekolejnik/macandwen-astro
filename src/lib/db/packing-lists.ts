@@ -193,6 +193,33 @@ export async function getById(
 }
 
 /**
+ * The item texts of several lists at once, keyed by list id.
+ *
+ * The index needs them to search inside lists, and one query for the whole page
+ * beats one per card. Access is the caller's problem: this is only ever handed
+ * ids that a listing already decided the viewer may see.
+ */
+export async function itemTextsFor(
+  ids: string[],
+): Promise<Map<string, string[]>> {
+  const texts = new Map<string, string[]>(ids.map((id) => [id, []]));
+  if (ids.length === 0) return texts;
+
+  const rows = await getDb()
+    .select({
+      listId: packingListItem.listId,
+      text: packingListItem.text,
+    })
+    .from(packingListItem)
+    .where(inArray(packingListItem.listId, ids))
+    .orderBy(asc(packingListItem.listId), asc(packingListItem.position));
+
+  for (const row of rows) texts.get(row.listId)?.push(row.text);
+
+  return texts;
+}
+
+/**
  * Distinguishable from a genuine failure so callers can answer 400 rather than
  * 500, and so the message is safe to show a visitor — every one is written for
  * them to read.
