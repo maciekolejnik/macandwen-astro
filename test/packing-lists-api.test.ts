@@ -3,6 +3,10 @@ import type { APIContext } from 'astro';
 import { onRequest } from '../src/middleware';
 import { POST } from '../src/pages/api/packing-lists/index';
 import { DELETE, PATCH } from '../src/pages/api/packing-lists/[id]';
+import {
+  POST as SAVE,
+  DELETE as UNSAVE,
+} from '../src/pages/api/packing-lists/[id]/save';
 import { create, getById } from '../src/lib/db/packing-lists';
 import { BASE_URL, signedInUser } from './helpers';
 
@@ -311,5 +315,108 @@ describe('DELETE /api/packing-lists/[id]', () => {
     expect(theirs.status).toBe(404);
     expect(theirs).toEqual(missing);
     expect(await getById(id)).not.toBeNull();
+  });
+});
+
+describe('POST/DELETE /api/packing-lists/[id]/save', () => {
+  const savePath = (id: string) => `${PATH}/${id}/save`;
+
+  it('saves and unsaves a public list, reporting the count', async () => {
+    const owner = await signedInUser();
+    const fan = await signedInUser();
+    const id = await create(owner.id, {
+      title: 'Sailing',
+      isPublic: true,
+      items: [],
+    });
+
+    const saved = await call(SAVE, {
+      path: savePath(id),
+      method: 'POST',
+      cookie: fan.headers.cookie,
+      params: { id },
+    });
+
+    expect(saved.status).toBe(200);
+    expect(saved.body).toEqual({ saved: true, count: 1 });
+
+    const unsaved = await call(UNSAVE, {
+      path: savePath(id),
+      method: 'DELETE',
+      cookie: fan.headers.cookie,
+      params: { id },
+    });
+
+    expect(unsaved.status).toBe(200);
+    expect(unsaved.body).toEqual({ saved: false, count: 0 });
+  });
+
+  it('is idempotent, so a double click cannot double count', async () => {
+    const owner = await signedInUser();
+    const fan = await signedInUser();
+    const id = await create(owner.id, {
+      title: 'Sailing',
+      isPublic: true,
+      items: [],
+    });
+
+    await call(SAVE, {
+      path: savePath(id),
+      method: 'POST',
+      cookie: fan.headers.cookie,
+      params: { id },
+    });
+    const again = await call(SAVE, {
+      path: savePath(id),
+      method: 'POST',
+      cookie: fan.headers.cookie,
+      params: { id },
+    });
+
+    expect(again.body).toEqual({ saved: true, count: 1 });
+  });
+
+  it('rejects an anonymous request', async () => {
+    const owner = await signedInUser();
+    const id = await create(owner.id, {
+      title: 'Sailing',
+      isPublic: true,
+      items: [],
+    });
+
+    const { status } = await call(SAVE, {
+      path: savePath(id),
+      method: 'POST',
+      params: { id },
+    });
+
+    expect(status).toBe(401);
+  });
+
+  it('answers 404 for a private, missing or own list alike', async () => {
+    const owner = await signedInUser();
+    const fan = await signedInUser();
+    const priv = await create(owner.id, {
+      title: 'Private',
+      isPublic: false,
+      items: [],
+    });
+    const mine = await create(fan.id, {
+      title: 'Mine',
+      isPublic: true,
+      items: [],
+    });
+
+    for (const id of [priv, mine, crypto.randomUUID()]) {
+      const { status, body } = await call(SAVE, {
+        path: savePath(id),
+        method: 'POST',
+        cookie: fan.headers.cookie,
+        params: { id },
+      });
+
+      expect(status).toBe(404);
+      expect(body.error).toBeTypeOf('string');
+    }
   });
 });

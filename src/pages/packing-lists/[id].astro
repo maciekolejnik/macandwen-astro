@@ -39,6 +39,36 @@ const formatDate = (date: Date) =>
               Private
             </span>
           )}
+          {user && list.isPublic && !list.isOwn && (
+            <button
+              type="button"
+              data-save-list={list.id}
+              aria-pressed={list.isFavourite ? 'true' : 'false'}
+              aria-label={list.isFavourite ? 'Unsave this list' : 'Save this list'}
+              class:list={[
+                'flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium transition-colors',
+                list.isFavourite
+                  ? 'text-emerald-700 hover:bg-emerald-50'
+                  : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600',
+              ]}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill={list.isFavourite ? 'currentColor' : 'none'}
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+              </svg>
+              <span data-save-label>{list.isFavourite ? 'Saved' : 'Save'}</span>
+            </button>
+          )}
           {list.isOwn && (
             <a
               href={`/packing-lists/${list.id}/edit`}
@@ -53,9 +83,9 @@ const formatDate = (date: Date) =>
       <p class="mt-2 text-sm text-stone-500">
         {list.isOwn ? 'Yours' : `By ${list.ownerName}`} &middot; updated {formatDate(list.updatedAt)}
         {list.isPublic && (
-          <>
-            {' '}&middot; saved by {list.favouriteCount} {list.favouriteCount === 1 ? 'person' : 'people'}
-          </>
+          <span data-save-count={list.id}>
+            {' '}&middot; <span data-save-count-value>{list.favouriteCount}</span> saves
+          </span>
         )}
       </p>
 
@@ -132,6 +162,9 @@ const formatDate = (date: Date) =>
     pruneExpiredTicks,
     saveTicks,
   } from '../../lib/packing-ticks';
+  import { wireSaveButtons } from '../../lib/save-button';
+
+  wireSaveButtons();
 
   const list = document.getElementById('packing-items');
   const listId = list?.dataset.listId;

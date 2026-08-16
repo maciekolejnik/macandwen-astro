@@ -58,8 +58,11 @@ route cannot accidentally choose a weaker one.
   again indistinguishable from outside.
 - Only public lists can be favourited. A private list is invisible to anyone but
   its owner, so a favourite on one could only follow from a guessed id.
-- The viewer's own public lists stay in the public listing. They are visible to
-  everyone else, so hiding them would misreport the ranking.
+- An owner cannot favourite their own list. A save means "someone else found
+  this useful", and self-saves would make the ranking say something it does not
+  mean. `setFavourite` enforces it in the query rather than the route, so no
+  caller can get round it, and it answers `null` — the same answer as a private
+  or missing list, so the refusal still reveals nothing.
 
 ## Reads
 
@@ -96,8 +99,10 @@ deletion.
 | `/api/packing-lists` | `POST` | `201 { id }` |
 | `/api/packing-lists/[id]` | `PATCH` | `200 { id }` |
 | `/api/packing-lists/[id]` | `DELETE` | `200 { id }` |
+| `/api/packing-lists/[id]/save` | `POST` | `200 { saved, count }` |
+| `/api/packing-lists/[id]/save` | `DELETE` | `200 { saved, count }` |
 
-All three are `prerender = false` and require a session; without one they answer
+All of them are `prerender = false` and require a session; without one they answer
 `401`. Failures are always `{ error }` with a message written for a visitor to
 read, so the UI can show it as-is.
 
@@ -105,6 +110,11 @@ read, so the UI can show it as-is.
 update. A list that does not exist and one owned by somebody else both answer
 `404` with an identical body, so the routes cannot be used to discover which
 ids are real.
+
+The save route is idempotent in both directions — saving twice counts once —
+so a double click or a retried request cannot inflate the ranking. It returns
+the fresh count so the page can correct the number it guessed. A list that is
+private, missing, or the caller's own all answer the same `404`.
 
 Layering: the routes shape-check the body's types, `normaliseInput` owns the
 content rules, and `PackingListValidationError` carries the difference between
@@ -126,7 +136,7 @@ list is indistinguishable from a missing one.
 
 | Path | Shows |
 | --- | --- |
-| `/packing-lists` | The visitor's own lists, then public lists ranked by favourites |
+| `/packing-lists` | The visitor's own lists and saves, then the remaining public lists |
 | `/packing-lists/[id]` | One list and its items |
 | `/packing-lists/new` | The editor, empty |
 | `/packing-lists/[id]/edit` | The editor, loaded — owner only |
@@ -135,10 +145,15 @@ Both set `prerender = false`, since both read the session. They are rendered in
 the Worker, so the lists are queried in the same request that returns the HTML
 and never travel as JSON — which is why there is no `GET` route.
 
-A signed-out visitor sees the public section and a prompt to sign in. A
-signed-in one also gets a "Your lists" section, private lists included; their
-own public lists appear in both, because the public section is a ranking and
-leaving them out would misreport it.
+A signed-out visitor sees one public section and a prompt to sign in.
+
+A signed-in one gets two more, boxed together because both are theirs: "Your
+lists", private ones included, and "Saved lists". Anything in either is left out
+of the browse section below. A page that shows the same list twice reads as
+padding, and the save count on each card already says how popular a list is
+without it needing a place in the ranking as well. Both sections stay on the
+page when empty, saying what would go there — an empty box that disappears makes
+the feature hard to find.
 
 A list that does not exist and a private one belonging to somebody else render
 the same not-found page with a `404`, matching the API's refusal to confirm
@@ -149,9 +164,18 @@ about who sees what are testable without rendering anything;
 `test/packing-lists-view.test.ts` covers them. The pages themselves stay thin
 enough that `astro check` and the build are adequate cover.
 
-The star on a card is decorative for now — it shows how many people favourited
-a list and whether the visitor is one of them. Making it clickable is the next
-change.
+Saving is a bookmark button on the card and on the detail page, shown only to a
+signed-in visitor looking at somebody else's public list — the two cases where
+it would do anything. A bookmark rather than a star, to match the verb.
+
+`src/lib/save-button.ts` wires every `[data-save-list]` button on the page and
+is shared by both. The click is optimistic: the icon fills and the count moves
+straight away, and both are put back if the request fails. Saving is small and
+reversible, so waiting on a round trip to see a bookmark fill would only make it
+feel broken. The server's count then replaces the guess, since other people may
+have saved the list since the page was rendered. The button also stops its
+click, because the card is one big stretched link and the button sits on top of
+it.
 
 ## Ticking items off
 
@@ -198,12 +222,13 @@ The visitor-facing verb is **save** — "Most saved first", "Saved by 3 people" 
 because it describes what the button does, where "favourite" describes a
 feeling. The database, the query module and the API keep `favourite` in their
 names: renaming a table and its columns to follow a wording choice would be
-churn with no benefit, and the two never appear together.
+churn with no benefit, and the two never appear together. The one place they do
+meet is the save route's JSON, which speaks the visitor's language (`saved`,
+`count`) because the page it feeds does.
 
 If the copy is ever revisited, keep the two consistent within their own layer
-rather than half-renaming across both. The star icon is the remaining mismatch;
-a bookmark would suit "save" better, and that is worth settling when the button
-becomes clickable.
+rather than half-renaming across both. The icon is a bookmark, not a star, for
+the same reason the verb is "save".
 
 ## The editor
 
