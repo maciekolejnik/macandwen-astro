@@ -1,0 +1,50 @@
+---
+import { ITEM_MAX_LENGTH } from '../lib/packing-list-limits';
+
+interface Props {
+  text?: string;
+}
+
+const { text = '' } = Astro.props;
+---
+
+<!--
+  One row of the editor. The form renders this for each existing item and puts
+  an empty one inside a <template>, which the client script clones for new
+  rows — so the markup exists once rather than twice, in two languages, needing
+  to be kept in step by hand.
+-->
+<li class="flex items-center gap-2" data-item-row>
+  <input
+    type="text"
+    value={text}
+    maxlength={ITEM_MAX_LENGTH}
+    placeholder="Something to bring"
+    data-item-input
+    class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
+  />
+  <button
+    type="button"
+    data-move-up
+    aria-label="Move item up"
+    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
+  </button>
+  <button
+    type="button"
+    data-move-down
+    aria-label="Move item down"
+    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+  </button>
+  <button
+    type="button"
+    data-remove-item
+    aria-label="Remove item"
+    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-red-950 dark:hover:text-red-400"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+  </button>
+</li>

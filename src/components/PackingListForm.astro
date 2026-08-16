@@ -1,6 +1,7 @@
 ---
 import type { PackingListDetail } from '../lib/db/packing-lists';
-import { ITEM_MAX_LENGTH, TITLE_MAX_LENGTH } from '../lib/packing-list-limits';
+import PackingListItemRow from './PackingListItemRow.astro';
+import { TITLE_MAX_LENGTH } from '../lib/packing-list-limits';
 
 interface Props {
   /** Absent when creating; the form posts instead of patching. */
@@ -48,43 +49,13 @@ const items = list?.items.map((item) => item.text) ?? [];
     <legend class="text-sm font-medium text-stone-700 dark:text-stone-200">Items</legend>
 
     <ul id="item-rows" class="mt-2 space-y-2">
-      {items.map((text) => (
-        <li class="flex items-center gap-2" data-item-row>
-          <input
-            type="text"
-            value={text}
-            maxlength={ITEM_MAX_LENGTH}
-            placeholder="Something to bring"
-            data-item-input
-            class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
-          />
-          <button
-            type="button"
-            data-move-up
-            aria-label="Move item up"
-            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
-          </button>
-          <button
-            type="button"
-            data-move-down
-            aria-label="Move item down"
-            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-          </button>
-          <button
-            type="button"
-            data-remove-item
-            aria-label="Remove item"
-            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-red-950 dark:hover:text-red-400"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
-          </button>
-        </li>
-      ))}
+      {items.map((text) => <PackingListItemRow text={text} />)}
     </ul>
+
+    <!-- Cloned by the client script for every row added after load. -->
+    <template id="item-row-template">
+      <PackingListItemRow />
+    </template>
 
     <button
       type="button"
@@ -145,8 +116,6 @@ const items = list?.items.map((item) => item.text) ?? [];
 </form>
 
 <script>
-  import { ITEM_MAX_LENGTH } from '../lib/packing-list-limits';
-
   const form = document.getElementById('packing-list-form') as HTMLFormElement | null;
   const rows = document.getElementById('item-rows');
   const addItem = document.getElementById('add-item');
@@ -155,8 +124,11 @@ const items = list?.items.map((item) => item.text) ?? [];
   const save = document.getElementById('save-list') as HTMLButtonElement | null;
   const remove = document.getElementById('delete-list') as HTMLButtonElement | null;
   const errorBox = document.getElementById('form-error');
+  const template = document.getElementById(
+    'item-row-template',
+  ) as HTMLTemplateElement | null;
 
-  if (form && rows && addItem && title && isPublic && save) {
+  if (form && rows && addItem && title && isPublic && save && template) {
     const listId = form.dataset.listId;
 
     const showError = (message: string) => {
@@ -185,13 +157,11 @@ const items = list?.items.map((item) => item.text) ?? [];
 
     /** Adds a blank row, after `after` when given and at the end otherwise. */
     const addRow = (focus = true, after?: HTMLLIElement) => {
-      const template = rows.querySelector<HTMLLIElement>('[data-item-row]');
-      const row = template
-        ? (template.cloneNode(true) as HTMLLIElement)
-        : buildRow();
-
-      const input = row.querySelector<HTMLInputElement>('[data-item-input]')!;
-      input.value = '';
+      // Cloned from the <template>, so a new row is the same markup the server
+      // renders for an existing one — there is no second copy to keep in step.
+      const row = template.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLLIElement;
 
       if (after?.nextElementSibling) {
         rows.insertBefore(row, after.nextElementSibling);
@@ -200,34 +170,10 @@ const items = list?.items.map((item) => item.text) ?? [];
       }
 
       paint();
-      if (focus) input.focus();
+      if (focus) row.querySelector<HTMLInputElement>('[data-item-input]')!.focus();
 
       return row;
     };
-
-    /** Only needed when the list starts empty and there is nothing to clone. */
-    function buildRow() {
-      const row = document.createElement('li');
-      row.className = 'flex items-center gap-2';
-      row.setAttribute('data-item-row', '');
-      row.innerHTML = `
-        <input type="text" maxlength="${ITEM_MAX_LENGTH}" placeholder="Something to bring" data-item-input
-          class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100" />
-        <button type="button" data-move-up aria-label="Move item up"
-          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
-        </button>
-        <button type="button" data-move-down aria-label="Move item down"
-          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-        </button>
-        <button type="button" data-remove-item aria-label="Remove item"
-          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-red-950 dark:hover:text-red-400">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
-        </button>`;
-
-      return row;
-    }
 
     if (itemRows().length === 0) addRow(false);
     paint();

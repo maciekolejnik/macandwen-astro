@@ -73,6 +73,11 @@ the listing, so rendering a page never needs a second round trip.
 
 `listPublic` orders by favourite count and falls back to recency for ties.
 
+`itemTextsFor` fetches the item texts of many lists in one query, keyed by list
+id. The index needs them to search inside lists; one query for the page beats
+one per card. It checks nothing itself — it is only ever handed ids a listing
+has already decided the viewer may see.
+
 ## Writes
 
 `update` replaces the whole list, items included: the editor submits the full
@@ -136,7 +141,7 @@ list is indistinguishable from a missing one.
 
 | Path | Shows |
 | --- | --- |
-| `/packing-lists` | The visitor's own lists and saves, then the remaining public lists |
+| `/packing-lists` | The visitor's own lists and saves, then the remaining public lists — filterable and searchable |
 | `/packing-lists/[id]` | One list and its items |
 | `/packing-lists/new` | The editor, empty |
 | `/packing-lists/[id]/edit` | The editor, loaded — owner only |
@@ -176,6 +181,82 @@ feel broken. The server's count then replaces the guess, since other people may
 have saved the list since the page was rendered. The button also stops its
 click, because the card is one big stretched link and the button sits on top of
 it.
+
+## Filtering and search
+
+The index carries a search box and, for a signed-in visitor, one chip per
+section: Mine, Saved, Public. Unticking every chip shows everything rather than
+nothing — a filter that blanks the page when the last box comes off is an
+obstacle, and nobody means "show me nothing".
+
+Both live in the URL, `?q=` and `?show=`, so a filtered view can be linked,
+bookmarked and reloaded. The default — all three sections — is left out of the
+query string, so the plain address stays plain.
+
+**The same code runs in both places.** `src/lib/packing-lists-search.ts` holds
+the matching rules and knows nothing of the DOM or the database;
+`applyFilters` in `src/lib/packing-lists-view.ts` applies them to a loaded view.
+The page runs them while rendering, so a shared link arrives already filtered
+with no flash of the unfiltered page, and the form — a real `GET` form — works
+with JavaScript off. `src/lib/packing-lists-filter.ts` then runs the very same
+functions in the browser on every keystroke. One set of rules, so the two can
+never disagree about what matches.
+
+Every list is rendered whether it matches or not, non-matching ones with the
+`hidden` attribute. That is what makes filtering instant: nothing to fetch, no
+round trip between a keystroke and the answer. It costs the item texts of every
+list on the page, which `itemTextsFor` collects in one query — a few kilobytes,
+against a request per keystroke.
+
+Matching is a small scorer rather than a dependency. Terms are ANDed, so more
+words narrow; each term may match the title or any item, and the title counts
+double, because a list *called* "Ski trip" answers "ski" better than one that
+merely mentions ski socks. Within a string the ladder runs: the whole string,
+its start, the start of a word inside it, anywhere inside it, and last a
+scattered subsequence — "slpbg" finds "sleeping bag". Subsequences need three
+characters, because on one or two nearly everything matches. Text is compared
+with accents stripped, so "rucken" finds "Rückenprotektor".
+
+Searching reorders each section by score, since that is what a search box is
+for; clearing the box restores the order the queries gave — the visitor's lists
+by recency, the public ones by saves. A section whose lists all fail the filter
+is hidden entirely, heading and all, but a section with no lists *yet* stays,
+because its prompt is how the visitor learns what would go there.
+
+### What costs a request
+
+Typing never reaches the server. The whole cost is paid once, when the page
+loads:
+
+| Moment | Requests | Queries |
+| --- | --- | --- |
+| Page load, signed in | 1 | 4 — `listOwned`, `listFavourites` and `listPublic` in parallel, then `itemTextsFor` |
+| Page load, signed out | 1 | 2 — `listPublic`, then `itemTextsFor` |
+| Every keystroke, every chip | 0 | 0 |
+| Opening a shared `?q=` link | 1 | as above |
+
+After the load, filtering is entirely local: `scoreList` runs over the cards
+already in the document, flips their `hidden` attribute, reorders them, and
+`history.replaceState` updates `?q=` and `?show=` in the address bar without
+navigating. No fetch, no query, no re-render.
+
+The trade is payload for latency — the item texts add a few kilobytes to the
+HTML, and buy filtering with no round trip between a keystroke and the answer.
+
+Only two things go back to the server, and both are an ordinary page render: a
+shared link, which the server filters so it arrives without a flash of the full
+list, and the `<noscript>` submit button.
+
+**This loads every list the visitor may see**, which is the honest limit of the
+design. It is comfortable at tens or low hundreds of lists. Past that the public
+section wants pagination and the search wants to move into the database — D1
+supports SQLite's FTS5, so item text could be indexed rather than shipped. Worth
+doing when the page starts feeling heavy, and not before: the current approach
+is a few hundred lines lighter and answers instantly.
+
+`test/packing-lists-search.test.ts` covers the scorer and the URL round trip,
+and `test/packing-lists-view.test.ts` covers `applyFilters`. The browser wiring
+is thin on purpose, since everything it decides is decided by those two.
 
 ## Ticking items off
 
@@ -264,6 +345,13 @@ Details worth knowing:
   regardless.
 - `src/lib/packing-list-limits.ts` exists so the browser can share the length
   limits without importing Drizzle and the D1 binding with them.
+- A row is `PackingListItemRow.astro`, rendered once per existing item and once
+  more inside a `<template>`. The client script clones the template for every
+  row it adds, so the markup exists in one place instead of being repeated as an
+  HTML string in the script — two copies in two languages that had to be kept in
+  step by hand. Astro inlines the script into the page now that it imports
+  nothing, which costs a request less and a shared cache entry more; at this
+  size neither matters.
 
 ### Astro's origin check
 
