@@ -223,6 +223,37 @@ by recency, the public ones by saves. A section whose lists all fail the filter
 is hidden entirely, heading and all, but a section with no lists *yet* stays,
 because its prompt is how the visitor learns what would go there.
 
+### What costs a request
+
+Typing never reaches the server. The whole cost is paid once, when the page
+loads:
+
+| Moment | Requests | Queries |
+| --- | --- | --- |
+| Page load, signed in | 1 | 4 — `listOwned`, `listFavourites` and `listPublic` in parallel, then `itemTextsFor` |
+| Page load, signed out | 1 | 2 — `listPublic`, then `itemTextsFor` |
+| Every keystroke, every chip | 0 | 0 |
+| Opening a shared `?q=` link | 1 | as above |
+
+After the load, filtering is entirely local: `scoreList` runs over the cards
+already in the document, flips their `hidden` attribute, reorders them, and
+`history.replaceState` updates `?q=` and `?show=` in the address bar without
+navigating. No fetch, no query, no re-render.
+
+The trade is payload for latency — the item texts add a few kilobytes to the
+HTML, and buy filtering with no round trip between a keystroke and the answer.
+
+Only two things go back to the server, and both are an ordinary page render: a
+shared link, which the server filters so it arrives without a flash of the full
+list, and the `<noscript>` submit button.
+
+**This loads every list the visitor may see**, which is the honest limit of the
+design. It is comfortable at tens or low hundreds of lists. Past that the public
+section wants pagination and the search wants to move into the database — D1
+supports SQLite's FTS5, so item text could be indexed rather than shipped. Worth
+doing when the page starts feeling heavy, and not before: the current approach
+is a few hundred lines lighter and answers instantly.
+
 `test/packing-lists-search.test.ts` covers the scorer and the URL round trip,
 and `test/packing-lists-view.test.ts` covers `applyFilters`. The browser wiring
 is thin on purpose, since everything it decides is decided by those two.
