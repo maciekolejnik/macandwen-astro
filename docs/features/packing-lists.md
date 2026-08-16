@@ -273,3 +273,81 @@ beneath `SameSite=Lax` and the required JSON content type, and it is worth
 knowing about when testing by hand: `curl` sends no `Origin`, so a bare
 `curl -X DELETE` answers `403` where a browser succeeds. Add
 `-H "Origin: http://localhost:4321"` to reproduce what the form does.
+
+## Rate limiting
+
+**Not implemented yet.** Nothing currently caps how many lists a user can
+create; a script with a valid session could fill the database. This section is
+the agreed plan.
+
+**The limit is 50 lists per user per rolling 24 hours.** Far past any honest
+use — a busy day of trip planning is a handful — and low enough that a runaway
+script achieves nothing interesting. It is a rate rather than a ceiling, so it
+bounds the damage per day rather than the total, which is the right trade for a
+site that requires a Google sign-in to write anything at all.
+
+It belongs in `create` in `src/lib/db/packing-lists.ts`, alongside the other
+limits, so no route can be added later that forgets it:
+
+```ts
+const [{ recent }] = await getDb()
+  .select({ recent: count() })
+  .from(packingList)
+  .where(and(
+    eq(packingList.userId, userId),
+    gt(packingList.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)),
+  ));
+
+if (recent >= MAX_LISTS_PER_DAY) {
+  throw new PackingListValidationError(
+    'That is a lot of packing lists for one day. Try again tomorrow.',
+  );
+}
+```
+
+`PackingListValidationError` already turns into a `400` carrying a message
+written for a visitor to read, so the routes need no change. The count is
+covered by the existing index on `user_id`.
+
+Two things this deliberately does *not* do:
+
+- **It does not rate-limit reads or edits.** Reads are cheap and cached by
+  Cloudflare in front of the Worker; edits cannot grow the database, since
+  `update` replaces a list rather than adding one.
+- **It does not use Cloudflare's rate limit binding.** That binding counts per
+  data centre rather than globally and only supports 10 or 60 second windows,
+  which suits burst protection rather than a daily quota. It is worth adding
+  later *as well* if abuse ever looks deliberate rather than accidental.
+
+### The WAF rule
+
+A rate limiting rule at the zone catches floods before they reach the Worker,
+and costs no code. The free plan allows one rule.
+
+Cloudflare dashboard → **macandwen.com** → **Security** → **WAF** →
+**Rate limiting rules** → **Create rule**:
+
+| Field | Value |
+| --- | --- |
+| Name | `api-writes` |
+| Expression | `(starts_with(http.request.uri.path, "/api/") and http.request.method ne "GET")` |
+| Characteristics | IP (the only choice on the free plan) |
+| Rate | 20 requests per 10 seconds |
+| Action | Block, for 10 seconds |
+
+Notes worth having before touching it:
+
+- **Keep it to writes.** Matching every request would count page loads and
+  assets, and the numbers stop meaning anything.
+- **The IP is shared.** Mobile carriers and offices put many people behind one
+  address, so the limit has to be generous enough that a household never trips
+  it. 20 writes in 10 seconds is far above what the editor can produce, since it
+  submits once per save.
+- **`/api/auth/*` is included** by that expression, which is intended: sign-in
+  attempts are worth limiting too. Check the number is not so tight that a
+  legitimate retry after a failed sign-in gets blocked.
+- **Verify it with Security → Events**, filtering by the rule name, rather than
+  by trying to trip it from a browser — a block is invisible to the page beyond
+  a failed request.
+- It applies at the edge only. Local development and `wrangler dev` see nothing
+  of it, so it cannot be tested before deploying.
