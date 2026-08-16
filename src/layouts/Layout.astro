@@ -31,17 +31,17 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
 
     <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-stone-800 flex flex-col">
+  <body class="min-h-screen bg-stone-50 text-stone-800 dark:bg-stone-950 dark:text-stone-200 flex flex-col">
     <header class:list={[
       'w-full z-20',
       transparentHeader
         ? 'absolute top-0 left-0'
-        : 'bg-white border-b border-stone-200',
+        : 'bg-white border-b border-stone-200 dark:bg-stone-900 dark:border-stone-800',
     ]}>
       <nav class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
         <a href="/" class:list={[
           'text-xl font-bold tracking-tight transition-colors',
-          transparentHeader ? 'text-white hover:text-white/80' : 'text-stone-900 hover:text-emerald-700',
+          transparentHeader ? 'text-white hover:text-white/80' : 'text-stone-900 hover:text-emerald-700 dark:text-stone-100 dark:hover:text-emerald-400',
         ]}>
           Mac &amp; Wen
         </a>
@@ -49,7 +49,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
           <li>
             <a href="/blog" class:list={[
               'transition-colors',
-              transparentHeader ? 'text-white/90 hover:text-white' : 'text-stone-600 hover:text-emerald-700',
+              transparentHeader ? 'text-white/90 hover:text-white' : 'text-stone-600 hover:text-emerald-700 dark:text-stone-300 dark:hover:text-emerald-400',
             ]}>Blog</a>
           </li>
           <li>
@@ -87,7 +87,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
                 'flex items-center justify-center w-8 h-8 rounded-full border transition-colors',
                 transparentHeader
                   ? 'border-white/70 text-white bg-white/10 hover:bg-white/20 hover:border-white'
-                  : 'border-stone-300 text-stone-500 bg-stone-100 hover:bg-stone-200 hover:border-stone-400 hover:text-stone-800',
+                  : 'border-stone-300 text-stone-500 bg-stone-100 hover:bg-stone-200 hover:border-stone-400 hover:text-stone-800 dark:border-stone-700 dark:text-stone-400 dark:bg-stone-800 dark:hover:bg-stone-700 dark:hover:border-stone-600 dark:hover:text-stone-100',
               ]}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -108,7 +108,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
                 'flex items-center justify-center w-8 h-8 rounded-full border transition-colors',
                 transparentHeader
                   ? 'border-white/70 text-white bg-white/10 hover:bg-white/20 hover:border-white'
-                  : 'border-stone-300 text-stone-500 bg-stone-100 hover:bg-stone-200 hover:border-stone-400 hover:text-stone-800',
+                  : 'border-stone-300 text-stone-500 bg-stone-100 hover:bg-stone-200 hover:border-stone-400 hover:text-stone-800 dark:border-stone-700 dark:text-stone-400 dark:bg-stone-800 dark:hover:bg-stone-700 dark:hover:border-stone-600 dark:hover:text-stone-100',
               ]}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -125,11 +125,11 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
       <slot />
     </main>
 
-    <footer class="bg-white border-t border-stone-200 mt-16">
-      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-stone-500">
+    <footer class="bg-white border-t border-stone-200 dark:bg-stone-900 dark:border-stone-800 mt-16">
+      <div class="max-w-4xl mx-auto px-4 py-8 text-center text-sm text-stone-500 dark:text-stone-400">
         <p>&copy; {new Date().getFullYear()} Mac &amp; Wen. All rights reserved.</p>
         <p class="mt-2">
-          <a href="/privacy" class="hover:text-emerald-700 transition-colors">Privacy</a>
+          <a href="/privacy" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Privacy</a>
         </p>
       </div>
     </footer>

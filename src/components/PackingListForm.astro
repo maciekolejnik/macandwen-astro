@@ -26,12 +26,12 @@ const items = list?.items.map((item) => item.text) ?? [];
     id="form-error"
     role="alert"
     hidden
-    class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
   >
   </p>
 
   <label class="block">
-    <span class="text-sm font-medium text-stone-700">Title</span>
+    <span class="text-sm font-medium text-stone-700 dark:text-stone-200">Title</span>
     <input
       id="list-title"
       name="title"
@@ -40,12 +40,12 @@ const items = list?.items.map((item) => item.text) ?? [];
       maxlength={TITLE_MAX_LENGTH}
       value={list?.title ?? ''}
       placeholder="Alpine day hike"
-      class="mt-2 w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+      class="mt-2 w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
     />
   </label>
 
   <fieldset class="mt-8">
-    <legend class="text-sm font-medium text-stone-700">Items</legend>
+    <legend class="text-sm font-medium text-stone-700 dark:text-stone-200">Items</legend>
 
     <ul id="item-rows" class="mt-2 space-y-2">
       {items.map((text) => (
@@ -56,13 +56,13 @@ const items = list?.items.map((item) => item.text) ?? [];
             maxlength={ITEM_MAX_LENGTH}
             placeholder="Something to bring"
             data-item-input
-            class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
           />
           <button
             type="button"
             data-move-up
             aria-label="Move item up"
-            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
           </button>
@@ -70,7 +70,7 @@ const items = list?.items.map((item) => item.text) ?? [];
             type="button"
             data-move-down
             aria-label="Move item down"
-            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
           </button>
@@ -78,7 +78,7 @@ const items = list?.items.map((item) => item.text) ?? [];
             type="button"
             data-remove-item
             aria-label="Remove item"
-            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600"
+            class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-red-950 dark:hover:text-red-400"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
           </button>
@@ -89,12 +89,12 @@ const items = list?.items.map((item) => item.text) ?? [];
     <button
       type="button"
       id="add-item"
-      class="mt-3 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+      class="mt-3 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
     >
       Add item
     </button>
 
-    <p class="mt-2 text-xs text-stone-400">
+    <p class="mt-2 text-xs text-stone-400 dark:text-stone-500">
       Press Enter to add an item below, Backspace in an empty one to remove it.
       Blank items are dropped.
     </p>
@@ -106,11 +106,11 @@ const items = list?.items.map((item) => item.text) ?? [];
       name="isPublic"
       type="checkbox"
       checked={list?.isPublic ?? false}
-      class="mt-1 h-4 w-4 shrink-0 rounded border-stone-300 accent-emerald-600"
+      class="mt-1 h-4 w-4 shrink-0 rounded border-stone-300 dark:border-stone-700 accent-emerald-600"
     />
-    <span class="text-sm text-stone-700">
+    <span class="text-sm text-stone-700 dark:text-stone-200">
       <span class="font-medium">Share publicly</span>
-      <span class="mt-0.5 block text-stone-500">
+      <span class="mt-0.5 block text-stone-500 dark:text-stone-400">
         Anyone can find and save a public list. Private lists are visible only
         to you.
       </span>
@@ -121,13 +121,13 @@ const items = list?.items.map((item) => item.text) ?? [];
     <button
       type="submit"
       id="save-list"
-      class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 disabled:opacity-60"
+      class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 disabled:opacity-60"
     >
       {isEdit ? 'Save changes' : 'Create list'}
     </button>
     <a
       href={isEdit ? `/packing-lists/${list!.id}` : '/packing-lists'}
-      class="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+      class="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200 dark:hover:bg-stone-800"
     >
       Cancel
     </a>
@@ -136,7 +136,7 @@ const items = list?.items.map((item) => item.text) ?? [];
       <button
         type="button"
         id="delete-list"
-        class="ml-auto rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 disabled:opacity-60"
+        class="ml-auto rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-800 dark:bg-stone-900 dark:text-red-400 dark:hover:bg-red-950 disabled:opacity-60"
       >
         Delete list
       </button>
@@ -212,17 +212,17 @@ const items = list?.items.map((item) => item.text) ?? [];
       row.setAttribute('data-item-row', '');
       row.innerHTML = `
         <input type="text" maxlength="${ITEM_MAX_LENGTH}" placeholder="Something to bring" data-item-input
-          class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" />
+          class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100" />
         <button type="button" data-move-up aria-label="Move item up"
-          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30">
+          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
         </button>
         <button type="button" data-move-down aria-label="Move item down"
-          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30">
+          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 disabled:opacity-30">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
         </button>
         <button type="button" data-remove-item aria-label="Remove item"
-          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600">
+          class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-400 dark:hover:bg-red-950 dark:hover:text-red-400">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
         </button>`;
 

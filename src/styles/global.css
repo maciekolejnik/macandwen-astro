@@ -1,2 +1,12 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/*
+  Dark mode follows the operating system via Tailwind's default `dark:`
+  variant (`prefers-color-scheme`), so it needs no JavaScript and works on
+  prerendered, cached pages. `color-scheme` gets the browser to match its own
+  UI — scrollbars, form controls and the like — to the active theme.
+*/
+html {
+  color-scheme: light dark;
+}
