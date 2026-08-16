@@ -193,6 +193,24 @@ export async function getById(
 }
 
 /**
+ * An `in (...)` binds one variable per id, and SQLite caps a statement at 100
+ * on D1, so any query over a page's worth of lists has to be split. The id
+ * lists here come from whatever the site has grown to, not from a caller's
+ * choice, so the ceiling would otherwise be reached by simply having enough
+ * lists. Kept below the cap to leave room for the query's other bindings.
+ */
+const IDS_PER_QUERY = 90;
+
+function chunked<T>(values: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < values.length; i += size) {
+    chunks.push(values.slice(i, i + size));
+  }
+
+  return chunks;
+}
+
+/**
  * The item texts of several lists at once, keyed by list id.
  *
  * The index needs them to search inside lists, and one query for the whole page
@@ -205,16 +223,22 @@ export async function itemTextsFor(
   const texts = new Map<string, string[]>(ids.map((id) => [id, []]));
   if (ids.length === 0) return texts;
 
-  const rows = await getDb()
-    .select({
-      listId: packingListItem.listId,
-      text: packingListItem.text,
-    })
-    .from(packingListItem)
-    .where(inArray(packingListItem.listId, ids))
-    .orderBy(asc(packingListItem.listId), asc(packingListItem.position));
+  const batches = await Promise.all(
+    chunked(ids, IDS_PER_QUERY).map((chunk) =>
+      getDb()
+        .select({
+          listId: packingListItem.listId,
+          text: packingListItem.text,
+        })
+        .from(packingListItem)
+        .where(inArray(packingListItem.listId, chunk))
+        .orderBy(asc(packingListItem.listId), asc(packingListItem.position)),
+    ),
+  );
 
-  for (const row of rows) texts.get(row.listId)?.push(row.text);
+  for (const rows of batches) {
+    for (const row of rows) texts.get(row.listId)?.push(row.text);
+  }
 
   return texts;
 }
@@ -261,6 +285,32 @@ function itemRows(listId: string, items: string[]) {
   }));
 }
 
+/**
+ * SQLite caps a statement at 100 bound variables on D1, and a multi-row insert
+ * binds one per column per row — four here — so a single `values()` call breaks
+ * somewhere past twenty items. The rows are split into statements that stay
+ * under the cap; a `batch` runs them atomically, so a long list is still all or
+ * nothing.
+ */
+const ITEMS_PER_INSERT = 25;
+
+function insertItemsStatements(
+  db: ReturnType<typeof getDb>,
+  listId: string,
+  items: string[],
+) {
+  const rows = itemRows(listId, items);
+  const statements = [];
+
+  for (let i = 0; i < rows.length; i += ITEMS_PER_INSERT) {
+    statements.push(
+      db.insert(packingListItem).values(rows.slice(i, i + ITEMS_PER_INSERT)),
+    );
+  }
+
+  return statements;
+}
+
 export async function create(
   userId: string,
   input: PackingListInput,
@@ -275,7 +325,7 @@ export async function create(
 
   // D1 has no interactive transactions; `batch` is the atomic equivalent.
   if (items.length) {
-    await db.batch([insertList, db.insert(packingListItem).values(itemRows(id, items))]);
+    await db.batch([insertList, ...insertItemsStatements(db, id, items)]);
   } else {
     await insertList;
   }
@@ -316,7 +366,7 @@ export async function update(
     await db.batch([
       updateList,
       clearItems,
-      db.insert(packingListItem).values(itemRows(id, items)),
+      ...insertItemsStatements(db, id, items),
     ]);
   } else {
     await db.batch([updateList, clearItems]);
@@ -393,15 +443,19 @@ export async function favouritedAmong(
 ): Promise<Set<string>> {
   if (listIds.length === 0) return new Set();
 
-  const rows = await getDb()
-    .select({ listId: packingListFavourite.listId })
-    .from(packingListFavourite)
-    .where(
-      and(
-        eq(packingListFavourite.userId, viewerId),
-        inArray(packingListFavourite.listId, listIds),
-      ),
-    );
+  const batches = await Promise.all(
+    chunked(listIds, IDS_PER_QUERY).map((chunk) =>
+      getDb()
+        .select({ listId: packingListFavourite.listId })
+        .from(packingListFavourite)
+        .where(
+          and(
+            eq(packingListFavourite.userId, viewerId),
+            inArray(packingListFavourite.listId, chunk),
+          ),
+        ),
+    ),
+  );
 
-  return new Set(rows.map((row) => row.listId));
+  return new Set(batches.flat().map((row) => row.listId));
 }

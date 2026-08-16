@@ -4,6 +4,7 @@ import {
   create,
   favouritedAmong,
   getById,
+  itemTextsFor,
   listFavourites,
   listOwned,
   listPublic,
@@ -62,6 +63,37 @@ describe('packing lists', () => {
       'Towel',
       'Sunscreen',
     ]);
+  });
+
+  it('stores a list far past D1 bound-variable limit of one statement', async () => {
+    const owner = await signedInUser();
+    const items = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
+
+    const id = await create(owner.id, {
+      title: 'Big trip',
+      isPublic: false,
+      items,
+    });
+
+    const list = await getById(id, owner.id);
+    expect(list?.items.map((item) => item.text)).toEqual(items);
+  });
+
+  it('replaces a list far past D1 bound-variable limit of one statement', async () => {
+    const owner = await signedInUser();
+    const id = await create(owner.id, {
+      title: 'Big trip',
+      isPublic: false,
+      items: ['Boots'],
+    });
+    const items = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
+
+    expect(
+      await update(id, owner.id, { title: 'Big trip', isPublic: false, items }),
+    ).toBe(true);
+
+    const list = await getById(id, owner.id);
+    expect(list?.items.map((item) => item.text)).toEqual(items);
   });
 
   it('rejects input that is empty or over the limits', async () => {
@@ -353,5 +385,44 @@ describe('packing lists', () => {
     await env.DB.prepare('DELETE FROM user WHERE id = ?').bind(owner.id).run();
     expect(await countRows('packing_list', 'user_id', owner.id)).toBe(0);
     expect(await countRows('packing_list_item', 'list_id', id)).toBe(0);
+  });
+
+  // The index hands these every list on the page, so the count is whatever the
+  // site has grown to rather than anything a caller chose.
+  it('reads item texts for more lists than a statement can bind', async () => {
+    const owner = await signedInUser();
+    const ids = [];
+    for (let i = 0; i < 150; i += 1) {
+      ids.push(
+        await create(owner.id, {
+          title: `List ${i}`,
+          isPublic: true,
+          items: [`Item ${i}`],
+        }),
+      );
+    }
+
+    const texts = await itemTextsFor(ids);
+
+    expect(texts.size).toBe(150);
+    expect(texts.get(ids[149])).toEqual(['Item 149']);
+  });
+
+  it('reads favourites among more lists than a statement can bind', async () => {
+    const owner = await signedInUser();
+    const fan = await signedInUser();
+    const ids = [];
+    for (let i = 0; i < 150; i += 1) {
+      ids.push(
+        await create(owner.id, {
+          title: `List ${i}`,
+          isPublic: true,
+          items: [],
+        }),
+      );
+    }
+    await setFavourite(ids[149], fan.id, true);
+
+    expect(await favouritedAmong(fan.id, ids)).toEqual(new Set([ids[149]]));
   });
 });
