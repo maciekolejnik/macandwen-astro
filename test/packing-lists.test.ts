@@ -64,6 +64,37 @@ describe('packing lists', () => {
     ]);
   });
 
+  it('stores a list far past D1 bound-variable limit of one statement', async () => {
+    const owner = await signedInUser();
+    const items = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
+
+    const id = await create(owner.id, {
+      title: 'Big trip',
+      isPublic: false,
+      items,
+    });
+
+    const list = await getById(id, owner.id);
+    expect(list?.items.map((item) => item.text)).toEqual(items);
+  });
+
+  it('replaces a list far past D1 bound-variable limit of one statement', async () => {
+    const owner = await signedInUser();
+    const id = await create(owner.id, {
+      title: 'Big trip',
+      isPublic: false,
+      items: ['Boots'],
+    });
+    const items = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
+
+    expect(
+      await update(id, owner.id, { title: 'Big trip', isPublic: false, items }),
+    ).toBe(true);
+
+    const list = await getById(id, owner.id);
+    expect(list?.items.map((item) => item.text)).toEqual(items);
+  });
+
   it('rejects input that is empty or over the limits', async () => {
     const owner = await signedInUser();
     const valid = { title: 'Trip', isPublic: false, items: [] };
