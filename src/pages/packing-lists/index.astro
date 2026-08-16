@@ -1,13 +1,31 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PackingListCard from '../../components/PackingListCard.astro';
-import { loadIndex } from '../../lib/packing-lists-view';
+import { applyFilters, loadIndex } from '../../lib/packing-lists-view';
+import { parseFilters, type Section } from '../../lib/packing-lists-search';
 
 // Reads the session, so it cannot be prerendered.
 export const prerender = false;
 
 const user = Astro.locals.user;
-const { own, saved, browse } = await loadIndex(user?.id);
+const filters = parseFilters(Astro.url.searchParams);
+const view = await loadIndex(user?.id);
+
+/*
+ * Filtering happens here as well as in the browser, from the same module. A
+ * link with a search in it therefore arrives already filtered, with no flash of
+ * the full page, and the form still works with JavaScript switched off.
+ */
+const filtered = applyFilters(view, filters);
+const sections = Object.fromEntries(
+  filtered.sections.map((section) => [section.key, section]),
+) as Record<Section, (typeof filtered.sections)[number]>;
+
+const chips: { key: Section; label: string }[] = [
+  { key: 'mine', label: 'Mine' },
+  { key: 'saved', label: 'Saved' },
+  { key: 'public', label: 'Public' },
+];
 ---
 
 <Layout
@@ -33,15 +51,77 @@ const { own, saved, browse } = await loadIndex(user?.id);
       )}
     </div>
 
+    <!-- A real GET form, so filtering still works without JavaScript. -->
+    <form
+      id="packing-filters"
+      method="get"
+      action="/packing-lists"
+      class="mt-8 flex flex-wrap items-center gap-3"
+    >
+      <label class="min-w-56 flex-1">
+        <span class="sr-only">Search packing lists</span>
+        <input
+          type="search"
+          name="q"
+          value={filters.query}
+          placeholder="Search titles and items"
+          autocomplete="off"
+          class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        />
+      </label>
+
+      {user && (
+        <div class="flex items-center gap-2">
+          {chips.map((chip) => (
+            <label
+              data-chip={chip.key}
+              class:list={[
+                'cursor-pointer rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus-within:ring-2 focus-within:ring-emerald-500 focus-within:ring-offset-2',
+                filters.show.includes(chip.key)
+                  ? 'border-emerald-600 bg-emerald-600 text-white'
+                  : 'border-stone-300 bg-white text-stone-600 hover:bg-stone-100',
+              ]}
+            >
+              <input
+                type="checkbox"
+                name="show"
+                value={chip.key}
+                checked={filters.show.includes(chip.key)}
+                class="sr-only"
+              />
+              {chip.label}
+            </label>
+          ))}
+        </div>
+      )}
+
+      <noscript>
+        <button
+          type="submit"
+          class="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+        >
+          Filter
+        </button>
+      </noscript>
+    </form>
+
     {user ? (
-      <div class="mt-12 space-y-8 rounded-2xl border border-stone-200 bg-stone-100/60 p-6">
-        <section>
+      <div
+        id="your-lists"
+        hidden={!sections.mine.visible && !sections.saved.visible}
+        class="mt-8 space-y-8 rounded-2xl border border-stone-200 bg-stone-100/60 p-6"
+      >
+        <section data-section="mine" hidden={!sections.mine.visible}>
           <h2 class="text-lg font-semibold text-stone-900">Your lists</h2>
 
-          {own.length > 0 ? (
+          {sections.mine.entries.length > 0 ? (
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
-              {own.map((list) => (
-                <PackingListCard list={list} showOwner={false} />
+              {sections.mine.entries.map((entry) => (
+                <PackingListCard
+                  list={entry.list}
+                  showOwner={false}
+                  hidden={!entry.visible}
+                />
               ))}
             </div>
           ) : (
@@ -54,13 +134,13 @@ const { own, saved, browse } = await loadIndex(user?.id);
           )}
         </section>
 
-        <section>
+        <section data-section="saved" hidden={!sections.saved.visible}>
           <h2 class="text-lg font-semibold text-stone-900">Saved lists</h2>
 
-          {saved.length > 0 ? (
+          {sections.saved.entries.length > 0 ? (
             <div class="mt-4 grid gap-4 sm:grid-cols-2">
-              {saved.map((list) => (
-                <PackingListCard list={list} canSave />
+              {sections.saved.entries.map((entry) => (
+                <PackingListCard list={entry.list} canSave hidden={!entry.visible} />
               ))}
             </div>
           ) : (
@@ -79,16 +159,24 @@ const { own, saved, browse } = await loadIndex(user?.id);
       </p>
     )}
 
-    <section class="mt-12">
+    <section
+      data-section="public"
+      class="mt-12"
+      hidden={!sections.public.visible}
+    >
       <h2 class="text-lg font-semibold text-stone-900">
         {user ? 'More public lists' : 'Public lists'}
       </h2>
       <p class="mt-1 text-sm text-stone-500">Most saved first.</p>
 
-      {browse.length > 0 ? (
+      {sections.public.entries.length > 0 ? (
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          {browse.map((list) => (
-            <PackingListCard list={list} canSave={Boolean(user)} />
+          {sections.public.entries.map((entry) => (
+            <PackingListCard
+              list={entry.list}
+              canSave={Boolean(user)}
+              hidden={!entry.visible}
+            />
           ))}
         </div>
       ) : (
@@ -99,11 +187,21 @@ const { own, saved, browse } = await loadIndex(user?.id);
         </p>
       )}
     </section>
+
+    <p
+      id="no-matches"
+      hidden={!filtered.empty}
+      class="mt-8 rounded-xl border border-dashed border-stone-300 bg-white p-6 text-sm text-stone-500"
+    >
+      Nothing matches that. Try fewer words, or a different filter.
+    </p>
   </div>
 </Layout>
 
 <script>
   import { wireSaveButtons } from '../../lib/save-button';
+  import { wireFilters } from '../../lib/packing-lists-filter';
 
   wireSaveButtons();
+  wireFilters();
 </script>
