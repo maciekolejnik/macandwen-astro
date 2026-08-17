@@ -5,6 +5,8 @@ import {
   integer,
   index,
   primaryKey,
+  real,
+  unique,
 } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
@@ -99,6 +101,8 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   packingLists: many(packingList),
   packingListFavourites: many(packingListFavourite),
+  entries: many(entry),
+  entryVisits: many(entryVisit),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
@@ -220,3 +224,249 @@ export const packingListFavouriteRelations = relations(
     }),
   }),
 );
+
+/*
+ * Places: locations and activities. See docs/features/places.md.
+ *
+ * One `entry` row per thing, with `location_detail` and `activity_detail` each
+ * optional — an entry may have both, which is how a wild swimming spot is one
+ * row rather than a lake and a swim that duplicate each other.
+ */
+
+export const entryType = sqliteTable(
+  "entry_type",
+  {
+    id: text("id").primaryKey(),
+    // Strictly 'location' | 'activity'. Scopes the vocabulary, and is a
+    // different thing from `entry.kind`, which may also be 'both'.
+    kind: text("kind").notNull(),
+    slug: text("slug").notNull(),
+    label: text("label").notNull(),
+    description: text("description"),
+    icon: text("icon"),
+    colour: text("colour"),
+    position: integer("position").default(0).notNull(),
+    isActive: integer("is_active", { mode: "boolean" })
+      .default(true)
+      .notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+  },
+  (table) => [
+    unique("entry_type_kind_slug_unq").on(table.kind, table.slug),
+    index("entry_type_kind_position_idx").on(table.kind, table.position),
+  ],
+);
+
+export const entry = sqliteTable(
+  "entry",
+  {
+    id: text("id").primaryKey(),
+    // Derived from which detail rows exist: 'location' | 'activity' | 'both'.
+    // A cache of the detail tables, rewritten on every save so a listing can
+    // filter and badge without joining both of them.
+    kind: text("kind").notNull(),
+    name: text("name").notNull(),
+    // Derived from the name once and then frozen: a shared link should keep
+    // working after a rename.
+    slug: text("slug").notNull().unique(),
+    description: text("description"),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    visibility: text("visibility").default("private").notNull(),
+    // The representative point: the pin, and what distance is measured from.
+    lat: real("lat"),
+    lng: real("lng"),
+    // How literally to read that point: 'point' | 'area' | 'region'.
+    extent: text("extent").default("point").notNull(),
+    bboxMinLat: real("bbox_min_lat"),
+    bboxMinLng: real("bbox_min_lng"),
+    bboxMaxLat: real("bbox_max_lat"),
+    bboxMaxLng: real("bbox_max_lng"),
+    // Bitmask: spring 1, summer 2, autumn 4, winter 8. 0 means any time, and
+    // needs no special case in a filter: `seasons = 0 or seasons & ? != 0`.
+    seasons: integer("seasons").default(0).notNull(),
+    // Free-form extras, rendered as a key/value list and never queried in SQL.
+    // Anything in here that wants filtering has earned a column.
+    attributes: text("attributes"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("entry_userId_idx").on(table.userId),
+    // Serves the public listing, which always filters on visibility and orders
+    // by recency.
+    index("entry_visibility_createdAt_idx").on(table.visibility, table.createdAt),
+    // Prefilters the map's bounding box.
+    index("entry_lat_lng_idx").on(table.lat, table.lng),
+  ],
+);
+
+export const locationDetail = sqliteTable("location_detail", {
+  entryId: text("entry_id")
+    .primaryKey()
+    .references(() => entry.id, { onDelete: "cascade" }),
+  typeId: text("type_id")
+    .notNull()
+    .references(() => entryType.id),
+  access: text("access"),
+});
+
+export const activityDetail = sqliteTable("activity_detail", {
+  entryId: text("entry_id")
+    .primaryKey()
+    .references(() => entry.id, { onDelete: "cascade" }),
+  typeId: text("type_id")
+    .notNull()
+    .references(() => entryType.id),
+  // 'easy' | 'moderate' | 'difficult' | null for unknown.
+  difficulty: text("difficulty"),
+  // 'short' | 'half_day' | 'full_day' | 'multi_day' | null. Stored rather than
+  // derived on read, so a filter can use an index.
+  durationBucket: text("duration_bucket"),
+  durationMinutes: integer("duration_minutes"),
+  // Tri-state: 1 yes, 0 no, null not marked. "Unknown" and "not for small
+  // children" are different answers.
+  familyFriendly: integer("family_friendly", { mode: "boolean" }),
+  distanceM: integer("distance_m"),
+  ascentM: integer("ascent_m"),
+});
+
+export const entryLink = sqliteTable(
+  "entry_link",
+  {
+    id: text("id").primaryKey(),
+    fromEntryId: text("from_entry_id")
+      .notNull()
+      .references(() => entry.id, { onDelete: "cascade" }),
+    toEntryId: text("to_entry_id")
+      .notNull()
+      .references(() => entry.id, { onDelete: "cascade" }),
+    // A fixed vocabulary, not free text: two people writing "parking" and
+    // "park at" would stop the graph answering questions.
+    relation: text("relation").notNull(),
+    note: text("note"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+  },
+  (table) => [
+    unique("entry_link_unq").on(
+      table.fromEntryId,
+      table.toEntryId,
+      table.relation,
+    ),
+    index("entry_link_from_idx").on(table.fromEntryId),
+    // Links are read from both ends: symmetric relations union the two
+    // directions, and an asymmetric one still shows on the far entry.
+    index("entry_link_to_idx").on(table.toEntryId),
+  ],
+);
+
+export const entryPhoto = sqliteTable(
+  "entry_photo",
+  {
+    id: text("id").primaryKey(),
+    entryId: text("entry_id")
+      .notNull()
+      .references(() => entry.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    caption: text("caption"),
+    position: integer("position").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+  },
+  (table) => [
+    index("entry_photo_entryId_position_idx").on(table.entryId, table.position),
+  ],
+);
+
+export const entryVisit = sqliteTable(
+  "entry_visit",
+  {
+    id: text("id").primaryKey(),
+    entryId: text("entry_id")
+      .notNull()
+      .references(() => entry.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    // An ISO date, not a timestamp: a visit is a day, and one recalled from
+    // memory should not pretend to a time zone.
+    visitedOn: text("visited_on").notNull(),
+    note: text("note"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+  },
+  (table) => [
+    unique("entry_visit_unq").on(table.entryId, table.userId, table.visitedOn),
+    index("entry_visit_entryId_idx").on(table.entryId),
+    index("entry_visit_userId_idx").on(table.userId),
+  ],
+);
+
+export const entryRelations = relations(entry, ({ one, many }) => ({
+  owner: one(user, {
+    fields: [entry.userId],
+    references: [user.id],
+  }),
+  location: one(locationDetail, {
+    fields: [entry.id],
+    references: [locationDetail.entryId],
+  }),
+  activity: one(activityDetail, {
+    fields: [entry.id],
+    references: [activityDetail.entryId],
+  }),
+  photos: many(entryPhoto),
+  visits: many(entryVisit),
+}));
+
+export const locationDetailRelations = relations(locationDetail, ({ one }) => ({
+  entry: one(entry, {
+    fields: [locationDetail.entryId],
+    references: [entry.id],
+  }),
+  type: one(entryType, {
+    fields: [locationDetail.typeId],
+    references: [entryType.id],
+  }),
+}));
+
+export const activityDetailRelations = relations(activityDetail, ({ one }) => ({
+  entry: one(entry, {
+    fields: [activityDetail.entryId],
+    references: [entry.id],
+  }),
+  type: one(entryType, {
+    fields: [activityDetail.typeId],
+    references: [entryType.id],
+  }),
+}));
+
+export const entryPhotoRelations = relations(entryPhoto, ({ one }) => ({
+  entry: one(entry, {
+    fields: [entryPhoto.entryId],
+    references: [entry.id],
+  }),
+}));
+
+export const entryVisitRelations = relations(entryVisit, ({ one }) => ({
+  entry: one(entry, {
+    fields: [entryVisit.entryId],
+    references: [entry.id],
+  }),
+  user: one(user, {
+    fields: [entryVisit.userId],
+    references: [user.id],
+  }),
+}));

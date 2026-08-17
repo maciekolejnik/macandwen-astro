@@ -8,7 +8,9 @@ This document is the design and the plan. It is written before the code, so
 everything below is a decision with its reasoning attached rather than a
 description of what exists.
 
-Status: **Planned.** Nothing here is implemented yet.
+Status: **In progress.** Step 1 of the plan — the schema and the query layer —
+has landed; the pages and the write API have not. Sections describing what does
+not exist yet stay in the future tense.
 
 **Scope for the first release: storing, editing and displaying entries, on a
 list and on a map.** Filtering, moderation and the type-management UI are
@@ -190,6 +192,10 @@ The seed ships in the migration:
 | Location | lake, viewpoint, car park, refuge, beach, wild camping spot, campsite, town, region, cave, mountain peak, restaurant |
 | Activity | hike, via ferrata, climbing, kayaking, cycling, wild swimming, stand-up paddleboarding |
 
+Ids are readable and deterministic — `loc_lake`, `act_hike` — so a seeded type
+can be named in a test or a fixture without a lookup, and so re-running the seed
+is an obvious no-op.
+
 **There is no admin UI for types in the first release.** Adding one is a single
 `wrangler d1 execute` insert (see [database.md](./database.md)), which is
 acceptable while the only person adding types also has the database open. The
@@ -266,7 +272,8 @@ zone.
 They live in `src/lib/db/places.ts` and nowhere else, exactly as the packing
 list rules live in one module, so a new page cannot pick a weaker one.
 
-- A private entry is visible to its owner. Reads return `null` for missing and
+- A private entry is visible to its owner, admins included in the refusal: an
+  admin who did not write it cannot read it. Reads return `null` for missing and
   for forbidden alike, so ids cannot be probed.
 - **Only the owner may edit or delete an entry — admins included.** An admin is
   not an editor of other people's writing; the admin power is over *visibility*,
@@ -277,12 +284,20 @@ list rules live in one module, so a new page cannot pick a weaker one.
 - An admin chooses private or public when creating or editing their own entry.
 - Signed-out visitors see `visibility = 'public'` only. A single predicate in
   the query layer, never in a template.
+- A visit belongs to the person who made it, so anyone who can see an entry may
+  record one on it — including on somebody else's public entry — and may remove
+  only their own.
 - A link may only be created between two entries the actor can see, and a link
   is visible only if **both** endpoints are visible to the viewer — otherwise a
   public entry would leak the names of the private ones linked to it.
 
 That last rule is the one most likely to be got wrong, so it is enforced in the
 link query itself and tested directly.
+
+`setVisibility` is the one admin-only write, and it is still scoped to the
+admin's own entries. `update` leaves a normal user's visibility exactly as it
+was rather than forcing it back to private, since a silent revert would be as
+surprising as an escalation.
 
 **Every ownership question goes through `canEdit(entry, viewer)` and
 `canView(entry, viewer)`**, never through `entry.user_id === viewer.id` written
@@ -301,8 +316,12 @@ is a write cost with no reader:
 | Map bounding box | `(lat, lng)` |
 
 `(type_id)` arrives with the filters, since that is what will use it.
-`EXPLAIN QUERY PLAN` findings get written back into this
-document as the packing list one does.
+
+`EXPLAIN QUERY PLAN` confirms the public listing searches
+`entry_visibility_createdAt_idx` on `visibility` rather than scanning. A
+signed-in visitor's listing is an `OR` across visibility and ownership, which
+SQLite answers by scanning — correct at this size, and the first thing to look
+at if that page ever slows down.
 
 ## Pages
 
@@ -398,9 +417,11 @@ tests asserting the refusal looks identical to absence.
 
 Each step is a mergeable change that leaves the site working.
 
-1. **Schema and query layer.** Every table, the type seed, `places.ts` with the
-   access rules, `places.test.ts`. No UI. This is the step worth getting right;
-   the rest is comparatively mechanical.
+1. ~~**Schema and query layer.**~~ **Done.** Every table, the type seed,
+   `src/lib/db/places.ts` with the access rules, and
+   `src/lib/places-constants.ts` for the vocabulary the browser will need
+   without Drizzle — the same reason `packing-list-limits.ts` exists. Covered by
+   `places.test.ts` and `places-links.test.ts`.
 2. **Read-only display.** `/places` and `/places/[slug]`. Proves the read paths
    and the visibility predicate against real pages.
 3. **The editor and the write API.** Create, edit, delete, both detail sections,

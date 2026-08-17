@@ -15,6 +15,13 @@
       "when": 1786818564798,
       "tag": "0001_packing_lists",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786961732120,
+      "tag": "0002_places",
+      "breakpoints": true
     }
   ]
 }
