@@ -58,6 +58,15 @@ before changing the schema or touching the auth flow.
 - `src/middleware.ts` — populates `Astro.locals.user` / `Astro.locals.session`
 - `migrations/` — D1 SQL migrations
 
+To query the database by hand, pass the *database name* `macandwen`, not the
+`DB` binding name — `wrangler d1 execute DB ...` fails with a misleading
+"account is not valid or is not authorized" (7403) error:
+
+```sh
+npx wrangler d1 execute macandwen --local --command "SELECT * FROM user"
+npx wrangler d1 execute macandwen --remote --command "SELECT * FROM user"
+```
+
 Bindings are read via `import { env } from 'cloudflare:workers'`.
 `Astro.locals.runtime.env` was removed in Astro v6 and throws if used.
 
