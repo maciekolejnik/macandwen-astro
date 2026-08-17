@@ -123,6 +123,12 @@ production and `--local` is the file under `.wrangler/`:
 npx wrangler d1 execute macandwen --remote --command "SELECT id, email, role FROM user"
 ```
 
+The first argument is the database name, `macandwen` — not `DB`, which is the
+binding name used inside the Worker. Passing the binding fails with a
+thoroughly misleading `The given account is not valid or is not authorized to
+access this service [code: 7403]`, which looks like an auth problem rather than
+an unknown database.
+
 That flag is the only thing separating a harmless test from a production write,
 and leaving it off silently hits the local database instead — which usually
 looks like the change simply not working. Useful additions: `--json` for output
