@@ -10,8 +10,8 @@ description of what exists.
 
 Status: **Planned.** Nothing here is implemented yet.
 
-**Scope for the first release: storing, editing and displaying entries.**
-Filtering, the map, moderation and the type-management UI are
+**Scope for the first release: storing, editing and displaying entries, on a
+list and on a map.** Filtering, moderation and the type-management UI are
 [future deliverables](#future-deliverables). The schema is designed so each of
 them is an addition rather than a rewrite, and the places where that costs
 something today are called out as they arise.
@@ -180,7 +180,7 @@ unique (kind, slug)
 Types are rows, not a TypeScript union, so adding "canyoning" does not need a
 deploy. `kind` here is strictly `'location' | 'activity'` — it scopes the
 vocabulary, and is a different thing from the derived `entry.kind`. `icon` and
-`colour` will drive the map pin and the list badge. `is_active` retires a type
+`colour` drive the map pin and the list badge. `is_active` retires a type
 without orphaning the entries using it; deleting a type in use is refused.
 
 The seed ships in the migration:
@@ -298,16 +298,18 @@ is a write cost with no reader:
 | --- | --- |
 | A user's own entries | `(user_id)` |
 | Public browse, newest first | `(visibility, created_at)` |
+| Map bounding box | `(lat, lng)` |
 
-`(lat, lng)` and `(type_id)` arrive with the map and the filters, since those
-are what will use them. `EXPLAIN QUERY PLAN` findings get written back into this
+`(type_id)` arrives with the filters, since that is what will use it.
+`EXPLAIN QUERY PLAN` findings get written back into this
 document as the packing list one does.
 
 ## Pages
 
 | Path | Shows |
 | --- | --- |
-| `/places` | Everything the visitor may see |
+| `/places` | Everything the visitor may see, as a list |
+| `/places/map` | The same set, as pins |
 | `/places/[slug]` | One entry: details, photos, visits, links |
 | `/places/new` | The editor, empty — signed in only |
 | `/places/[slug]/edit` | The editor, loaded — owner only |
@@ -324,9 +326,40 @@ must be ticked. That is what makes a hybrid a natural thing to create rather
 than an advanced feature. It is a plain form with a `<script>`, not a framework
 island, matching `PackingListForm.astro`.
 
-Coordinates are typed in, or pasted from a maps URL — the editor accepts a
-`lat, lng` pair in one field, which is what copying from Google Maps gives you.
-A map picker is a future deliverable.
+Coordinates come from a **map picker**: the editor shows the same map component
+as `/places/map`, and clicking it drops the pin. Dragging the pin moves it, and
+the numbers stay visible and editable underneath, because a coordinate pasted
+from Google Maps is often the fastest way in — the field accepts a `lat, lng`
+pair, which is exactly what copying from Maps gives you. The two are bound
+together: typing moves the pin, moving the pin updates the numbers.
+
+Without JavaScript the picker is absent and the pair of number fields is the
+whole story, so the form still works.
+
+An entry whose `extent` is `area` or `region` picks a bounding box by dragging a
+rectangle, with the representative point defaulting to its centre and still
+movable — a region's centre is rarely the place you would point at.
+
+**The map** is Leaflet with OpenStreetMap tiles: no API key, no account, no
+per-view billing, and small enough to load only on the pages that use it. It is
+the one dependency this feature adds. MapLibre is the alternative and is better
+at vector tiles, but wants a tile provider with a key.
+
+`/places/map` renders the entries into the HTML server-side and Leaflet reads
+them from there, so a shared link does not flash an empty map and the map and
+the list can never show different sets. The list and the map are two views of
+one query with a toggle between them; when filters arrive, the toggle becomes a
+link that carries the query string across, which is the whole of what it takes
+for filters to work on both.
+
+Pins are coloured and iconed by `entry_type` — which is why those columns exist
+now. A hybrid takes its activity type's pin, since "what can I do here" is the
+question a map is being asked. Areas and regions draw their bounding box as well
+as their pin. Clustering arrives when the pins actually overlap, not before.
+
+`src/components/PlacesMap.astro` is the single map component, used by the map
+page and the editor, so pin colours and tile configuration are written once.
+The detail page reuses it too, showing one pin and any linked entries around it.
 
 ## HTTP API
 
@@ -371,12 +404,15 @@ Each step is a mergeable change that leaves the site working.
 2. **Read-only display.** `/places` and `/places/[slug]`. Proves the read paths
    and the visibility predicate against real pages.
 3. **The editor and the write API.** Create, edit, delete, both detail sections,
-   photos, visits.
-4. **Links.** The link editor on the detail page and the both-ends visibility
+   photos, visits. The shared map component lands here, since the picker is its
+   first user.
+4. **The map view.** `/places/map` reusing that component, and the list/map
+   toggle.
+5. **Links.** The link editor on the detail page and the both-ends visibility
    rule.
 
-That is the release. A person can record places and things to do, see them, and
-connect them.
+That is the release. A person can record places and things to do, see them on a
+list and on a map, and connect them.
 
 ## Future deliverables
 
@@ -385,7 +421,7 @@ notes what the current schema already does for it, since that is the part that
 would be expensive to retrofit.
 
 **Filters.** Type, kind, difficulty, duration bucket, season, family
-friendliness and text search. The schema is filter-ready: buckets are stored
+friendliness and text search, on both the list and the map. The schema is filter-ready: buckets are stored
 rather than derived, `family_friendly` is tri-state so "unknown" is not silently
 counted as "no", and seasons are a bitmask so a multi-season filter is one
 integer comparison. The mechanism will follow the packing list index — a shared
@@ -399,26 +435,20 @@ crow-flies distance from a chosen origin:
 
 | Band | Distance | Means |
 | --- | --- | --- |
-| Nearby | under 100 km | an easy day trip |
-| Further | 100–250 km | a long day, or a weekend |
-| Far | over 250 km | a trip in its own right |
+| Nearby | under about 120 km | an easy day trip |
+| Further | about 100–250 km | a long day, or a weekend |
+| Far | over about 250 km | a trip in its own right |
 
-The boundaries are named constants, because they are a judgement about roads
-around here rather than a fact. Beyond 250 km the band stops being interesting,
-which is why there is no fourth.
+**The bands overlap on purpose.** Something 110 km away is honestly both, and a
+hard boundary would hide it from one of the two searches it belongs in. The
+numbers are named constants, because they are a judgement about the roads around
+here rather than a fact — and since a band is computed at query time and stored
+nowhere, tuning them changes no data. Beyond 250 km the band stops being
+interesting, which is why there is no fourth.
 
 The schema needs nothing new: `lat`/`lng` are already there, and the band is
-computed with haversine from an origin at query time. What it does need is
-somewhere to put the origin — a "home" location per user — which is a small
-table added then.
-
-**Map view.** `/places/map`, sharing the filter bar and the query string with
-the list so the toggle between them is a link that carries the filters across.
-Leaflet with OpenStreetMap tiles: no API key, no account, no per-view billing,
-loaded only on that page. Pins coloured by `entry_type.colour`, which is why
-that column exists now. Areas and regions draw their bounding box instead of a
-pin. The entries are rendered into the HTML by the server and read from there,
-so a shared link does not flash an empty map.
+computed with haversine from an origin. What it does need is somewhere to put
+the origin — a "home" location per user — which is a small table added then.
 
 **Publishing other people's entries.** A user asking for a private entry to be
 made public, and an admin queue to approve or reject. This wants a table of its
@@ -432,9 +462,6 @@ for a user to ask for a type that does not exist. The suggestion side needs a
 notification, and the project sends no mail today — so the first version is a
 pending count on an admin page, with the email hook as a single function called
 at the point of creation.
-
-**A map picker in the editor**, so coordinates can be clicked rather than
-pasted.
 
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into
