@@ -401,6 +401,13 @@ A signed-out visitor sees public entries and a prompt to sign in. A signed-in
 one sees their own — private ones included — and the public ones, in two
 sections, following the packing list index.
 
+What a page shows is decided in `src/lib/places-view.ts`, not in the `.astro`
+files: which section an entry belongs to, which badges it carries, and how a
+season mask, a duration or a coordinate pair reads in English. Templates are
+awkward to test and these rules have edge cases — a mask of `0` means "any
+time", a hybrid carries two type badges, `family_friendly` has three states —
+so they live where a test can reach them.
+
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one
 must be ticked. That is what makes a hybrid a natural thing to create rather
@@ -469,6 +476,7 @@ Real D1 in workerd, no mocks, following the packing list precedent:
 | --- | --- |
 | `test/places.test.ts` | Access rules, visibility, the derived `kind`, slug generation, cascades |
 | `test/places-links.test.ts` | Relation direction, symmetry, the both-ends visibility rule |
+| `test/places-view.test.ts` | The display rules: sectioning, badges, facts, season and duration wording |
 | `test/places-api.test.ts` | Each route: success, anonymous, non-owner, admin-is-not-owner, malformed bodies |
 
 The link-visibility rule and "an admin may not edit someone else's entry" are
@@ -484,8 +492,12 @@ Each step is a mergeable change that leaves the site working.
    `src/lib/places-constants.ts` for the vocabulary the browser will need
    without Drizzle — the same reason `packing-list-limits.ts` exists. Covered by
    `places.test.ts` and `places-links.test.ts`.
-2. **Read-only display.** `/places` and `/places/[slug]`. Proves the read paths
-   and the visibility predicate against real pages.
+2. ~~**Read-only display.**~~ **Done.** `/places` lists what you can see, split
+   into "Yours" and "Shared with everyone"; `/places/[slug]` shows one entry.
+   The display rules live in `src/lib/places-view.ts` rather than in the pages,
+   so they can be tested — see `places-view.test.ts`. A missing slug and a slug
+   you are not allowed to see both return the same 404, since a distinguishable
+   403 would confirm that the entry exists.
 3. **The editor and the write API.** Create, edit, delete, both detail sections,
    photos, visits. The shared map component lands here, since the picker is its
    first user.
