@@ -332,7 +332,10 @@ id, entry_id → entry.id (cascade), url, caption, position, created_at
 ```
 
 Rows, ordered by `position`, matching `packing_list_item`. URLs only — no
-uploads, no R2 bucket, no image pipeline.
+uploads and no image pipeline. The site's own pictures already live in the
+`macandwen` R2 bucket and are served from `media.macandwen.com`, so a URL
+column is enough to point at them; an upload flow can be added later without
+the schema changing.
 
 **Position 0 is the entry's default picture**, and carries real weight: it is
 the card image on the list, the first frame of the carousel and the share
@@ -453,19 +456,31 @@ puts the carousel directly under the title and badges, above the description —
 a photograph answers "do I want to go here" faster than any sentence, and this
 is a database of places worth looking at.
 
-An entry with no photo still gets the same picture-shaped area, tinted with its
-type's colour and naming the type in words. A grid where some cards have images
-and others collapse to text looks broken, and the stand-in is a weaker version
-of the same information rather than a placeholder saying nothing. It names the
-type instead of showing the icon alone, for the reason given under
-[Icons and colour](#icons-and-colour).
+**Photographs keep their own shape.** Nothing is cropped to a fixed ratio: a
+portrait makes a tall card, a panorama a short one, and the carousel is as tall
+as its tallest picture with each one contained inside it. Cropping every image
+to 3:2 makes a tidier grid out of worse photographs, and a portrait of a
+waterfall loses the waterfall. Because the cards are then ragged, the list is
+CSS columns rather than a row-aligned grid, so a short card does not leave a
+hole beneath it.
+
+An entry with no photo is simply a text card. A tinted stand-in was tried and
+removed: it took up the room of a photograph while saying less than the type
+badges directly beneath it already did.
 
 **The carousel** is a scroll-snap strip, not a slideshow: it swipes on a phone
 and scrolls with a trackpad before any JavaScript runs. The arrows are added by
 a script and stay hidden until it does, so nothing on screen is ever inert. The
 current index is read back from `scrollLeft` rather than held in a variable,
 which is what stops a swipe and an arrow press disagreeing about which photo is
-showing. No framework, matching the rest of the site.
+showing.
+
+**The arrows wrap**: the last photo goes on to the first, and back from the
+first lands on the last. A handful of photographs is a loop rather than a
+document with an end, and an arrow that greys out at the edge is a control that
+looks available and does nothing. The wrap itself jumps rather than animating,
+since scrolling from last to first would otherwise drag the strip past every
+photo in between. No framework, matching the rest of the site.
 
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one

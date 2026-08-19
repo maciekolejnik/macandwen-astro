@@ -17,7 +17,7 @@ const many = rest.length > 0;
 
 {first && (
   <figure
-    class="relative mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-stone-100"
+    class="relative mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-stone-900/[0.03]"
     data-carousel
   >
     <!--
@@ -25,6 +25,10 @@ const many = rest.length > 0;
       and scrollable with a trackpad before any JavaScript runs, so the arrows
       below are an enhancement rather than the mechanism. Nothing here needs a
       framework.
+
+      The strip is as tall as its tallest photo and each one is contained
+      inside it, so a portrait is shown whole rather than cropped to a letterbox
+      and the height does not jump as you move between them.
     -->
     <div
       class="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -36,7 +40,7 @@ const many = rest.length > 0;
           alt={photo.caption ?? `${name}, photo ${index + 1}`}
           data-caption={photo.caption ?? ''}
           loading={index === 0 ? 'eager' : 'lazy'}
-          class="aspect-[3/2] w-full shrink-0 snap-center object-cover"
+          class="w-full shrink-0 snap-center object-contain"
         />
       ))}
     </div>
@@ -51,7 +55,7 @@ const many = rest.length > 0;
           type="button"
           data-carousel-previous
           aria-label="Previous photo"
-          class="absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-stone-700 shadow-sm backdrop-blur transition hover:bg-white disabled:cursor-default disabled:opacity-0"
+          class="absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-stone-700 shadow-sm backdrop-blur transition hover:bg-white"
         >
           <span aria-hidden="true">&larr;</span>
         </button>
@@ -60,7 +64,7 @@ const many = rest.length > 0;
           type="button"
           data-carousel-next
           aria-label="Next photo"
-          class="absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-stone-700 shadow-sm backdrop-blur transition hover:bg-white disabled:cursor-default disabled:opacity-0"
+          class="absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-stone-700 shadow-sm backdrop-blur transition hover:bg-white"
         >
           <span aria-hidden="true">&rarr;</span>
         </button>
@@ -107,15 +111,23 @@ const many = rest.length > 0;
     const currentIndex = () =>
       Math.round(track.scrollLeft / track.clientWidth);
 
+    // Wraps rather than stopping: the last photo goes on to the first, and
+    // back from the first lands on the last. A set of photographs is a loop,
+    // not a document with an end, and a dead arrow at either end is a control
+    // that looks available and does nothing.
     const go = (index: number) => {
-      const clamped = Math.max(0, Math.min(index, slides.length - 1));
-      track.scrollTo({ left: clamped * track.clientWidth, behavior: 'smooth' });
+      const wrapped = (index + slides.length) % slides.length;
+      // Wrapping is a jump, not a scroll: animating from the last photo back
+      // to the first would drag the whole strip past every photo between.
+      const wrapping = Math.abs(wrapped - currentIndex()) > 1;
+      track.scrollTo({
+        left: wrapped * track.clientWidth,
+        behavior: wrapping ? 'auto' : 'smooth',
+      });
     };
 
     const sync = () => {
       const index = currentIndex();
-      previous.disabled = index === 0;
-      next.disabled = index === slides.length - 1;
       if (count) count.textContent = `${index + 1} / ${slides.length}`;
       if (caption) caption.textContent = slides[index]?.dataset.caption ?? '';
     };

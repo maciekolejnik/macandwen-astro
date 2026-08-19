@@ -1,6 +1,6 @@
 ---
 import type { PlaceSummary } from '../lib/db/places';
-import { factsFor, pinType, typeBadges } from '../lib/places-view';
+import { factsFor, typeBadges } from '../lib/places-view';
 
 interface Props {
   place: PlaceSummary;
@@ -13,39 +13,25 @@ const { place, showOwner = true } = Astro.props;
 const badges = typeBadges(place);
 // Two or three facts on a card; the rest are on the detail page.
 const facts = factsFor(place).slice(0, 3);
-
-// Every card gets a picture-shaped area, photo or not, so a grid of them
-// stays even and one entry without a photo does not look broken. The stand-in
-// is tinted with the type's colour and says the type in words — an icon alone
-// would be a guess, and half of them have no honest emoji anyway.
-const pin = pinType(place);
-const tint = pin?.colour ?? '#57534e';
 ---
 
 <article
   data-place-card
-  class="group relative flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-colors hover:border-emerald-400 hover:shadow-md"
+  class="group relative mb-4 flex break-inside-avoid flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-colors hover:border-emerald-400 hover:shadow-md"
 >
-  {place.photoUrl ? (
+  <!--
+    No fixed aspect ratio: the image keeps its own shape, so a portrait makes a
+    tall card and a panorama a short one. An entry with no photo is simply a
+    text card — a stand-in panel would take up the room of a photograph while
+    saying less than the badges below it already do.
+  -->
+  {place.photoUrl && (
     <img
       src={place.photoUrl}
       alt=""
       loading="lazy"
-      class="aspect-[3/2] w-full bg-stone-100 object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+      class="w-full bg-stone-100"
     />
-  ) : (
-    <div
-      class="flex aspect-[3/2] w-full items-center justify-center"
-      style={`background-color: color-mix(in srgb, ${tint} 12%, white)`}
-    >
-      <span
-        class="inline-flex items-center gap-1.5 text-sm font-medium"
-        style={`color: color-mix(in srgb, ${tint} 75%, black)`}
-      >
-        {pin?.icon && <span aria-hidden="true">{pin.icon}</span>}
-        {pin?.label ?? place.name}
-      </span>
-    </div>
   )}
 
   <div class="flex flex-1 flex-col p-5">
