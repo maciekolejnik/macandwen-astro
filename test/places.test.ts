@@ -71,16 +71,32 @@ describe('places: kind', () => {
     const owner = await signedInUser();
     const { id } = await create(owner, {
       name: 'Wild swim spot',
-      location: { typeId: LAKE, access: 'Park by the church' },
+      access: 'Park by the church',
+      location: { typeId: LAKE },
       activity: { typeId: HIKE, difficulty: 'easy' },
     });
 
     const place = await getById(id, owner);
 
     expect(place?.location?.type.slug).toBe('lake');
-    expect(place?.location?.access).toBe('Park by the church');
+    expect(place?.access).toBe('Park by the church');
     expect(place?.activity?.type.slug).toBe('hike');
     expect(place?.activity?.difficulty).toBe('easy');
+  });
+
+  it('keeps the way in on an activity that is not a place', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(owner, {
+      name: 'The ridge walk',
+      access: 'Gate is usually shut, park on the verge',
+      activity: { typeId: HIKE },
+    });
+
+    // Access belongs to the entry, so an activity has one without having to
+    // invent a location row to hang it on.
+    expect((await getById(id, owner))?.access).toBe(
+      'Gate is usually shut, park on the verge',
+    );
   });
 
   it('refuses an entry that is neither a place nor a thing to do', async () => {

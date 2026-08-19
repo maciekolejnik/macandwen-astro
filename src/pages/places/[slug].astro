@@ -105,7 +105,7 @@ const formatVisit = (iso: string) =>
         </dl>
       )}
 
-      {(coordinates || place.location?.access) && (
+      {(coordinates || place.access) && (
         <section class="mt-8">
           <h2 class="text-lg font-semibold text-stone-900">Getting there</h2>
 
@@ -123,8 +123,8 @@ const formatVisit = (iso: string) =>
             </p>
           )}
 
-          {place.location?.access && (
-            <p class="mt-2 text-sm text-stone-600">{place.location.access}</p>
+          {place.access && (
+            <p class="mt-2 text-sm text-stone-600">{place.access}</p>
           )}
         </section>
       )}

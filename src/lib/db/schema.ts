@@ -287,6 +287,11 @@ export const entry = sqliteTable(
     bboxMinLng: real("bbox_min_lng"),
     bboxMaxLat: real("bbox_max_lat"),
     bboxMaxLng: real("bbox_max_lng"),
+    // How to reach that point: "toll road", "20 min walk in", "gate is
+    // usually shut, park on the verge". It sits here rather than on
+    // `location_detail` because it describes the point above it, and an
+    // activity has a way in as much as a place does.
+    access: text("access"),
     // Bitmask: spring 1, summer 2, autumn 4, winter 8. 0 means any time, and
     // needs no special case in a filter: `seasons = 0 or seasons & ? != 0`.
     seasons: integer("seasons").default(0).notNull(),
@@ -315,7 +320,6 @@ export const locationDetail = sqliteTable("location_detail", {
   typeId: text("type_id")
     .notNull()
     .references(() => entryType.id),
-  access: text("access"),
   // Free-form extras, stored as JSON text, rendered as a key/value list and
   // never queried in SQL — anything in here that wants filtering has earned a
   // column. It sits beside the type, because that is what decides which extras

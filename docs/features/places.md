@@ -89,8 +89,8 @@ the location vocabulary because it is stored in the location table.
 
 | Table | Role |
 | --- | --- |
-| `entry` | The shared row: name, description, owner, visibility, geometry, seasons, derived `kind`, timestamps |
-| `location_detail` | Present if the entry is a place. Type, access notes, extras |
+| `entry` | The shared row: name, description, owner, visibility, geometry, access, seasons, derived `kind`, timestamps |
+| `location_detail` | Present if the entry is a place. Type and extras |
 | `activity_detail` | Present if the entry is a thing to do. Type, difficulty, duration, family friendliness, extras |
 | `entry_type` | The vocabulary of types, per kind |
 | `entry_link` | `(from_entry, relation, to_entry)` — the flexible graph |
@@ -113,6 +113,7 @@ extent        text not null default 'point'     -- 'point' | 'area' | 'region'
 bbox_min_lat  real  bbox_min_lng real
 bbox_max_lat  real  bbox_max_lng real
 seasons       integer not null default 0        -- bitmask, 0 = any time
+access        text                     -- how to reach the point above
 created_at / updated_at
 ```
 
@@ -128,6 +129,22 @@ bounding-box arithmetic, not PostGIS.
 Anything genuinely polygonal — a coastline, a national park border — is out of
 scope. A bounding box is a rectangle around Catalunya, not Catalunya.
 
+**Access** — "toll road", "20 minutes walk in", "gate is usually shut, park on
+the verge" — sits on `entry`, beside the point it describes, rather than on
+`location_detail`. It was on the location row first, which was wrong twice
+over: an activity has a way in as much as a place does, and forcing a hike to
+invent a location row just to hold one sentence would corrupt the `kind` that
+row is supposed to derive. A hybrid also has one way in, not two.
+
+It stays separate from `description` because the two are read at different
+moments: the description is why you would go, the access line is what you need
+when you are already in the car looking for the turning.
+
+For an activity this is the short version — a full "park here, then walk 20
+minutes" is better expressed as a `parks_at` link to a car park entry, which is
+reusable by every walk that starts there. The column is for when a whole second
+entry would be overkill.
+
 **Seasons** are a bitmask (`spring 1`, `summer 2`, `autumn 4`, `winter 8`) so
 "summer or autumn" is one integer. `0` means any time, which needs no separate
 branch when the filter arrives: `seasons = 0 OR seasons & ? != 0`.
@@ -142,7 +159,6 @@ working.
 ```
 entry_id    text pk → entry.id (cascade)
 type_id     text not null → entry_type.id
-access      text        -- free text: 'toll road', '20 min walk in', …
 attributes  text        -- JSON, free-form extras
 ```
 

@@ -75,12 +75,15 @@ export type PlaceSummary = {
     maxLng: number;
   } | null;
   seasons: number;
+  /** How to reach the point above. Belongs to the entry, not to either detail
+   * row: an activity has a way in as much as a place does, and a hybrid has
+   * one way in rather than two. */
+  access: string | null;
   createdAt: Date;
   updatedAt: Date;
   photoUrl: string | null;
   location: {
     type: PlaceTypeRef;
-    access: string | null;
     attributes: Record<string, string>;
   } | null;
   activity: {
@@ -137,9 +140,9 @@ export type PlaceInput = {
     maxLng: number;
   } | null;
   seasons?: number;
+  access?: string | null;
   location?: {
     typeId: string;
-    access?: string | null;
     attributes?: Record<string, string> | null;
   } | null;
   activity?: {
@@ -225,13 +228,13 @@ function summarySelection() {
     seasons: entry.seasons,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
+    access: entry.access,
     photoUrl: firstPhotoUrl,
     locationTypeId: locationType.id,
     locationTypeSlug: locationType.slug,
     locationTypeLabel: locationType.label,
     locationTypeIcon: locationType.icon,
     locationTypeColour: locationType.colour,
-    access: locationDetail.access,
     locationAttributes: locationDetail.attributes,
     activityTypeId: activityType.id,
     activityTypeSlug: activityType.slug,
@@ -282,6 +285,7 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
         }
       : null,
     seasons: row.seasons,
+    access: row.access,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     photoUrl: row.photoUrl ?? null,
@@ -296,7 +300,6 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
             icon: row.locationTypeIcon,
             colour: row.locationTypeColour,
           },
-          access: row.access,
           attributes: parseAttributes(row.locationAttributes),
         }
       : null,
@@ -706,9 +709,9 @@ type NormalisedInput = {
   bboxMaxLat: number | null;
   bboxMaxLng: number | null;
   seasons: number;
+  access: string | null;
   location: {
     typeId: string;
-    access: string | null;
     attributes: string | null;
   } | null;
   activity: {
@@ -849,10 +852,10 @@ export function normaliseInput(input: PlaceInput): NormalisedInput {
     bboxMaxLat: bbox?.maxLat ?? null,
     bboxMaxLng: bbox?.maxLng ?? null,
     seasons,
+    access: trimmedOrNull(input.access, ACCESS_MAX_LENGTH, 'Access'),
     location: input.location
       ? {
           typeId: input.location.typeId,
-          access: trimmedOrNull(input.location.access, ACCESS_MAX_LENGTH, 'Access'),
           attributes: serialiseAttributes(input.location.attributes),
         }
       : null,
@@ -973,6 +976,7 @@ export async function create(
     bboxMaxLat: normalised.bboxMaxLat,
     bboxMaxLng: normalised.bboxMaxLng,
     seasons: normalised.seasons,
+    access: normalised.access,
   });
 
   // D1 has no interactive transactions; `batch` is the atomic equivalent.
@@ -1030,6 +1034,7 @@ export async function update(
         bboxMaxLat: normalised.bboxMaxLat,
         bboxMaxLng: normalised.bboxMaxLng,
         seasons: normalised.seasons,
+        access: normalised.access,
         updatedAt: new Date(),
       })
       .where(eq(entry.id, id)),
