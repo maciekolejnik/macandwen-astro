@@ -1,8 +1,14 @@
-# Places: locations and activities
+# Places & activities
 
 A personal database of **locations** (a lake, a car park, a refuge, a whole
 region) and **activities** (a hike, a via ferrata, a kayak route), owned by the
 person who added them and linked to each other in whatever way makes sense.
+
+The feature is called "places & activities" rather than "places", because half
+the data is not a place: a hike is a thing you do. The clumsier name is the
+honest one, and it matches the two checkboxes in the editor, so the same
+vocabulary runs from the nav to the form. The route stays `/places` — a URL is a
+handle, not a title, and shared links should keep working.
 
 This document is the design and the plan. It is written before the code, so
 everything below is a decision with its reasoning attached rather than a
@@ -441,9 +447,15 @@ link that carries the query string across, which is the whole of what it takes
 for filters to work on both.
 
 Pins are coloured and iconed by `entry_type` — which is why those columns exist
-now. A hybrid takes its activity type's pin, since "what can I do here" is the
-question a map is being asked. Areas and regions draw their bounding box as well
-as their pin. Clustering arrives when the pins actually overlap, not before.
+now. A hybrid has two types, so the pin is a real decision rather than a lookup:
+**the activity wins**, because a map is being asked "what can I do here", and
+because the location half of a hybrid is usually the less specific of the pair —
+"lake" against "wild swimming". `pinType()` in `places-view.ts` is the only
+thing allowed to make that choice, so the map page, the detail page and any
+future legend cannot disagree about what an entry is. Both types still show as
+badges everywhere there is room for two; it is only the pin that has to pick.
+Areas and regions draw their bounding box as well as their pin. Clustering
+arrives when the pins actually overlap, not before.
 
 `src/components/PlacesMap.astro` is the single map component, used by the map
 page and the editor, so pin colours and tile configuration are written once.
@@ -557,6 +569,29 @@ for a user to ask for a type that does not exist. The suggestion side needs a
 notification, and the project sends no mail today — so the first version is a
 pending count on an admin page, with the email hook as a single function called
 at the point of creation.
+
+**Tags.** A free-form, many-per-entry label — "dog friendly", "shady", "no phone
+signal", "good in the rain". These were considered as a *replacement* for
+`entry_type` and rejected, because a type and a tag are different tools:
+
+| | Type | Tag |
+| --- | --- | --- |
+| How many per entry | One per detail row | Any number |
+| Who defines the vocabulary | Admins, so it stays small | Anyone |
+| What it drives | The pin, the icon, which extras a thing has | Nothing structural |
+
+Cardinality-one is the whole value. A pin has one colour, and a tags-only model
+would need a "primary tag" to draw it — which is a type wearing a disguise, with
+the ambiguity of the other four left over. `attributes` sits beside `type_id`
+for the same reason: a refuge has beds and half board, a car park has spaces and
+a barrier height, and a per-type form is only possible because there is exactly
+one type to key it on. Opening the vocabulary up would get "hike", "hiking" and
+"walk" within a month.
+
+But the things types handle *badly* are exactly the unbounded, personal,
+un-adminned ones in that list, so the two axes are orthogonal and should both
+exist eventually. A tag needs `tag` and `entry_tag` and touches nothing that is
+here — no column changes, no rewrite — which is the reason it can wait.
 
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into

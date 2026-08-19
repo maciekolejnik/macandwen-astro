@@ -6,6 +6,7 @@ import {
   formatDistance,
   formatMinutes,
   loadIndex,
+  pinType,
   seasonLabel,
   splitSections,
   typeBadges,
@@ -82,6 +83,22 @@ describe('places display rules', () => {
     expect(typeBadges(own[0]!).map((type) => type.label)).toEqual(['Lake', 'Hike']);
   });
 
+  it('draws a hybrid pin from its activity, and a plain one from whatever it has', async () => {
+    const owner = await signedInUser();
+    await create(owner, {
+      name: 'Hybrid pin',
+      location: { typeId: LAKE },
+      activity: { typeId: HIKE },
+    });
+    await create(owner, { name: 'Location pin', location: { typeId: LAKE } });
+
+    const { own } = await loadIndex(owner);
+    const byName = new Map(own.map((place) => [place.name, place]));
+
+    expect(pinType(byName.get('Hybrid pin')!)?.label).toBe('Hike');
+    expect(pinType(byName.get('Location pin')!)?.label).toBe('Lake');
+  });
+
   it('leaves out facts nobody filled in', () => {
     expect(factsFor(summary({ activity: { type: {}, difficulty: null } }))).toEqual(
       [],
@@ -132,6 +149,7 @@ describe('places display rules', () => {
     expect(formatMinutes(150)).toBe('2 h 30 min');
     expect(formatDistance(800)).toBe('800 m');
     expect(formatDistance(12400)).toBe('12.4 km');
+    expect(formatDistance(14000)).toBe('14 km');
     expect(formatCoordinates(42.1178, 2.7513)).toBe('42.11780, 2.75130');
     expect(formatCoordinates(null, null)).toBeNull();
   });

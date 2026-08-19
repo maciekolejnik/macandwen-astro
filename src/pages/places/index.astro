@@ -11,12 +11,12 @@ const { own, browse } = await loadIndex(user);
 ---
 
 <Layout
-  title="Places"
+  title="Places & activities"
   description="Lakes, hikes, viewpoints and everything else worth going back to."
 >
   <div class="mx-auto max-w-4xl px-4 py-12">
     <div>
-      <h1 class="text-3xl font-bold text-stone-900">Places</h1>
+      <h1 class="text-3xl font-bold text-stone-900">Places &amp; activities</h1>
       <p class="mt-2 max-w-prose text-stone-600">
         Somewhere to keep the lakes, hikes and viewpoints that would otherwise
         live in a phone's screenshots folder.
@@ -54,7 +54,7 @@ const { own, browse } = await loadIndex(user);
 
     <section class="mt-12">
       <h2 class="text-lg font-semibold text-stone-900">
-        {user ? 'Shared with everyone' : 'Places'}
+        {user ? 'Shared with everyone' : 'Places & activities'}
       </h2>
 
       {browse.length > 0 ? (
