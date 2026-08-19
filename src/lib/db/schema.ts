@@ -243,6 +243,8 @@ export const entryType = sqliteTable(
     slug: text("slug").notNull(),
     label: text("label").notNull(),
     description: text("description"),
+    // An emoji, and nullable on purpose: some types have no honest one. The UI
+    // never renders it alone, so a missing icon costs nothing.
     icon: text("icon"),
     colour: text("colour"),
     position: integer("position").default(0).notNull(),

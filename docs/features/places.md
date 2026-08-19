@@ -207,9 +207,45 @@ unique (kind, slug)
 
 Types are rows, not a TypeScript union, so adding "canyoning" does not need a
 deploy. `kind` here is strictly `'location' | 'activity'` — it scopes the
-vocabulary, and is a different thing from the derived `entry.kind`. `icon` and
-`colour` drive the map pin and the list badge. `is_active` retires a type
-without orphaning the entries using it; deleting a type in use is refused.
+vocabulary, and is a different thing from the derived `entry.kind`. `is_active`
+retires a type without orphaning the entries using it; deleting a type in use is
+refused.
+
+##### Icons and colour
+
+**The label carries the meaning; the icon is decoration and may be absent.**
+That rule exists because the alternative does not survive contact with the
+vocabulary: there is no emoji that means *via ferrata*, and the nearest one
+(🧗) already means climbing. Nor is there one for a viewpoint (👁️ is an eye),
+a cave (🕳️ is a hole), a lake (🏞️ reads as scenery) or a paddleboard (🏄 is
+surfing). Half the seed was wrong on the first pass.
+
+So `icon` is nullable, holds an emoji, and is left NULL wherever none is
+honest. A forced-in icon is worse than none: it is read as a claim about the
+type and quietly miscategorises it.
+
+Three rules follow, and they are what make a missing icon cost nothing:
+
+- **Nothing renders an icon alone.** On a card or a chip it sits next to the
+  label, so it is a visual anchor for something already spelled out.
+- **A map pin is identified by colour and shape**, with the emoji drawn inside
+  only if there is one. At the size a pin is drawn, a glyph is barely legible
+  anyway — which is why the map needs a legend, and why the pin's tooltip and
+  its popup both carry the label.
+- **Colour is only memorable for a handful of types at once.** With nineteen
+  seeded types no palette is self-explanatory, so colour separates what is on
+  screen rather than encoding the whole vocabulary; the legend does the naming.
+
+Emoji rather than an icon set, because an icon set would break the promise that
+a type is data: adding one whose icon name is not bundled would render nothing,
+so either the whole set ships or types quietly stop working. If a set is wanted
+later, `icon` holds a name from it and an unrecognised name falls back to the
+plain coloured pin — the same fallback a NULL already uses, so no data has to
+change.
+
+Near-duplicates within one family are fine — ⛺ for a wild camping spot beside
+🏕️ for a campsite — because they *are* the same family, and the label is always
+there to separate them.
 
 The seed ships in the migration:
 

@@ -514,6 +514,18 @@ describe('places: types', () => {
     expect(locations.every((type) => type.kind === 'location')).toBe(true);
   });
 
+  it('leaves an icon off where no emoji is honest', async () => {
+    const types = [...(await listTypes('location')), ...(await listTypes('activity'))];
+    const byId = new Map(types.map((type) => [type.id, type]));
+
+    // There is no emoji for a via ferrata, and the nearest one already means
+    // climbing. Nothing may render an icon alone, so this must stay allowed.
+    expect(byId.get('act_via_ferrata')?.icon).toBeNull();
+    expect(byId.get('act_climbing')?.icon).not.toBeNull();
+    // Colour and label, on the other hand, are always there to fall back on.
+    expect(types.every((type) => type.colour && type.label)).toBe(true);
+  });
+
   it('hides a retired type without orphaning what uses it', async () => {
     const owner = await signedInUser();
     const { id } = await create(owner, aPlace());
