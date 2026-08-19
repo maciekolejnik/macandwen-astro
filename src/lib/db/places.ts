@@ -104,8 +104,6 @@ export type PlacePhoto = {
 
 export type PlaceVisit = {
   id: string;
-  userId: string;
-  userName: string;
   visitedOn: string;
   note: string | null;
 };
@@ -403,18 +401,7 @@ async function detailFor(
       .from(entryPhoto)
       .where(eq(entryPhoto.entryId, summary.id))
       .orderBy(asc(entryPhoto.position)),
-    db
-      .select({
-        id: entryVisit.id,
-        userId: entryVisit.userId,
-        userName: user.name,
-        visitedOn: entryVisit.visitedOn,
-        note: entryVisit.note,
-      })
-      .from(entryVisit)
-      .innerJoin(user, eq(user.id, entryVisit.userId))
-      .where(eq(entryVisit.entryId, summary.id))
-      .orderBy(desc(entryVisit.visitedOn)),
+    visitsFor(summary.id, viewer),
     linksFor(summary.id, viewer),
   ]);
 
@@ -612,7 +599,7 @@ export async function addVisit(
     })
     .onConflictDoNothing();
 
-  return visitsFor(entryId);
+  return visitsFor(entryId, viewer);
 }
 
 export async function removeVisit(
@@ -636,21 +623,34 @@ export async function removeVisit(
       ),
     );
 
-  return visitsFor(entryId);
+  return visitsFor(entryId, viewer);
 }
 
-function visitsFor(entryId: string): Promise<PlaceVisit[]> {
+/**
+ * A visitor sees their own visits and nobody else's, even on an entry somebody
+ * else made public. A visit note is a diary line — "kids melted down at the
+ * top" is written for the person who wrote it, and publishing an entry should
+ * not publish the dates and moods of everyone who has since been there.
+ *
+ * Households widen this to the household's rows; starting narrow is the
+ * direction that cannot leak, since data shown once cannot be unshown.
+ *
+ * A signed-out visitor has no visits, so this answers with none rather than
+ * with everyone's.
+ */
+function visitsFor(entryId: string, viewer: Viewer): Promise<PlaceVisit[]> {
+  if (!viewer?.id) return Promise.resolve([]);
+
   return getDb()
     .select({
       id: entryVisit.id,
-      userId: entryVisit.userId,
-      userName: user.name,
       visitedOn: entryVisit.visitedOn,
       note: entryVisit.note,
     })
     .from(entryVisit)
-    .innerJoin(user, eq(user.id, entryVisit.userId))
-    .where(eq(entryVisit.entryId, entryId))
+    .where(
+      and(eq(entryVisit.entryId, entryId), eq(entryVisit.userId, viewer.id)),
+    )
     .orderBy(desc(entryVisit.visitedOn));
 }
 

@@ -182,8 +182,7 @@ const formatVisit = (iso: string) =>
                 <span class="font-medium text-stone-800">
                   {formatVisit(visit.visitedOn)}
                 </span>
-                <span class="text-stone-500"> — {visit.userName}</span>
-                {visit.note && <span class="text-stone-500">, {visit.note}</span>}
+                {visit.note && <span class="text-stone-500"> — {visit.note}</span>}
               </li>
             ))}
           </ul>

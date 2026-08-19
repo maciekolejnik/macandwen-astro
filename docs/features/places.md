@@ -327,9 +327,12 @@ unique (entry_id, user_id, visited_on)
 ```
 
 Rows rather than an ordered JSON array on the entry, for three reasons: a visit
-is **per user**, so a public entry visited by several people needs to say whose;
-the ordering wanted is just `ORDER BY visited_on`; and "have I been there"
-becomes a query rather than an array scan.
+is **per user**, so a public entry visited by several people keeps them apart
+rather than merging them into one list; the ordering wanted is just `ORDER BY
+visited_on`; and "have I been there" becomes a query rather than an array scan.
+
+The `user_id` is what makes the visit private to its author — see the access
+rules — and the same column is what a household later widens to a set.
 
 `visited_on` is an ISO date string rather than a timestamp because a visit is a
 day, not a moment, and dates recalled from memory should not pretend to a time
@@ -355,6 +358,14 @@ list rules live in one module, so a new page cannot pick a weaker one.
 - A visit belongs to the person who made it, so anyone who can see an entry may
   record one on it — including on somebody else's public entry — and may remove
   only their own.
+- **A visit is only ever shown to the person who made it.** A note is a diary
+  line, not a description: "kids melted down at the top" is written for the
+  person who wrote it, and publishing an entry should not publish the dates and
+  moods of everyone who has since been there. So the read is scoped to the
+  viewer as well as the entry, and a signed-out reader sees none rather than
+  everyone's. Households widen this later; starting narrow is the direction that
+  cannot leak, because data shown once cannot be unshown. "Three people have
+  been here" is a fair thing to want, but it is a count, not a list of names.
 - A link may only be created between two entries the actor can see, and a link
   is visible only if **both** endpoints are visible to the viewer — otherwise a
   public entry would leak the names of the private ones linked to it.
