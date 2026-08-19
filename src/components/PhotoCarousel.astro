@@ -1,0 +1,134 @@
+---
+import type { PlacePhoto } from '../lib/db/places';
+
+interface Props {
+  photos: PlacePhoto[];
+  /** Used as the alt text when a photo has no caption of its own. */
+  name: string;
+}
+
+const { photos, name } = Astro.props;
+
+// Photos arrive ordered by `position`, so the first one is the entry's default
+// picture — the one on its card, in the share preview, and shown here first.
+const [first, ...rest] = photos;
+const many = rest.length > 0;
+---
+
+{first && (
+  <figure
+    class="relative mt-6 overflow-hidden rounded-2xl border border-stone-200 bg-stone-100"
+    data-carousel
+  >
+    <!--
+      A scroll-snap strip rather than a slideshow: it is swipeable on a phone
+      and scrollable with a trackpad before any JavaScript runs, so the arrows
+      below are an enhancement rather than the mechanism. Nothing here needs a
+      framework.
+    -->
+    <div
+      class="flex snap-x snap-mandatory overflow-x-auto scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-carousel-track
+    >
+      {photos.map((photo, index) => (
+        <img
+          src={photo.url}
+          alt={photo.caption ?? `${name}, photo ${index + 1}`}
+          data-caption={photo.caption ?? ''}
+          loading={index === 0 ? 'eager' : 'lazy'}
+          class="aspect-[3/2] w-full shrink-0 snap-center object-cover"
+        />
+      ))}
+    </div>
+
+    {many && (
+      <>
+        <!--
+          Hidden until the script runs: an arrow that cannot do anything is
+          worse than no arrow, and without JavaScript the strip still scrolls.
+        -->
+        <button
+          type="button"
+          data-carousel-previous
+          aria-label="Previous photo"
+          class="absolute left-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-stone-700 shadow-sm backdrop-blur transition hover:bg-white disabled:cursor-default disabled:opacity-0"
+        >
+          <span aria-hidden="true">&larr;</span>
+        </button>
+
+        <button
+          type="button"
+          data-carousel-next
+          aria-label="Next photo"
+          class="absolute right-3 top-1/2 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-stone-700 shadow-sm backdrop-blur transition hover:bg-white disabled:cursor-default disabled:opacity-0"
+        >
+          <span aria-hidden="true">&rarr;</span>
+        </button>
+
+        <p
+          class="absolute right-3 top-3 rounded-full bg-black/50 px-2 py-0.5 text-xs font-medium text-white"
+          data-carousel-count
+        >
+          1 / {photos.length}
+        </p>
+      </>
+    )}
+
+    {photos.some((photo) => photo.caption) && (
+      <figcaption
+        class="border-t border-stone-200 bg-white px-4 py-2 text-xs text-stone-500"
+        data-carousel-caption
+      >
+        {first.caption ?? ''}
+      </figcaption>
+    )}
+  </figure>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
+    const track = root.querySelector<HTMLElement>('[data-carousel-track]');
+    if (!track) return;
+
+    const slides = [...track.querySelectorAll('img')];
+    const previous = root.querySelector<HTMLButtonElement>('[data-carousel-previous]');
+    const next = root.querySelector<HTMLButtonElement>('[data-carousel-next]');
+    const count = root.querySelector<HTMLElement>('[data-carousel-count]');
+    const caption = root.querySelector<HTMLElement>('[data-carousel-caption]');
+    if (!previous || !next) return;
+
+    // Revealed only now: an arrow that cannot do anything is worse than no
+    // arrow, and the strip scrolls perfectly well without them.
+    previous.classList.replace('hidden', 'flex');
+    next.classList.replace('hidden', 'flex');
+
+    // Derived from scroll position rather than tracked in a variable, so a
+    // swipe and an arrow press cannot disagree about which photo is showing.
+    const currentIndex = () =>
+      Math.round(track.scrollLeft / track.clientWidth);
+
+    const go = (index: number) => {
+      const clamped = Math.max(0, Math.min(index, slides.length - 1));
+      track.scrollTo({ left: clamped * track.clientWidth, behavior: 'smooth' });
+    };
+
+    const sync = () => {
+      const index = currentIndex();
+      previous.disabled = index === 0;
+      next.disabled = index === slides.length - 1;
+      if (count) count.textContent = `${index + 1} / ${slides.length}`;
+      if (caption) caption.textContent = slides[index]?.dataset.caption ?? '';
+    };
+
+    previous.addEventListener('click', () => go(currentIndex() - 1));
+    next.addEventListener('click', () => go(currentIndex() + 1));
+    track.addEventListener('scroll', () => requestAnimationFrame(sync), {
+      passive: true,
+    });
+    // A resize changes what `scrollLeft` means, so the arrows would otherwise
+    // start moving by the wrong amount.
+    window.addEventListener('resize', sync);
+
+    sync();
+  });
+</script>

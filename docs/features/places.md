@@ -332,7 +332,14 @@ id, entry_id → entry.id (cascade), url, caption, position, created_at
 ```
 
 Rows, ordered by `position`, matching `packing_list_item`. URLs only — no
-uploads, no R2 bucket, no image pipeline. The first photo is the card image.
+uploads, no R2 bucket, no image pipeline.
+
+**Position 0 is the entry's default picture**, and carries real weight: it is
+the card image on the list, the first frame of the carousel and the share
+preview. Order is therefore something the editor has to let you set rather than
+an accident of the order you happened to paste links in — the write path
+already renumbers positions from the array it is given, so reordering is a
+matter of the form offering it.
 
 #### `entry_visit`
 
@@ -441,6 +448,25 @@ awkward to test and these rules have edge cases — a mask of `0` means "any
 time", a hybrid carries two type badges, `family_friendly` has three states —
 so they live where a test can reach them.
 
+**Photos lead.** The list gives every card a 3:2 image, and the detail page
+puts the carousel directly under the title and badges, above the description —
+a photograph answers "do I want to go here" faster than any sentence, and this
+is a database of places worth looking at.
+
+An entry with no photo still gets the same picture-shaped area, tinted with its
+type's colour and naming the type in words. A grid where some cards have images
+and others collapse to text looks broken, and the stand-in is a weaker version
+of the same information rather than a placeholder saying nothing. It names the
+type instead of showing the icon alone, for the reason given under
+[Icons and colour](#icons-and-colour).
+
+**The carousel** is a scroll-snap strip, not a slideshow: it swipes on a phone
+and scrolls with a trackpad before any JavaScript runs. The arrows are added by
+a script and stay hidden until it does, so nothing on screen is ever inert. The
+current index is read back from `scrollLeft` rather than held in a variable,
+which is what stops a swipe and an arrow press disagreeing about which photo is
+showing. No framework, matching the rest of the site.
+
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one
 must be ticked. That is what makes a hybrid a natural thing to create rather
@@ -538,7 +564,8 @@ Each step is a mergeable change that leaves the site working.
    you are not allowed to see both return the same 404, since a distinguishable
    403 would confirm that the entry exists.
 3. **The editor and the write API.** Create, edit, delete, both detail sections,
-   photos, visits. The shared map component lands here, since the picker is its
+   photos — reorderable, since position 0 is the picture everything else uses —
+   and visits. The shared map component lands here, since the picker is its
    first user.
 4. **The map view.** `/places/map` reusing that component, and the list/map
    toggle.
