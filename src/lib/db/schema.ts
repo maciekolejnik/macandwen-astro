@@ -288,9 +288,6 @@ export const entry = sqliteTable(
     // Bitmask: spring 1, summer 2, autumn 4, winter 8. 0 means any time, and
     // needs no special case in a filter: `seasons = 0 or seasons & ? != 0`.
     seasons: integer("seasons").default(0).notNull(),
-    // Free-form extras, rendered as a key/value list and never queried in SQL.
-    // Anything in here that wants filtering has earned a column.
-    attributes: text("attributes"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
@@ -317,6 +314,11 @@ export const locationDetail = sqliteTable("location_detail", {
     .notNull()
     .references(() => entryType.id),
   access: text("access"),
+  // Free-form extras, stored as JSON text, rendered as a key/value list and
+  // never queried in SQL — anything in here that wants filtering has earned a
+  // column. It sits beside the type, because that is what decides which extras
+  // a thing has: a hybrid's lake facts and swim facts are different sets.
+  attributes: text("attributes"),
 });
 
 export const activityDetail = sqliteTable("activity_detail", {
@@ -337,6 +339,8 @@ export const activityDetail = sqliteTable("activity_detail", {
   familyFriendly: integer("family_friendly", { mode: "boolean" }),
   distanceM: integer("distance_m"),
   ascentM: integer("ascent_m"),
+  // See `locationDetail.attributes`.
+  attributes: text("attributes"),
 });
 
 export const entryLink = sqliteTable(

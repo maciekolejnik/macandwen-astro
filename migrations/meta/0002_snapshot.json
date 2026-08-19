@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "092aeeeb-20cc-40a7-8803-d7390ef9514b",
+  "id": "a987990e-aee6-4aec-b409-dcb6e62b1faf",
   "prevId": "195914e4-692b-4d45-b615-f3ab132843b4",
   "tables": {
     "account": {
@@ -186,6 +186,13 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "attributes": {
+          "name": "attributes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
         }
       },
       "indexes": {},
@@ -331,13 +338,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": 0
-        },
-        "attributes": {
-          "name": "attributes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         },
         "created_at": {
           "name": "created_at",
@@ -810,6 +810,13 @@
         },
         "access": {
           "name": "access",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "attributes": {
+          "name": "attributes",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

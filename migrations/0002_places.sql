@@ -7,6 +7,7 @@ CREATE TABLE `activity_detail` (
 	`family_friendly` integer,
 	`distance_m` integer,
 	`ascent_m` integer,
+	`attributes` text,
 	FOREIGN KEY (`entry_id`) REFERENCES `entry`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`type_id`) REFERENCES `entry_type`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -27,7 +28,6 @@ CREATE TABLE `entry` (
 	`bbox_max_lat` real,
 	`bbox_max_lng` real,
 	`seasons` integer DEFAULT 0 NOT NULL,
-	`attributes` text,
 	`created_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL,
 	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL,
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
@@ -95,6 +95,7 @@ CREATE TABLE `location_detail` (
 	`entry_id` text PRIMARY KEY NOT NULL,
 	`type_id` text NOT NULL,
 	`access` text,
+	`attributes` text,
 	FOREIGN KEY (`entry_id`) REFERENCES `entry`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`type_id`) REFERENCES `entry_type`(`id`) ON UPDATE no action ON DELETE no action
 );

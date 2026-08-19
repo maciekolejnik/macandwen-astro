@@ -78,7 +78,11 @@ export type PlaceSummary = {
   createdAt: Date;
   updatedAt: Date;
   photoUrl: string | null;
-  location: { type: PlaceTypeRef; access: string | null } | null;
+  location: {
+    type: PlaceTypeRef;
+    access: string | null;
+    attributes: Record<string, string>;
+  } | null;
   activity: {
     type: PlaceTypeRef;
     difficulty: Difficulty | null;
@@ -87,6 +91,7 @@ export type PlaceSummary = {
     familyFriendly: boolean | null;
     distanceM: number | null;
     ascentM: number | null;
+    attributes: Record<string, string>;
   } | null;
 };
 
@@ -115,7 +120,6 @@ export type PlaceLink = {
 };
 
 export type PlaceDetail = PlaceSummary & {
-  attributes: Record<string, string>;
   photos: PlacePhoto[];
   visits: PlaceVisit[];
   links: PlaceLink[];
@@ -135,8 +139,11 @@ export type PlaceInput = {
     maxLng: number;
   } | null;
   seasons?: number;
-  attributes?: Record<string, string> | null;
-  location?: { typeId: string; access?: string | null } | null;
+  location?: {
+    typeId: string;
+    access?: string | null;
+    attributes?: Record<string, string> | null;
+  } | null;
   activity?: {
     typeId: string;
     difficulty?: Difficulty | null;
@@ -145,6 +152,7 @@ export type PlaceInput = {
     familyFriendly?: boolean | null;
     distanceM?: number | null;
     ascentM?: number | null;
+    attributes?: Record<string, string> | null;
   } | null;
   photos?: { url: string; caption?: string | null }[];
 };
@@ -226,6 +234,7 @@ function summarySelection() {
     locationTypeIcon: locationType.icon,
     locationTypeColour: locationType.colour,
     access: locationDetail.access,
+    locationAttributes: locationDetail.attributes,
     activityTypeId: activityType.id,
     activityTypeSlug: activityType.slug,
     activityTypeLabel: activityType.label,
@@ -237,6 +246,7 @@ function summarySelection() {
     familyFriendly: activityDetail.familyFriendly,
     distanceM: activityDetail.distanceM,
     ascentM: activityDetail.ascentM,
+    activityAttributes: activityDetail.attributes,
   };
 }
 
@@ -289,6 +299,7 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
             colour: row.locationTypeColour,
           },
           access: row.access,
+          attributes: parseAttributes(row.locationAttributes),
         }
       : null,
     activity: row.activityTypeId
@@ -306,6 +317,7 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
           familyFriendly: row.familyFriendly,
           distanceM: row.distanceM,
           ascentM: row.ascentM,
+          attributes: parseAttributes(row.activityAttributes),
         }
       : null,
   };
@@ -380,12 +392,7 @@ async function detailFor(
 ): Promise<PlaceDetail> {
   const db = getDb();
 
-  const [attributes, photos, visits, links] = await Promise.all([
-    db
-      .select({ attributes: entry.attributes })
-      .from(entry)
-      .where(eq(entry.id, summary.id))
-      .limit(1),
+  const [photos, visits, links] = await Promise.all([
     db
       .select({
         id: entryPhoto.id,
@@ -413,7 +420,6 @@ async function detailFor(
 
   return {
     ...summary,
-    attributes: parseAttributes(attributes[0]?.attributes ?? null),
     photos,
     visits,
     links,
@@ -434,6 +440,14 @@ export async function getBySlug(
 ): Promise<PlaceDetail | null> {
   const summary = await getSummaryBySlug(slug, viewer);
   return summary ? detailFor(summary, viewer) : null;
+}
+
+function serialiseAttributes(
+  attributes: Record<string, string> | null | undefined,
+): string | null {
+  return attributes && Object.keys(attributes).length > 0
+    ? JSON.stringify(attributes)
+    : null;
 }
 
 function parseAttributes(raw: string | null): Record<string, string> {
@@ -692,8 +706,11 @@ type NormalisedInput = {
   bboxMaxLat: number | null;
   bboxMaxLng: number | null;
   seasons: number;
-  attributes: string | null;
-  location: { typeId: string; access: string | null } | null;
+  location: {
+    typeId: string;
+    access: string | null;
+    attributes: string | null;
+  } | null;
   activity: {
     typeId: string;
     difficulty: Difficulty | null;
@@ -702,6 +719,7 @@ type NormalisedInput = {
     familyFriendly: boolean | null;
     distanceM: number | null;
     ascentM: number | null;
+    attributes: string | null;
   } | null;
   photos: { url: string; caption: string | null }[];
 };
@@ -806,6 +824,7 @@ export function normaliseInput(input: PlaceInput): NormalisedInput {
       familyFriendly: input.activity.familyFriendly ?? null,
       distanceM: positiveOrNull(input.activity.distanceM, 'Distance'),
       ascentM: positiveOrNull(input.activity.ascentM, 'Ascent'),
+      attributes: serialiseAttributes(input.activity.attributes),
     };
     if (!activity.typeId) invalid('Choose a type for the activity');
   }
@@ -830,14 +849,11 @@ export function normaliseInput(input: PlaceInput): NormalisedInput {
     bboxMaxLat: bbox?.maxLat ?? null,
     bboxMaxLng: bbox?.maxLng ?? null,
     seasons,
-    attributes:
-      input.attributes && Object.keys(input.attributes).length > 0
-        ? JSON.stringify(input.attributes)
-        : null,
     location: input.location
       ? {
           typeId: input.location.typeId,
           access: trimmedOrNull(input.location.access, ACCESS_MAX_LENGTH, 'Access'),
+          attributes: serialiseAttributes(input.location.attributes),
         }
       : null,
     activity,
@@ -957,7 +973,6 @@ export async function create(
     bboxMaxLat: normalised.bboxMaxLat,
     bboxMaxLng: normalised.bboxMaxLng,
     seasons: normalised.seasons,
-    attributes: normalised.attributes,
   });
 
   // D1 has no interactive transactions; `batch` is the atomic equivalent.
@@ -1015,7 +1030,6 @@ export async function update(
         bboxMaxLat: normalised.bboxMaxLat,
         bboxMaxLng: normalised.bboxMaxLng,
         seasons: normalised.seasons,
-        attributes: normalised.attributes,
         updatedAt: new Date(),
       })
       .where(eq(entry.id, id)),

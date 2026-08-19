@@ -83,9 +83,9 @@ the location vocabulary because it is stored in the location table.
 
 | Table | Role |
 | --- | --- |
-| `entry` | The shared row: name, description, owner, visibility, geometry, seasons, attributes, derived `kind`, timestamps |
-| `location_detail` | Present if the entry is a place. Type, access notes |
-| `activity_detail` | Present if the entry is a thing to do. Type, difficulty, duration, family friendliness |
+| `entry` | The shared row: name, description, owner, visibility, geometry, seasons, derived `kind`, timestamps |
+| `location_detail` | Present if the entry is a place. Type, access notes, extras |
+| `activity_detail` | Present if the entry is a thing to do. Type, difficulty, duration, family friendliness, extras |
 | `entry_type` | The vocabulary of types, per kind |
 | `entry_link` | `(from_entry, relation, to_entry)` — the flexible graph |
 | `entry_photo` | Ordered image URLs with captions |
@@ -107,7 +107,6 @@ extent        text not null default 'point'     -- 'point' | 'area' | 'region'
 bbox_min_lat  real  bbox_min_lng real
 bbox_max_lat  real  bbox_max_lng real
 seasons       integer not null default 0        -- bitmask, 0 = any time
-attributes    text                     -- JSON blob, free-form extras
 created_at / updated_at
 ```
 
@@ -132,16 +131,13 @@ is derived from the name, deduplicated with a numeric suffix, and does not
 change when the name is edited — a link that has been shared should keep
 working.
 
-**`attributes`** is the escape hatch: a JSON object of extra properties,
-rendered as a key/value list and never queried in SQL. The moment something in
-there wants filtering, it has earned a column.
-
 #### `location_detail`
 
 ```
-entry_id  text pk → entry.id (cascade)
-type_id   text not null → entry_type.id
-access    text        -- free text: 'toll road', '20 min walk in', …
+entry_id    text pk → entry.id (cascade)
+type_id     text not null → entry_type.id
+access      text        -- free text: 'toll road', '20 min walk in', …
+attributes  text        -- JSON, free-form extras
 ```
 
 #### `activity_detail`
@@ -155,6 +151,7 @@ duration_minutes integer     -- optional precision
 family_friendly  integer     -- 1 yes, 0 no, null unknown
 distance_m       integer
 ascent_m         integer
+attributes       text        -- JSON, free-form extras
 ```
 
 **Duration is a bucket, optionally backed by minutes.** The bucket is what
@@ -170,6 +167,35 @@ hide unmarked entries from families or promise something nobody checked.
 
 **Difficulty** is a text enum, nullable for unknown. Unlike types, this
 vocabulary is ordered, small and unlikely to grow, so it is not a lookup table.
+
+#### Where the extras live
+
+**`attributes` sits on the detail rows, not on `entry`**, for the same reason
+the type does. It is the escape hatch — a JSON object of extra properties,
+rendered as a key/value list and never queried in SQL — and what decides which
+extras a thing has is *what kind of thing it is*. A via ferrata has a cable
+length, a restaurant has a phone number, a lake has a depth. Those are facts
+about the activity or the place, not about the entry, and on a hybrid a single
+bag would mix the lake's facts with the swim's.
+
+The cost is that a genuinely entry-wide extra on a hybrid has two homes and no
+obvious one. That is rare and harmless: anything that really belongs to the
+entry as a whole — and is used often enough to notice — has earned a column,
+which is the same rule that governs `attributes` in the first place.
+
+**It is `TEXT`, not SQLite's JSONB.** D1 does support JSONB — both the local
+runtime and production answer `jsonb('{"a":1}')` with a blob, so the SQLite
+underneath is 3.45 or newer — but it would buy nothing here and cost something.
+JSONB is a parsing optimisation for documents repeatedly read *inside* SQL with
+`json_extract`; these are read whole, once, and parsed in the Worker. Against
+that, a blob is unreadable in `wrangler d1 execute` and in the Cloudflare
+console, where `TEXT` shows the object as written. SQLite's own documentation
+also calls the JSONB format an internal detail rather than an interchange one.
+
+If some future query does start extracting keys in SQL — the point at which
+that becomes tempting is also the point at which the key deserves a column —
+the conversion is `jsonb(attributes)` in place, with no change to what is
+stored elsewhere.
 
 #### `entry_type`
 

@@ -462,17 +462,32 @@ describe('places: validation', () => {
     expect((await getById(no.id, owner))?.activity?.familyFriendly).toBe(false);
   });
 
-  it('stores free-form attributes and survives an unreadable blob', async () => {
+  it('keeps a hybrid’s two sets of extras apart', async () => {
     const owner = await signedInUser();
-    const { id } = await create(owner, aPlace({ attributes: { fee: '5 EUR' } }));
+    const { id } = await create(owner, {
+      name: 'Lake with a swim',
+      location: { typeId: LAKE, attributes: { parking: '5 EUR' } },
+      activity: { typeId: HIKE, attributes: { water: '18C in August' } },
+    });
 
-    expect((await getById(id, owner))?.attributes).toEqual({ fee: '5 EUR' });
+    const place = await getById(id, owner);
 
-    await env.DB.prepare('UPDATE entry SET attributes = ? WHERE id = ?')
+    // Attributes sit beside the type, so the lake's facts and the swim's do
+    // not land in one bag.
+    expect(place?.location?.attributes).toEqual({ parking: '5 EUR' });
+    expect(place?.activity?.attributes).toEqual({ water: '18C in August' });
+  });
+
+  it('survives an unreadable attributes blob', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(owner, aPlace({ location: { typeId: LAKE } }));
+
+    await env.DB.prepare('UPDATE location_detail SET attributes = ? WHERE entry_id = ?')
       .bind('not json', id)
       .run();
 
-    expect((await getById(id, owner))?.attributes).toEqual({});
+    // Extras are decoration; a corrupt blob should not take the page down.
+    expect((await getById(id, owner))?.location?.attributes).toEqual({});
   });
 });
 
