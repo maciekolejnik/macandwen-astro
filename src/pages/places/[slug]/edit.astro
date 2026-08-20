@@ -1,0 +1,56 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import PlaceForm from '../../../components/PlaceForm.astro';
+import { getBySlug, isAdmin } from '../../../lib/db/places';
+
+// Reads the session, so it cannot be prerendered.
+export const prerender = false;
+
+const user = Astro.locals.user;
+
+if (!user) {
+  return Astro.redirect(`/login?redirectTo=/places/${Astro.params.slug}/edit`);
+}
+
+const place = await getBySlug(Astro.params.slug!, user);
+
+// Only the owner may edit, admin or not. Somebody else's entry is answered
+// exactly as a missing one, matching the API and the detail page.
+const editable = place?.isOwn ? place : null;
+
+if (!editable) {
+  Astro.response.status = 404;
+}
+---
+
+{editable ? (
+<Layout title={`Edit ${editable.name}`}>
+  <div class="mx-auto max-w-2xl px-4 py-12">
+    <a
+      href={`/places/${editable.slug}`}
+      class="text-sm text-stone-500 transition-colors hover:text-emerald-700"
+    >
+      &larr; Back to {editable.name}
+    </a>
+
+    <h1 class="mt-4 text-3xl font-bold text-stone-900">Edit</h1>
+
+    <PlaceForm place={editable} canPublish={isAdmin(user)} />
+  </div>
+</Layout>
+) : (
+<Layout title="Not found">
+  <div class="mx-auto max-w-2xl px-4 py-20 text-center">
+    <h1 class="text-3xl font-bold text-stone-900">Not found</h1>
+    <p class="mt-3 text-stone-600">
+      It may have been deleted, or it may not be yours to edit.
+    </p>
+    <a
+      href="/places"
+      class="mt-8 inline-block rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      Places &amp; activities
+    </a>
+  </div>
+</Layout>
+)}

@@ -1,6 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getBySlug } from '../../lib/db/places';
+import { getBySlug, listVisible } from '../../lib/db/places';
+import VisitEditor from '../../components/VisitEditor.astro';
+import LinkEditor from '../../components/LinkEditor.astro';
 import {
   extentNote,
   factsFor,
@@ -41,13 +43,9 @@ const extras = place
 // Photos arrive ordered by `position`, so the first is the default picture.
 const [hero, ...morePhotos] = place?.photos ?? [];
 
-const formatVisit = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
+// Only fetched when there is a link editor to fill, since it is a second query
+// for the sake of one dropdown.
+const linkCandidates = place?.isOwn ? await listVisible(user) : [];
 ---
 
 {place ? (
@@ -67,11 +65,22 @@ const formatVisit = (iso: string) =>
       <div class="mt-4 flex items-start justify-between gap-4">
         <h1 class="text-3xl font-bold text-stone-900">{place.name}</h1>
 
-        {place.isOwn && place.visibility === 'private' && (
-          <span class="mt-1 shrink-0 rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
-            Private
-          </span>
-        )}
+        <div class="mt-1 flex shrink-0 items-center gap-2">
+          {place.isOwn && place.visibility === 'private' && (
+            <span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600">
+              Private
+            </span>
+          )}
+
+          {place.isOwn && (
+            <a
+              href={`/places/${place.slug}/edit`}
+              class="rounded-lg border border-stone-300 bg-white px-3 py-1 text-xs font-medium text-stone-700 transition-colors hover:bg-stone-100"
+            >
+              Edit
+            </a>
+          )}
+        </div>
       </div>
 
       <p class="mt-3 flex flex-wrap items-center gap-2">
@@ -178,42 +187,18 @@ const formatVisit = (iso: string) =>
         </section>
       )}
 
-      {place.links.length > 0 && (
-        <section class="mt-8">
-          <h2 class="text-lg font-semibold text-stone-900">Nearby and related</h2>
-          <ul class="mt-3 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
-            {place.links.map((link) => (
-              <li class="flex items-center justify-between gap-4 px-5 py-3">
-                <span class="text-xs uppercase tracking-wide text-stone-400">
-                  {link.label}
-                </span>
-                <a
-                  href={`/places/${link.other.slug}`}
-                  class="text-sm font-medium text-emerald-700 hover:underline"
-                >
-                  {link.other.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
+      {(place.links.length > 0 || place.isOwn) && (
+        <LinkEditor
+          placeId={place.id}
+          links={place.links}
+          candidates={linkCandidates}
+          editable={place.isOwn}
+        />
       )}
 
-      {place.visits.length > 0 && (
-        <section class="mt-8">
-          <h2 class="text-lg font-semibold text-stone-900">Been there</h2>
-          <ul class="mt-3 space-y-2">
-            {place.visits.map((visit) => (
-              <li class="text-sm text-stone-600">
-                <span class="font-medium text-stone-800">
-                  {formatVisit(visit.visitedOn)}
-                </span>
-                {visit.note && <span class="text-stone-500"> — {visit.note}</span>}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <!-- Offered to anybody signed in: a visit is private to whoever wrote
+           it, so recording one is not editing somebody else's entry. -->
+      {user && <VisitEditor placeId={place.id} visits={place.visits} />}
 
       {extras.length > 0 && (
         <section class="mt-8">

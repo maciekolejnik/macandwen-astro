@@ -14,9 +14,10 @@ This document is the design and the plan. It is written before the code, so
 everything below is a decision with its reasoning attached rather than a
 description of what exists.
 
-Status: **In progress.** Step 1 of the plan — the schema and the query layer —
-has landed; the pages and the write API have not. Sections describing what does
-not exist yet stay in the future tense.
+Status: **In progress.** Steps 1 to 3 of the plan have landed: the schema and
+the query layer, the read-only pages, and the editor with its write API. The map
+is what remains. Sections describing what does not exist yet stay in the future
+tense.
 
 **Scope for the first release: storing, editing and displaying entries, on a
 list and on a map.** Filtering, moderation and the type-management UI are
@@ -484,18 +485,26 @@ nothing later — it is one component and no schema.
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one
 must be ticked. That is what makes a hybrid a natural thing to create rather
-than an advanced feature. It is a plain form with a `<script>`, not a framework
-island, matching `PackingListForm.astro`.
+than an advanced feature. Unticking a half hides its section rather than
+disabling it, so what is on screen is exactly what will be stored. It is a plain
+form with a `<script>`, not a framework island, matching `PackingListForm.astro`.
 
-Coordinates come from a **map picker**: the editor shows the same map component
-as `/places/map`, and clicking it drops the pin. Dragging the pin moves it, and
-the numbers stay visible and editable underneath, because a coordinate pasted
-from Google Maps is often the fastest way in — the field accepts a `lat, lng`
-pair, which is exactly what copying from Maps gives you. The two are bound
-together: typing moves the pin, moving the pin updates the numbers.
+Photos are a list of URL-and-caption rows with move buttons, and the first is
+labelled "Main photo" — the ordering is not decoration, it decides the picture
+on the list and in a shared link. Distance is typed in kilometres and stored in
+metres; the conversion happens once, in the form.
 
-Without JavaScript the picker is absent and the pair of number fields is the
-whole story, so the form still works.
+Coordinates are **one paste-friendly field**, `42.1256, 2.7469`, because that is
+what copying from a map gives you and splitting it into two boxes means
+splitting it by hand. It accepts a comma, a space, or both.
+
+Coordinates will also come from a **map picker** in step 4: the editor will show
+the same map component as `/places/map`, clicking drops the pin, dragging moves
+it, and the text field stays bound to it — typing moves the pin, moving the pin
+rewrites the numbers. The picker is an addition to the field rather than a
+replacement for it, which is why the field shipped first and alone: without
+JavaScript, or with a coordinate already on the clipboard, it is the faster
+path anyway.
 
 An entry whose `extent` is `area` or `region` picks a bounding box by dragging a
 rectangle, with the representative point defaulting to its centre and still
@@ -547,6 +556,20 @@ Forbidden and missing both answer `404` with an identical body.
 packing list editor's replace-everything update. D1 has no interactive
 transactions, so multi-table writes go through `db.batch`.
 
+Visits and links have their own routes rather than riding along with `PATCH`,
+because they are not owned by the same person as the entry: a visit belongs to
+whoever recorded it, so it must be addable by somebody who cannot edit the entry
+at all. The two sub-editors on the detail page reload the page on success rather
+than patching the DOM. That is heavier, but a link's label depends on which end
+it is read from and a date has a format — both are things the server already
+knows how to work out, and neither is worth writing a second time in the
+browser for an action taken this rarely.
+
+`src/lib/places-payload.ts` shape-checks a body before it reaches the data
+layer, which trusts its types. Content rules — trimming, limits, blanks, the
+derived kind — stay in `normaliseInput`, so they hold for every caller rather
+than only for HTTP.
+
 ## Tests
 
 Real D1 in workerd, no mocks, following the packing list precedent:
@@ -577,14 +600,14 @@ Each step is a mergeable change that leaves the site working.
    so they can be tested — see `places-view.test.ts`. A missing slug and a slug
    you are not allowed to see both return the same 404, since a distinguishable
    403 would confirm that the entry exists.
-3. **The editor and the write API.** Create, edit, delete, both detail sections,
-   photos — reorderable, since position 0 is the picture everything else uses —
-   and visits. The shared map component lands here, since the picker is its
-   first user.
-4. **The map view.** `/places/map` reusing that component, and the list/map
-   toggle.
-5. **Links.** The link editor on the detail page and the both-ends visibility
-   rule.
+3. ~~**The editor and the write API.**~~ **Done.** Create, edit, delete, both
+   detail sections, photos — reorderable, since position 0 is the picture
+   everything else uses — visits and links. The map picker was held back to step
+   4 rather than shipped half-built: coordinates are pasted for now, into a
+   field the picker will later fill.
+4. **The map view.** `/places/map` and the shared `PlacesMap.astro`, reused by
+   the detail page's "Getting there" and by the editor as a picker, plus the
+   list/map toggle.
 
 That is the release. A person can record places and things to do, see them on a
 list and on a map, and connect them.
@@ -660,6 +683,32 @@ But the things types handle *badly* are exactly the unbounded, personal,
 un-adminned ones in that list, so the two axes are orthogonal and should both
 exist eventually. A tag needs `tag` and `entry_tag` and touches nothing that is
 here — no column changes, no rewrite — which is the reason it can wait.
+
+**Uploading photos.** Today a photo is a URL somebody pastes, which is fine for
+pictures already on `media.macandwen.com` and useless for one that is still on
+a phone. Its own feature, and worth writing up separately, but the shape is
+clear enough to record:
+
+- The `macandwen` R2 bucket is already public on `media.macandwen.com`, so an
+  upload writes `images/places/<entry>/<uuid>.webp` and hands back a URL. **The
+  schema does not change** — `entry_photo.url` holds it either way, which is why
+  this can land after the editor rather than before it. Upload swaps the input
+  control, not the model.
+- `POST /api/uploads` with an `r2_buckets` binding: session required, a content
+  type allowlist, a size cap and a random key. Roughly the size of one of the
+  packing list routes.
+- **Resize in the browser, not the Worker.** `sharp` is native and does not run
+  on Workers, and Cloudflare Images is a paid product for a problem this size. A
+  `<canvas>` resize to about 2000 px and `toBlob(…, 'image/webp', 0.82)` turns a
+  5 MB phone photo into roughly 300 KB before it leaves the device: faster
+  upload, less stored, no dependency, and the same format as everything already
+  in the bucket. HEIC is the exception — Safari decodes it, desktop Chrome does
+  not — so those either fall back to uploading the original or ask the phone to
+  shoot JPEG.
+- **The real work is orphans.** `entry_photo` rows cascade when an entry is
+  deleted; R2 objects do not. Removing a photo has to remove the object, and
+  whether that happens inline or as a sweep is the decision that feature exists
+  to make.
 
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into

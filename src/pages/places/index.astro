@@ -15,12 +15,23 @@ const { own, browse } = await loadIndex(user);
   description="Lakes, hikes, viewpoints and everything else worth going back to."
 >
   <div class="mx-auto max-w-4xl px-4 py-12">
-    <div>
-      <h1 class="text-3xl font-bold text-stone-900">Places &amp; activities</h1>
-      <p class="mt-2 max-w-prose text-stone-600">
-        Somewhere to keep the lakes, hikes and viewpoints that would otherwise
-        live in a phone's screenshots folder.
-      </p>
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-stone-900">Places &amp; activities</h1>
+        <p class="mt-2 max-w-prose text-stone-600">
+          Somewhere to keep the lakes, hikes and viewpoints that would otherwise
+          live in a phone's screenshots folder.
+        </p>
+      </div>
+
+      {user && (
+        <a
+          href="/places/new"
+          class="mt-1 shrink-0 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+        >
+          Add
+        </a>
+      )}
     </div>
 
     {user ? (
@@ -36,7 +47,10 @@ const { own, browse } = await loadIndex(user);
         ) : (
           <p class="mt-3 text-sm text-stone-500">
             Anything you add is kept here, and stays private unless it is made
-            public.
+            public.{' '}
+            <a href="/places/new" class="font-medium text-emerald-700 hover:underline">
+              Add the first one
+            </a>.
           </p>
         )}
       </section>

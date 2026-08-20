@@ -1,0 +1,168 @@
+---
+import type { PlaceVisit } from '../lib/db/places';
+import { NOTE_MAX_LENGTH } from '../lib/places-constants';
+
+interface Props {
+  placeId: string;
+  visits: PlaceVisit[];
+}
+
+const { placeId, visits } = Astro.props;
+
+const formatVisit = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  });
+
+// Today in the browser's calendar is close enough, and it saves a tap in the
+// common case: you write a visit down after getting home.
+const today = new Date().toISOString().slice(0, 10);
+---
+
+<!--
+  A visit belongs to whoever recorded it and is shown to nobody else, so this
+  is offered to any signed-in visitor rather than only the owner: keeping a
+  note of a walk you did is not editing somebody else's entry.
+-->
+<section class="mt-8" data-visit-editor data-place-id={placeId}>
+  <h2 class="text-lg font-semibold text-stone-900">Been there</h2>
+
+  <p
+    data-visit-error
+    role="alert"
+    hidden
+    class="mt-3 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700"
+  >
+  </p>
+
+  <ul class="mt-3 space-y-2" data-visit-list>
+    {
+      visits.map((visit) => (
+        <li class="flex items-baseline gap-2 text-sm text-stone-600" data-visit-id={visit.id}>
+          <span class="font-medium text-stone-800">{formatVisit(visit.visitedOn)}</span>
+          {visit.note && <span class="text-stone-500">— {visit.note}</span>}
+          <button
+            type="button"
+            data-remove-visit
+            aria-label="Remove this visit"
+            class="ml-auto shrink-0 text-xs text-stone-400 transition-colors hover:text-red-600"
+          >
+            Remove
+          </button>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    visits.length === 0 && (
+      <p class="mt-3 text-sm text-stone-500" data-visit-empty>
+        No visits written down yet.
+      </p>
+    )
+  }
+
+  <div class="mt-4 flex flex-wrap items-end gap-2">
+    <label class="block">
+      <span class="text-xs uppercase tracking-wide text-stone-400">When</span>
+      <input
+        type="date"
+        value={today}
+        data-visit-date
+        class="mt-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+      />
+    </label>
+
+    <label class="block flex-1">
+      <span class="text-xs uppercase tracking-wide text-stone-400">Note</span>
+      <input
+        type="text"
+        maxlength={NOTE_MAX_LENGTH}
+        placeholder="Optional — who with, what it was like"
+        data-visit-note
+        class="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+      />
+    </label>
+
+    <button
+      type="button"
+      data-add-visit
+      class="rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm text-stone-700 transition-colors hover:bg-stone-100 disabled:opacity-50"
+    >
+      I was here
+    </button>
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-visit-editor]');
+
+  if (root) {
+    const placeId = root.dataset.placeId!;
+    const errorBox = root.querySelector<HTMLElement>('[data-visit-error]')!;
+    const date = root.querySelector<HTMLInputElement>('[data-visit-date]')!;
+    const note = root.querySelector<HTMLInputElement>('[data-visit-note]')!;
+    const add = root.querySelector<HTMLButtonElement>('[data-add-visit]')!;
+
+    const showError = (message: string) => {
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+    };
+
+    /**
+     * The server re-renders the list, which keeps the dates formatted in one
+     * place rather than two. A reload is heavier than patching the DOM, but
+     * this is a rare action and correctness is worth more here than speed.
+     */
+    const send = async (method: string, body: unknown, button: HTMLButtonElement) => {
+      errorBox.hidden = true;
+      button.disabled = true;
+
+      try {
+        const response = await fetch(`/api/places/${placeId}/visits`, {
+          method,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+          button.disabled = false;
+          const payload = (await response.json().catch(() => null)) as
+            | { error?: string }
+            | null;
+          showError(payload?.error ?? 'That did not work. Please try again.');
+          return;
+        }
+
+        window.location.reload();
+      } catch {
+        button.disabled = false;
+        showError('Could not reach the server. Please try again.');
+      }
+    };
+
+    add.addEventListener('click', () => {
+      if (!date.value) {
+        showError('Pick a date');
+        return;
+      }
+
+      void send('POST', { visitedOn: date.value, note: note.value }, add);
+    });
+
+    root.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+        '[data-remove-visit]',
+      );
+      if (!button) return;
+
+      const item = button.closest<HTMLLIElement>('[data-visit-id]');
+      if (!item) return;
+
+      void send('DELETE', { visitId: item.dataset.visitId }, button);
+    });
+  }
+</script>
