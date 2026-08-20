@@ -1,0 +1,82 @@
+---
+import type { PlaceSummary } from '../lib/db/places';
+import { factsFor, typeBadges } from '../lib/places-view';
+
+interface Props {
+  place: PlaceSummary;
+  /** The visitor's own section already says whose these are. */
+  showOwner?: boolean;
+}
+
+const { place, showOwner = true } = Astro.props;
+
+const badges = typeBadges(place);
+// Two or three facts on a card; the rest are on the detail page.
+const facts = factsFor(place).slice(0, 3);
+---
+
+<article
+  data-place-card
+  class="group relative mb-4 flex break-inside-avoid flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition-colors hover:border-emerald-400 hover:shadow-md"
+>
+  <!--
+    No fixed aspect ratio: the image keeps its own shape, so a portrait makes a
+    tall card and a panorama a short one. An entry with no photo is simply a
+    text card — a stand-in panel would take up the room of a photograph while
+    saying less than the badges below it already do.
+  -->
+  {place.photoUrl && (
+    <img
+      src={place.photoUrl}
+      alt=""
+      loading="lazy"
+      class="w-full bg-stone-100"
+    />
+  )}
+
+  <div class="flex flex-1 flex-col p-5">
+    <div class="flex items-start justify-between gap-3">
+      <h3 class="font-semibold leading-snug text-stone-900 transition-colors group-hover:text-emerald-700">
+        <!-- Stretched over the whole card, so the card is one big link. -->
+        <a href={`/places/${place.slug}`} class="after:absolute after:inset-0">
+          {place.name}
+        </a>
+      </h3>
+
+      {place.isOwn && place.visibility === 'private' && (
+        <span class="shrink-0 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600">
+          Private
+        </span>
+      )}
+    </div>
+
+    <p class="mt-2 flex flex-wrap items-center gap-1.5">
+      {badges.map((type) => (
+        <span
+          class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-white"
+          style={`background-color: ${type.colour ?? '#57534e'}`}
+        >
+          <!-- Never alone: a type with no honest emoji still reads fine. -->
+          {type.icon && <span aria-hidden="true">{type.icon}</span>}
+          {type.label}
+        </span>
+      ))}
+    </p>
+
+    {place.description && (
+      <p class="mt-3 line-clamp-2 text-sm text-stone-600">{place.description}</p>
+    )}
+
+    {facts.length > 0 && (
+      <p class="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-500">
+        {facts.map((fact) => (
+          <span>{fact.value}</span>
+        ))}
+      </p>
+    )}
+
+    {showOwner && !place.isOwn && (
+      <p class="mt-3 text-xs text-stone-500">by {place.ownerName}</p>
+    )}
+  </div>
+</article>

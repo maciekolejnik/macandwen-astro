@@ -1,8 +1,14 @@
-# Places: locations and activities
+# Places & activities
 
 A personal database of **locations** (a lake, a car park, a refuge, a whole
 region) and **activities** (a hike, a via ferrata, a kayak route), owned by the
 person who added them and linked to each other in whatever way makes sense.
+
+The feature is called "places & activities" rather than "places", because half
+the data is not a place: a hike is a thing you do. The clumsier name is the
+honest one, and it matches the two checkboxes in the editor, so the same
+vocabulary runs from the nav to the form. The route stays `/places` — a URL is a
+handle, not a title, and shared links should keep working.
 
 This document is the design and the plan. It is written before the code, so
 everything below is a decision with its reasoning attached rather than a
@@ -83,8 +89,8 @@ the location vocabulary because it is stored in the location table.
 
 | Table | Role |
 | --- | --- |
-| `entry` | The shared row: name, description, owner, visibility, geometry, seasons, derived `kind`, timestamps |
-| `location_detail` | Present if the entry is a place. Type, access notes, extras |
+| `entry` | The shared row: name, description, owner, visibility, geometry, access, seasons, derived `kind`, timestamps |
+| `location_detail` | Present if the entry is a place. Type and extras |
 | `activity_detail` | Present if the entry is a thing to do. Type, difficulty, duration, family friendliness, extras |
 | `entry_type` | The vocabulary of types, per kind |
 | `entry_link` | `(from_entry, relation, to_entry)` — the flexible graph |
@@ -107,6 +113,7 @@ extent        text not null default 'point'     -- 'point' | 'area' | 'region'
 bbox_min_lat  real  bbox_min_lng real
 bbox_max_lat  real  bbox_max_lng real
 seasons       integer not null default 0        -- bitmask, 0 = any time
+access        text                     -- how to reach the point above
 created_at / updated_at
 ```
 
@@ -122,6 +129,22 @@ bounding-box arithmetic, not PostGIS.
 Anything genuinely polygonal — a coastline, a national park border — is out of
 scope. A bounding box is a rectangle around Catalunya, not Catalunya.
 
+**Access** — "toll road", "20 minutes walk in", "gate is usually shut, park on
+the verge" — sits on `entry`, beside the point it describes, rather than on
+`location_detail`. It was on the location row first, which was wrong twice
+over: an activity has a way in as much as a place does, and forcing a hike to
+invent a location row just to hold one sentence would corrupt the `kind` that
+row is supposed to derive. A hybrid also has one way in, not two.
+
+It stays separate from `description` because the two are read at different
+moments: the description is why you would go, the access line is what you need
+when you are already in the car looking for the turning.
+
+For an activity this is the short version — a full "park here, then walk 20
+minutes" is better expressed as a `parks_at` link to a car park entry, which is
+reusable by every walk that starts there. The column is for when a whole second
+entry would be overkill.
+
 **Seasons** are a bitmask (`spring 1`, `summer 2`, `autumn 4`, `winter 8`) so
 "summer or autumn" is one integer. `0` means any time, which needs no separate
 branch when the filter arrives: `seasons = 0 OR seasons & ? != 0`.
@@ -136,7 +159,6 @@ working.
 ```
 entry_id    text pk → entry.id (cascade)
 type_id     text not null → entry_type.id
-access      text        -- free text: 'toll road', '20 min walk in', …
 attributes  text        -- JSON, free-form extras
 ```
 
@@ -310,7 +332,17 @@ id, entry_id → entry.id (cascade), url, caption, position, created_at
 ```
 
 Rows, ordered by `position`, matching `packing_list_item`. URLs only — no
-uploads, no R2 bucket, no image pipeline. The first photo is the card image.
+uploads and no image pipeline. The site's own pictures already live in the
+`macandwen` R2 bucket and are served from `media.macandwen.com`, so a URL
+column is enough to point at them; an upload flow can be added later without
+the schema changing.
+
+**Position 0 is the entry's default picture**, and carries real weight: it is
+the card image on the list, the first frame of the carousel and the share
+preview. Order is therefore something the editor has to let you set rather than
+an accident of the order you happened to paste links in — the write path
+already renumbers positions from the array it is given, so reordering is a
+matter of the form offering it.
 
 #### `entry_visit`
 
@@ -321,9 +353,12 @@ unique (entry_id, user_id, visited_on)
 ```
 
 Rows rather than an ordered JSON array on the entry, for three reasons: a visit
-is **per user**, so a public entry visited by several people needs to say whose;
-the ordering wanted is just `ORDER BY visited_on`; and "have I been there"
-becomes a query rather than an array scan.
+is **per user**, so a public entry visited by several people keeps them apart
+rather than merging them into one list; the ordering wanted is just `ORDER BY
+visited_on`; and "have I been there" becomes a query rather than an array scan.
+
+The `user_id` is what makes the visit private to its author — see the access
+rules — and the same column is what a household later widens to a set.
 
 `visited_on` is an ISO date string rather than a timestamp because a visit is a
 day, not a moment, and dates recalled from memory should not pretend to a time
@@ -349,6 +384,14 @@ list rules live in one module, so a new page cannot pick a weaker one.
 - A visit belongs to the person who made it, so anyone who can see an entry may
   record one on it — including on somebody else's public entry — and may remove
   only their own.
+- **A visit is only ever shown to the person who made it.** A note is a diary
+  line, not a description: "kids melted down at the top" is written for the
+  person who wrote it, and publishing an entry should not publish the dates and
+  moods of everyone who has since been there. So the read is scoped to the
+  viewer as well as the entry, and a signed-out reader sees none rather than
+  everyone's. Households widen this later; starting narrow is the direction that
+  cannot leak, because data shown once cannot be unshown. "Three people have
+  been here" is a fair thing to want, but it is a count, not a list of names.
 - A link may only be created between two entries the actor can see, and a link
   is visible only if **both** endpoints are visible to the viewer — otherwise a
   public entry would leak the names of the private ones linked to it.
@@ -401,6 +444,43 @@ A signed-out visitor sees public entries and a prompt to sign in. A signed-in
 one sees their own — private ones included — and the public ones, in two
 sections, following the packing list index.
 
+What a page shows is decided in `src/lib/places-view.ts`, not in the `.astro`
+files: which section an entry belongs to, which badges it carries, and how a
+season mask, a duration or a coordinate pair reads in English. Templates are
+awkward to test and these rules have edge cases — a mask of `0` means "any
+time", a hybrid carries two type badges, `family_friendly` has three states —
+so they live where a test can reach them.
+
+**Photos lead.** The list gives every card a 3:2 image, and the detail page
+puts the carousel directly under the title and badges, above the description —
+a photograph answers "do I want to go here" faster than any sentence, and this
+is a database of places worth looking at.
+
+**Photographs keep their own shape.** Nothing is cropped to a fixed ratio: a
+portrait makes a tall card, a panorama a short one, and the carousel is as tall
+as its tallest picture with each one contained inside it. Cropping every image
+to 3:2 makes a tidier grid out of worse photographs, and a portrait of a
+waterfall loses the waterfall. Because the cards are then ragged, the list is
+CSS columns rather than a row-aligned grid, so a short card does not leave a
+hole beneath it.
+
+An entry with no photo is simply a text card. A tinted stand-in was tried and
+removed: it took up the room of a photograph while saying less than the type
+badges directly beneath it already did.
+
+**One picture at the top, the rest below.** The first photo is shown at its own
+aspect ratio under the title, and the others go in a Photos section further
+down, in columns so the ragged heights do not leave gaps.
+
+A carousel was built and removed. With every photo at its natural shape, a
+strip has to be as tall as its tallest member, so a panorama sitting next to a
+portrait was displayed as a thin band in an acre of empty background. The
+alternatives were both worse: crop everything to one ratio, which loses the
+portrait, or let the height jump as you page through. Swipe-through belongs
+here eventually, but it needs a considered answer to mixed aspect ratios rather
+than a component that mostly works, and shipping the plain version now costs
+nothing later — it is one component and no schema.
+
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one
 must be ticked. That is what makes a hybrid a natural thing to create rather
@@ -434,9 +514,15 @@ link that carries the query string across, which is the whole of what it takes
 for filters to work on both.
 
 Pins are coloured and iconed by `entry_type` — which is why those columns exist
-now. A hybrid takes its activity type's pin, since "what can I do here" is the
-question a map is being asked. Areas and regions draw their bounding box as well
-as their pin. Clustering arrives when the pins actually overlap, not before.
+now. A hybrid has two types, so the pin is a real decision rather than a lookup:
+**the activity wins**, because a map is being asked "what can I do here", and
+because the location half of a hybrid is usually the less specific of the pair —
+"lake" against "wild swimming". `pinType()` in `places-view.ts` is the only
+thing allowed to make that choice, so the map page, the detail page and any
+future legend cannot disagree about what an entry is. Both types still show as
+badges everywhere there is room for two; it is only the pin that has to pick.
+Areas and regions draw their bounding box as well as their pin. Clustering
+arrives when the pins actually overlap, not before.
 
 `src/components/PlacesMap.astro` is the single map component, used by the map
 page and the editor, so pin colours and tile configuration are written once.
@@ -469,6 +555,7 @@ Real D1 in workerd, no mocks, following the packing list precedent:
 | --- | --- |
 | `test/places.test.ts` | Access rules, visibility, the derived `kind`, slug generation, cascades |
 | `test/places-links.test.ts` | Relation direction, symmetry, the both-ends visibility rule |
+| `test/places-view.test.ts` | The display rules: sectioning, badges, facts, season and duration wording |
 | `test/places-api.test.ts` | Each route: success, anonymous, non-owner, admin-is-not-owner, malformed bodies |
 
 The link-visibility rule and "an admin may not edit someone else's entry" are
@@ -484,10 +571,15 @@ Each step is a mergeable change that leaves the site working.
    `src/lib/places-constants.ts` for the vocabulary the browser will need
    without Drizzle — the same reason `packing-list-limits.ts` exists. Covered by
    `places.test.ts` and `places-links.test.ts`.
-2. **Read-only display.** `/places` and `/places/[slug]`. Proves the read paths
-   and the visibility predicate against real pages.
+2. ~~**Read-only display.**~~ **Done.** `/places` lists what you can see, split
+   into "Yours" and "Shared with everyone"; `/places/[slug]` shows one entry.
+   The display rules live in `src/lib/places-view.ts` rather than in the pages,
+   so they can be tested — see `places-view.test.ts`. A missing slug and a slug
+   you are not allowed to see both return the same 404, since a distinguishable
+   403 would confirm that the entry exists.
 3. **The editor and the write API.** Create, edit, delete, both detail sections,
-   photos, visits. The shared map component lands here, since the picker is its
+   photos — reorderable, since position 0 is the picture everything else uses —
+   and visits. The shared map component lands here, since the picker is its
    first user.
 4. **The map view.** `/places/map` reusing that component, and the list/map
    toggle.
@@ -545,6 +637,29 @@ for a user to ask for a type that does not exist. The suggestion side needs a
 notification, and the project sends no mail today — so the first version is a
 pending count on an admin page, with the email hook as a single function called
 at the point of creation.
+
+**Tags.** A free-form, many-per-entry label — "dog friendly", "shady", "no phone
+signal", "good in the rain". These were considered as a *replacement* for
+`entry_type` and rejected, because a type and a tag are different tools:
+
+| | Type | Tag |
+| --- | --- | --- |
+| How many per entry | One per detail row | Any number |
+| Who defines the vocabulary | Admins, so it stays small | Anyone |
+| What it drives | The pin, the icon, which extras a thing has | Nothing structural |
+
+Cardinality-one is the whole value. A pin has one colour, and a tags-only model
+would need a "primary tag" to draw it — which is a type wearing a disguise, with
+the ambiguity of the other four left over. `attributes` sits beside `type_id`
+for the same reason: a refuge has beds and half board, a car park has spaces and
+a barrier height, and a per-type form is only possible because there is exactly
+one type to key it on. Opening the vocabulary up would get "hike", "hiking" and
+"walk" within a month.
+
+But the things types handle *badly* are exactly the unbounded, personal,
+un-adminned ones in that list, so the two axes are orthogonal and should both
+exist eventually. A tag needs `tag` and `entry_tag` and touches nothing that is
+here — no column changes, no rewrite — which is the reason it can wait.
 
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into

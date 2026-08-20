@@ -71,16 +71,32 @@ describe('places: kind', () => {
     const owner = await signedInUser();
     const { id } = await create(owner, {
       name: 'Wild swim spot',
-      location: { typeId: LAKE, access: 'Park by the church' },
+      access: 'Park by the church',
+      location: { typeId: LAKE },
       activity: { typeId: HIKE, difficulty: 'easy' },
     });
 
     const place = await getById(id, owner);
 
     expect(place?.location?.type.slug).toBe('lake');
-    expect(place?.location?.access).toBe('Park by the church');
+    expect(place?.access).toBe('Park by the church');
     expect(place?.activity?.type.slug).toBe('hike');
     expect(place?.activity?.difficulty).toBe('easy');
+  });
+
+  it('keeps the way in on an activity that is not a place', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(owner, {
+      name: 'The ridge walk',
+      access: 'Gate is usually shut, park on the verge',
+      activity: { typeId: HIKE },
+    });
+
+    // Access belongs to the entry, so an activity has one without having to
+    // invent a location row to hang it on.
+    expect((await getById(id, owner))?.access).toBe(
+      'Gate is usually shut, park on the verge',
+    );
   });
 
   it('refuses an entry that is neither a place nor a thing to do', async () => {
@@ -307,7 +323,28 @@ describe('places: visits', () => {
     const visits = await addVisit(id, visitor, '2025-08-14', 'Warm water');
 
     expect(visits).toHaveLength(1);
-    expect(visits?.[0]?.userId).toBe(visitor.id);
+    expect(visits?.[0]?.note).toBe('Warm water');
+    // ...and it is theirs: the owner of the entry does not see it.
+    expect((await getById(id, admin))!.visits).toHaveLength(0);
+  });
+
+  it('keeps visits to yourself, on a public entry and from a signed-out reader', async () => {
+    // An admin owns it, since a normal user's entry is forced private and the
+    // point of this test is a public entry with two people's visits on it.
+    const owner = await signedInUser({ role: 'admin' });
+    const other = await signedInUser();
+    const place = await create(owner, aPlace({ visibility: 'public' }));
+
+    await addVisit(place.id, owner, '2025-07-01', 'Ours');
+    await addVisit(place.id, other, '2025-07-02', 'Theirs');
+
+    const mine = await getBySlug(place.slug, owner);
+    const theirs = await getBySlug(place.slug, other);
+    const anonymous = await getBySlug(place.slug, undefined);
+
+    expect(mine!.visits.map((visit) => visit.note)).toEqual(['Ours']);
+    expect(theirs!.visits.map((visit) => visit.note)).toEqual(['Theirs']);
+    expect(anonymous!.visits).toEqual([]);
   });
 
   it('is idempotent for the same person on the same day', async () => {
@@ -341,7 +378,11 @@ describe('places: visits', () => {
     const { id } = await create(admin, aPlace({ visibility: 'public' }));
     const [visit] = (await addVisit(id, visitor, '2025-08-14')) ?? [];
 
-    expect(await removeVisit(id, visit!.id, admin)).toHaveLength(1);
+    // The admin's delete matches nothing, so the visitor still has their row.
+    // Their own answer is empty because they have no visits of their own.
+    expect(await removeVisit(id, visit!.id, admin)).toHaveLength(0);
+    expect((await getById(id, visitor))!.visits).toHaveLength(1);
+
     expect(await removeVisit(id, visit!.id, visitor)).toHaveLength(0);
   });
 

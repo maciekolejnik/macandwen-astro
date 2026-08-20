@@ -22,6 +22,13 @@
       "when": 1787154438348,
       "tag": "0002_places",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1787180978150,
+      "tag": "0004_entry_access",
+      "breakpoints": true
     }
   ]
 }
