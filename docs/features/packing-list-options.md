@@ -1,7 +1,5 @@
 # Packing list options
 
-*Status: proposed. Nothing below is built yet.*
-
 A camping list is not one list. Cooking adds a stove, gas, a pan, a lighter,
 washing-up liquid; a wild pitch adds a trowel and water carriers a campsite
 would have provided. The items are the same list either way — it is the
@@ -76,10 +74,16 @@ person tags something they are unsure about. Requiring all would hide items in
 exactly the case where the visitor said yes to more, which is the wrong
 direction: more trip, more kit.
 
-The rule lives in `src/lib/packing-list-options.ts` — a pure function over
-`(itemOptionIds, activeOptionIds)`, knowing nothing of the DOM or the database,
-in the same spirit as `packing-lists-search.ts`. The detail page and its tests
-both call it.
+The rule lives in `src/lib/packing-list-options.ts` — `isItemVisible`, a pure
+function over `(itemOptionIds, activeOptionIds)` knowing nothing of the DOM or
+the database, in the same spirit as `packing-lists-search.ts`. The detail page
+and `test/packing-list-visibility.test.ts` both call it.
+
+`resolveActiveOptions` sits beside it and answers the other question: which
+options are on, given what the visitor last chose. Stored answers are explicit
+per option rather than a list of the ones that are on, so an option *added to
+the list since* falls back to its own `default_on` instead of silently arriving
+off, and an answer naming an option that has gone is ignored.
 
 ## The detail page
 
@@ -106,24 +110,27 @@ right degradation, and it is what the page does today.
 
 ## The editor
 
-The new part, and most of the work.
+An **Options** fieldset above Items: `PackingListOptionRow.astro`, a label plus
+an "on by default" checkbox and a remove button, rendered once per option and
+once more inside a `<template>` for the script to clone — the arrangement item
+rows already use. Removing an option that has items tagged with it asks first,
+naming how many, since untagging them is not something the button says.
 
-An **Options** fieldset above Items: rows of label plus a "default on" checkbox,
-plus add and remove, mirroring the item rows it sits above. Removing an option
-warns that it will untag its items, since that is not obvious from the button.
+Each item row then carries a `[data-item-tags]` strip of small toggle chips,
+one per option. It is **rebuilt** from the options fieldset on every change to
+it rather than patched: option rows and item rows have to stay in step with no
+framework, and copying in one direction cannot fall out of step the way
+reconciling two lists can. At eight options and a few hundred items it costs
+nothing.
 
-Each item row then grows a compact tag control listing the list's options — a
-row of small toggle chips, rebuilt whenever the options change. This is the
-fiddly bit: option rows and item rows have to stay in step in the DOM with no
-framework, so the item row's chips are re-rendered from the options fieldset on
-every change to it, rather than patched. Rebuilding from one source is shorter
-than reconciling, and at eight options and a hundred items the cost is nothing.
+An item's tags live in `data-option-ids` on its row, which is what the chips
+toggle and what the submit handler reads. A list with no options renders the
+strip empty and hidden, so a list that is just a list looks as it did.
 
-A list with no options shows no tag controls at all — the fieldset stays
-collapsed behind an "Add options" button, so the common case, a list that is
-just a list, looks exactly as it does today.
-
-Editor state is submitted as part of the same whole-list `PATCH`.
+An option added in the browser has no id, so the form gives it a temporary one
+for the tags to point at; the server swaps in a real id when the list is saved.
+Editor state goes up in the same whole-list `POST` or `PATCH` as everything
+else.
 
 ## HTTP
 
@@ -151,23 +158,22 @@ every existing list keeps working unchanged.
 
 ## Migration
 
-One migration creating both tables. Nothing backfills: an existing list has no
-options, which is exactly the state the whole feature degrades to.
+`migrations/0002_packing_list_options.sql` creates both tables. Nothing
+backfills: an existing list has no options, which is exactly the state the whole
+feature degrades to.
 
-## Effort
+## Tests
 
-| Piece | Size |
+| File | Covers |
 | --- | --- |
-| Schema, migration, `packing-lists.ts` reads and writes | half a day |
-| `normaliseInput`, payload parsing, API tests | 2–3 hours |
-| `packing-list-options.ts` and its tests | an hour |
-| Detail page: chips, filtering, option state module, tests | half a day |
-| Editor: options fieldset and per-item tagging | a day — the bulk of it |
-| Docs, `astro check`, build, full suite | 2 hours |
+| `test/packing-list-options.test.ts` | Storing options and taggings, server-assigned ids, ids kept across an update, options and taggings deleted with the list, stale taggings dropped, labels and limits |
+| `test/packing-list-visibility.test.ts` | `isItemVisible` and `resolveActiveOptions` |
+| `test/packing-list-option-state.test.ts` | The `localStorage` rules: round trip, sliding window, corrupt and full storage, pruning |
 
-Call it two to three days. The data and page work are routine; the editor is
-where the estimate could slip, because tagging a hundred rows has to stay
-pleasant on a phone.
+The browser wiring on both pages is thin on purpose, because everything it
+decides is decided by those pure modules. `test/helpers.ts` gained `texts()`,
+which builds item inputs from plain strings — most tests care about an item's
+text and not its options, and this lets them keep saying so.
 
 ## What this deliberately does not do
 

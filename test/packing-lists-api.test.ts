@@ -8,7 +8,7 @@ import {
   DELETE as UNSAVE,
 } from '../src/pages/api/packing-lists/[id]/save';
 import { create, getById } from '../src/lib/db/packing-lists';
-import { BASE_URL, signedInUser } from './helpers';
+import { BASE_URL, signedInUser, texts } from './helpers';
 
 type Handler = (context: APIContext) => Promise<Response> | Response;
 
@@ -74,7 +74,11 @@ describe('POST /api/packing-lists', () => {
       path: PATH,
       method: 'POST',
       cookie: user.headers.cookie,
-      body: { title: 'Ski trip', isPublic: true, items: ['Skis', 'Gloves'] },
+      body: {
+        title: 'Ski trip',
+        isPublic: true,
+        items: [{ text: 'Skis' }, { text: 'Gloves' }],
+      },
     });
 
     expect(status).toBe(201);
@@ -140,13 +144,17 @@ describe('POST /api/packing-lists', () => {
 
   it('rejects fields of the wrong type', async () => {
     const user = await signedInUser();
-    const valid = { title: 'Trip', isPublic: false, items: ['Boots'] };
+    const valid = { title: 'Trip', isPublic: false, items: [{ text: 'Boots' }] };
 
     const bodies = [
       { ...valid, title: 42 },
       { ...valid, isPublic: 'yes' },
       { ...valid, items: 'Boots' },
-      { ...valid, items: ['Boots', 7] },
+      { ...valid, items: ['Boots'] },
+      { ...valid, items: [{ text: 7 }] },
+      { ...valid, items: [{ text: 'Boots', optionIds: 'a' }] },
+      { ...valid, options: [{ label: 7 }] },
+      { ...valid, options: [{ label: 'Cooking', defaultOn: 'yes' }] },
       { isPublic: false, items: [] },
     ];
 
@@ -183,7 +191,7 @@ describe('PATCH /api/packing-lists/[id]', () => {
     const id = await create(user.id, {
       title: 'Draft',
       isPublic: false,
-      items: ['Old'],
+      items: texts('Old'),
     });
 
     const { status } = await call(PATCH, {
@@ -191,7 +199,7 @@ describe('PATCH /api/packing-lists/[id]', () => {
       method: 'PATCH',
       cookie: user.headers.cookie,
       params: { id },
-      body: { title: 'Final', isPublic: true, items: ['New'] },
+      body: { title: 'Final', isPublic: true, items: [{ text: 'New' }] },
     });
 
     expect(status).toBe(200);
@@ -258,7 +266,7 @@ describe('DELETE /api/packing-lists/[id]', () => {
     const id = await create(user.id, {
       title: 'Temporary',
       isPublic: false,
-      items: ['Thing'],
+      items: texts('Thing'),
     });
 
     const { status } = await call(DELETE, {

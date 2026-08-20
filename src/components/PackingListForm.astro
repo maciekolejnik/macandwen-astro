@@ -1,6 +1,7 @@
 ---
 import type { PackingListDetail } from '../lib/db/packing-lists';
 import PackingListItemRow from './PackingListItemRow.astro';
+import PackingListOptionRow from './PackingListOptionRow.astro';
 import { TITLE_MAX_LENGTH } from '../lib/packing-list-limits';
 
 interface Props {
@@ -12,7 +13,8 @@ const { list } = Astro.props;
 
 const isEdit = Boolean(list);
 // One blank row to write in, so an empty form is not a dead end.
-const items = list?.items.map((item) => item.text) ?? [];
+const items = list?.items ?? [];
+const options = list?.options ?? [];
 ---
 
 <form
@@ -46,10 +48,39 @@ const items = list?.items.map((item) => item.text) ?? [];
   </label>
 
   <fieldset class="mt-8">
+    <legend class="text-sm font-medium text-stone-700">Options</legend>
+    <p class="mt-1 text-xs text-stone-500">
+      Independent choices for a trip — "Cooking", "Wild camping". Tag items with
+      the options they belong to; untagged items are always packed.
+    </p>
+
+    <ul id="option-rows" class="mt-3 space-y-2">
+      {options.map((option) => (
+        <PackingListOptionRow option={option} />
+      ))}
+    </ul>
+
+    <!-- Cloned by the client script for every option added after load. -->
+    <template id="option-row-template">
+      <PackingListOptionRow />
+    </template>
+
+    <button
+      type="button"
+      id="add-option"
+      class="mt-3 rounded-lg border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      Add option
+    </button>
+  </fieldset>
+
+  <fieldset class="mt-8">
     <legend class="text-sm font-medium text-stone-700">Items</legend>
 
     <ul id="item-rows" class="mt-2 space-y-2">
-      {items.map((text) => <PackingListItemRow text={text} />)}
+      {items.map((item) => (
+        <PackingListItemRow text={item.text} optionIds={item.optionIds} />
+      ))}
     </ul>
 
     <!-- Cloned by the client script for every row added after load. -->
@@ -116,9 +147,13 @@ const items = list?.items.map((item) => item.text) ?? [];
 </form>
 
 <script>
+  import { MAX_OPTIONS } from '../lib/packing-list-limits';
+
   const form = document.getElementById('packing-list-form') as HTMLFormElement | null;
   const rows = document.getElementById('item-rows');
+  const optionRows = document.getElementById('option-rows');
   const addItem = document.getElementById('add-item');
+  const addOption = document.getElementById('add-option') as HTMLButtonElement | null;
   const title = document.getElementById('list-title') as HTMLInputElement | null;
   const isPublic = document.getElementById('list-public') as HTMLInputElement | null;
   const save = document.getElementById('save-list') as HTMLButtonElement | null;
@@ -127,8 +162,22 @@ const items = list?.items.map((item) => item.text) ?? [];
   const template = document.getElementById(
     'item-row-template',
   ) as HTMLTemplateElement | null;
+  const optionTemplate = document.getElementById(
+    'option-row-template',
+  ) as HTMLTemplateElement | null;
 
-  if (form && rows && addItem && title && isPublic && save && template) {
+  if (
+    form &&
+    rows &&
+    optionRows &&
+    addItem &&
+    addOption &&
+    title &&
+    isPublic &&
+    save &&
+    template &&
+    optionTemplate
+  ) {
     const listId = form.dataset.listId;
 
     const showError = (message: string) => {
@@ -143,6 +192,69 @@ const items = list?.items.map((item) => item.text) ?? [];
     };
 
     const itemRows = () => [...rows.querySelectorAll<HTMLLIElement>('[data-item-row]')];
+    const allOptionRows = () => [
+      ...optionRows.querySelectorAll<HTMLLIElement>('[data-option-row]'),
+    ];
+
+    /**
+     * An option an item can be tagged with. A row added in the browser has no
+     * id yet, so it gets a temporary one: the tags refer to it while the form
+     * is open, and the server swaps in a real id when the list is saved.
+     */
+    const options = () =>
+      allOptionRows().map((row) => {
+        if (!row.dataset.optionId) row.dataset.optionId = crypto.randomUUID();
+
+        return {
+          id: row.dataset.optionId,
+          label: row.querySelector<HTMLInputElement>('[data-option-input]')!.value,
+          defaultOn: row.querySelector<HTMLInputElement>('[data-option-default]')!
+            .checked,
+        };
+      });
+
+    const tagsOf = (row: HTMLLIElement) =>
+      (row.dataset.optionIds ?? '').split(' ').filter(Boolean);
+
+    /**
+     * Rebuilds every item's tag chips from the options as they now stand.
+     *
+     * Rebuilt rather than patched: at eight options and a few hundred items it
+     * costs nothing, and one direction of copying cannot fall out of step the
+     * way reconciling two lists can.
+     */
+    const paintTags = () => {
+      const current = options().filter((option) => option.label.trim());
+      const known = new Set(current.map((option) => option.id));
+
+      for (const row of itemRows()) {
+        const tags = tagsOf(row).filter((id) => known.has(id));
+        row.dataset.optionIds = tags.join(' ');
+
+        const container = row.querySelector<HTMLElement>('[data-item-tags]');
+        if (!container) continue;
+
+        container.hidden = current.length === 0;
+        container.replaceChildren();
+
+        for (const option of current) {
+          const on = tags.includes(option.id);
+          const chip = document.createElement('button');
+
+          chip.type = 'button';
+          chip.dataset.tag = option.id;
+          chip.textContent = option.label.trim();
+          chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+          chip.className = on
+            ? 'rounded-full border border-emerald-600 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-800'
+            : 'rounded-full border border-stone-300 bg-white px-2.5 py-0.5 text-xs font-medium text-stone-500 hover:bg-stone-100';
+
+          container.appendChild(chip);
+        }
+      }
+
+      addOption.disabled = allOptionRows().length >= MAX_OPTIONS;
+    };
 
     /** The move buttons at the ends have nowhere to go, so they are disabled. */
     const paint = () => {
@@ -153,6 +265,8 @@ const items = list?.items.map((item) => item.text) ?? [];
         row.querySelector<HTMLButtonElement>('[data-move-down]')!.disabled =
           index === all.length - 1;
       });
+
+      paintTags();
     };
 
     /** Adds a blank row, after `after` when given and at the end otherwise. */
@@ -179,6 +293,65 @@ const items = list?.items.map((item) => item.text) ?? [];
     paint();
 
     addItem.addEventListener('click', () => addRow());
+
+    addOption.addEventListener('click', () => {
+      if (allOptionRows().length >= MAX_OPTIONS) return;
+
+      const row = optionTemplate.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLLIElement;
+
+      optionRows.appendChild(row);
+      paintTags();
+      row.querySelector<HTMLInputElement>('[data-option-input]')!.focus();
+    });
+
+    // Renaming an option must reach the chips, which carry its label.
+    optionRows.addEventListener('input', paintTags);
+    optionRows.addEventListener('change', paintTags);
+
+    optionRows.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest('button');
+      const row = (event.target as HTMLElement).closest<HTMLLIElement>(
+        '[data-option-row]',
+      );
+      if (!button?.hasAttribute('data-remove-option') || !row) return;
+
+      const label =
+        row.querySelector<HTMLInputElement>('[data-option-input]')!.value.trim();
+      const tagged = itemRows().filter((item) =>
+        tagsOf(item).includes(row.dataset.optionId ?? ''),
+      ).length;
+
+      // Removing an option untags items, which the button does not say.
+      if (tagged > 0) {
+        const confirmed = window.confirm(
+          `Remove "${label}"? ${tagged} item${tagged === 1 ? '' : 's'} tagged with it will go back to being always packed.`,
+        );
+        if (!confirmed) return;
+      }
+
+      row.remove();
+      paintTags();
+    });
+
+    // One listener for every chip, including those rebuilt a moment ago.
+    rows.addEventListener('click', (event) => {
+      const chip = (event.target as HTMLElement).closest<HTMLButtonElement>(
+        '[data-tag]',
+      );
+      const row = (event.target as HTMLElement).closest<HTMLLIElement>(
+        '[data-item-row]',
+      );
+      if (!chip || !row) return;
+
+      const tags = new Set(tagsOf(row));
+      if (tags.has(chip.dataset.tag!)) tags.delete(chip.dataset.tag!);
+      else tags.add(chip.dataset.tag!);
+
+      row.dataset.optionIds = [...tags].join(' ');
+      paintTags();
+    });
 
     // One listener on the container, so rows added later need no wiring.
     rows.addEventListener('click', (event) => {
@@ -264,13 +437,32 @@ const items = list?.items.map((item) => item.text) ?? [];
       clearError();
 
       const items = itemRows()
-        .map((row) => row.querySelector<HTMLInputElement>('[data-item-input]')!.value)
-        .map((value) => value.trim())
-        .filter((value) => value.length > 0);
+        .map((row) => ({
+          text: row.querySelector<HTMLInputElement>('[data-item-input]')!.value.trim(),
+          optionIds: tagsOf(row),
+        }))
+        .filter((item) => item.text.length > 0);
+
+      const submittedOptions = options()
+        .map((option) => ({ ...option, label: option.label.trim() }))
+        .filter((option) => option.label.length > 0);
 
       if (!title.value.trim()) {
         showError('A packing list needs a title');
         title.focus();
+        return;
+      }
+
+      const labels = new Set<string>();
+      const duplicate = submittedOptions.find((option) => {
+        const key = option.label.toLocaleLowerCase();
+        if (labels.has(key)) return true;
+        labels.add(key);
+        return false;
+      });
+
+      if (duplicate) {
+        showError(`Two options are both called "${duplicate.label}"`);
         return;
       }
 
@@ -283,6 +475,7 @@ const items = list?.items.map((item) => item.text) ?? [];
           body: JSON.stringify({
             title: title.value,
             isPublic: isPublic.checked,
+            options: submittedOptions,
             items,
           }),
         });

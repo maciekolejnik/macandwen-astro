@@ -3,12 +3,16 @@ import { getDb } from './client';
 import {
   ITEM_MAX_LENGTH,
   MAX_ITEMS,
+  MAX_OPTIONS,
+  OPTION_LABEL_MAX_LENGTH,
   TITLE_MAX_LENGTH,
 } from '../packing-list-limits';
 import {
   packingList,
   packingListFavourite,
   packingListItem,
+  packingListItemOption,
+  packingListOption,
   user,
 } from './schema';
 
@@ -27,19 +31,54 @@ export type PackingListSummary = {
 };
 
 export type PackingListDetail = PackingListSummary & {
-  items: { id: string; text: string; position: number }[];
+  items: {
+    id: string;
+    text: string;
+    position: number;
+    /** The options this item belongs to; empty means "always packed". */
+    optionIds: string[];
+  }[];
+  options: {
+    id: string;
+    label: string;
+    position: number;
+    defaultOn: boolean;
+  }[];
 };
+
+/**
+ * An option keeps its id across an update, unlike an item: the editor sends
+ * back the id it was rendered with, and a newly added option arrives without
+ * one. Items are replaced wholesale on every save, so if options were too,
+ * every visitor's toggles would reset on a typo fix.
+ */
+export type PackingListOptionInput = {
+  id?: string;
+  label: string;
+  defaultOn: boolean;
+};
+
+export type PackingListItemInput = {
+  text: string;
+  /** Omitted, like most items, means the item is always packed. */
+  optionIds?: string[];
+};
+
+type BatchStatement = Parameters<ReturnType<typeof getDb>['batch']>[0][number];
 
 export type PackingListInput = {
   title: string;
   isPublic: boolean;
-  items: string[];
+  items: PackingListItemInput[];
+  options?: PackingListOptionInput[];
 };
 
 // Defined in their own module so the browser can import them without Drizzle.
 export {
   ITEM_MAX_LENGTH,
   MAX_ITEMS,
+  MAX_OPTIONS,
+  OPTION_LABEL_MAX_LENGTH,
   TITLE_MAX_LENGTH,
 } from '../packing-list-limits';
 
@@ -179,17 +218,56 @@ export async function getById(
   const summary = toSummary(row, viewerId);
   if (!summary.isPublic && !summary.isOwn) return null;
 
-  const items = await getDb()
-    .select({
-      id: packingListItem.id,
-      text: packingListItem.text,
-      position: packingListItem.position,
-    })
-    .from(packingListItem)
-    .where(eq(packingListItem.listId, id))
-    .orderBy(asc(packingListItem.position));
+  // Three cheap reads rather than one join: a join would repeat every item row
+  // once per tagging, and the taggings are the rarer thing.
+  const [items, options, taggings] = await Promise.all([
+    getDb()
+      .select({
+        id: packingListItem.id,
+        text: packingListItem.text,
+        position: packingListItem.position,
+      })
+      .from(packingListItem)
+      .where(eq(packingListItem.listId, id))
+      .orderBy(asc(packingListItem.position)),
+    getDb()
+      .select({
+        id: packingListOption.id,
+        label: packingListOption.label,
+        position: packingListOption.position,
+        defaultOn: packingListOption.defaultOn,
+      })
+      .from(packingListOption)
+      .where(eq(packingListOption.listId, id))
+      .orderBy(asc(packingListOption.position)),
+    getDb()
+      .select({
+        itemId: packingListItemOption.itemId,
+        optionId: packingListItemOption.optionId,
+      })
+      .from(packingListItemOption)
+      .innerJoin(
+        packingListItem,
+        eq(packingListItem.id, packingListItemOption.itemId),
+      )
+      .where(eq(packingListItem.listId, id)),
+  ]);
 
-  return { ...summary, items };
+  const byItem = new Map<string, string[]>();
+  for (const tagging of taggings) {
+    const existing = byItem.get(tagging.itemId);
+    if (existing) existing.push(tagging.optionId);
+    else byItem.set(tagging.itemId, [tagging.optionId]);
+  }
+
+  return {
+    ...summary,
+    options,
+    items: items.map((item) => ({
+      ...item,
+      optionIds: byItem.get(item.id) ?? [],
+    })),
+  };
 }
 
 /**
@@ -258,84 +336,203 @@ function invalid(message: string): never {
 
 export function normaliseInput(input: PackingListInput) {
   const title = input.title.trim();
-  const items = input.items
-    .map((item) => item.trim())
-    .filter((item) => item.length > 0);
+
+  const options = (input.options ?? [])
+    .map((option) => ({
+      id: option.id,
+      label: option.label.trim(),
+      defaultOn: option.defaultOn,
+    }))
+    .filter((option) => option.label.length > 0);
 
   if (!title) invalid('A packing list needs a title');
   if (title.length > TITLE_MAX_LENGTH) {
     invalid(`Title must be ${TITLE_MAX_LENGTH} characters or fewer`);
   }
+  if (options.length > MAX_OPTIONS) {
+    invalid(`A packing list can have at most ${MAX_OPTIONS} options`);
+  }
+  if (options.some((option) => option.label.length > OPTION_LABEL_MAX_LENGTH)) {
+    invalid(`Options must be ${OPTION_LABEL_MAX_LENGTH} characters or fewer`);
+  }
+
+  // Two options with the same name are indistinguishable on the toggle row, so
+  // whichever the visitor taps is a coin flip.
+  const labels = new Set<string>();
+  for (const option of options) {
+    const key = option.label.toLocaleLowerCase();
+    if (labels.has(key)) invalid(`Two options are both called "${option.label}"`);
+    labels.add(key);
+  }
+
+  // An item may only be tagged with an option of its own list. Anything else is
+  // a stale form, and dropping it beats refusing the whole save.
+  const optionIds = new Set(
+    options.map((option) => option.id).filter((id): id is string => !!id),
+  );
+
+  const items = input.items
+    .map((item) => ({
+      text: item.text.trim(),
+      optionIds: [...new Set(item.optionIds ?? [])].filter((id) =>
+        optionIds.has(id),
+      ),
+    }))
+    .filter((item) => item.text.length > 0);
+
   if (items.length > MAX_ITEMS) {
     invalid(`A packing list can hold at most ${MAX_ITEMS} items`);
   }
-  if (items.some((item) => item.length > ITEM_MAX_LENGTH)) {
+  if (items.some((item) => item.text.length > ITEM_MAX_LENGTH)) {
     invalid(`Items must be ${ITEM_MAX_LENGTH} characters or fewer`);
   }
 
-  return { title, isPublic: input.isPublic, items };
+  return { title, isPublic: input.isPublic, items, options };
 }
 
-function itemRows(listId: string, items: string[]) {
-  return items.map((text, position) => ({
+type NormalisedInput = ReturnType<typeof normaliseInput>;
+
+/**
+ * Turns the ids the editor sent into the ids the database will hold.
+ *
+ * Ids that name an option this list already has are kept, so its toggles — and
+ * every visitor's saved answers, which are keyed by option id — survive an
+ * edit. Anything else is a new option, and gets a fresh server-generated id
+ * rather than the one it arrived with: a client-chosen id could otherwise
+ * collide with a row belonging to somebody else's list.
+ */
+function resolveOptions(
+  listId: string,
+  options: NormalisedInput['options'],
+  existingIds: ReadonlySet<string>,
+) {
+  const idFor = new Map<string, string>();
+
+  const rows = options.map((option, position) => {
+    const id =
+      option.id && existingIds.has(option.id) ? option.id : crypto.randomUUID();
+
+    if (option.id) idFor.set(option.id, id);
+
+    return { id, listId, label: option.label, position, defaultOn: option.defaultOn };
+  });
+
+  return { rows, idFor };
+}
+
+function itemRows(
+  listId: string,
+  items: NormalisedInput['items'],
+  idFor: ReadonlyMap<string, string>,
+) {
+  const rows = items.map((item, position) => ({
     id: crypto.randomUUID(),
     listId,
-    text,
+    text: item.text,
     position,
   }));
+
+  const taggings = items.flatMap((item, index) =>
+    item.optionIds
+      .map((sentId) => idFor.get(sentId))
+      .filter((optionId): optionId is string => !!optionId)
+      .map((optionId) => ({ itemId: rows[index]!.id, optionId })),
+  );
+
+  return { rows, taggings };
 }
 
 /**
  * SQLite caps a statement at 100 bound variables on D1, and a multi-row insert
- * binds one per column per row — four here — so a single `values()` call breaks
- * somewhere past twenty items. The rows are split into statements that stay
- * under the cap; a `batch` runs them atomically, so a long list is still all or
- * nothing.
+ * binds one per column per row, so a single `values()` call breaks on a long
+ * enough list. Rows are split into statements that stay under the cap; a
+ * `batch` runs them atomically, so a long list is still all or nothing.
+ *
+ * The chunk size is per table, since the tables have different widths: items
+ * bind four columns a row, options five, and a tagging two.
  */
-const ITEMS_PER_INSERT = 25;
-
-function insertItemsStatements(
-  db: ReturnType<typeof getDb>,
-  listId: string,
-  items: string[],
+function insertInChunks<Row>(
+  insert: (rows: Row[]) => BatchStatement,
+  rows: Row[],
+  perStatement: number,
 ) {
-  const rows = itemRows(listId, items);
-  const statements = [];
+  const statements: BatchStatement[] = [];
 
-  for (let i = 0; i < rows.length; i += ITEMS_PER_INSERT) {
-    statements.push(
-      db.insert(packingListItem).values(rows.slice(i, i + ITEMS_PER_INSERT)),
-    );
+  for (let i = 0; i < rows.length; i += perStatement) {
+    statements.push(insert(rows.slice(i, i + perStatement)));
   }
 
   return statements;
+}
+
+const ITEMS_PER_INSERT = 25;
+const OPTIONS_PER_INSERT = 20;
+const TAGGINGS_PER_INSERT = 50;
+
+/** Every write of a list's items, its options and the links between them. */
+function contentStatements(
+  db: ReturnType<typeof getDb>,
+  optionRows: ReturnType<typeof resolveOptions>['rows'],
+  itemInserts: ReturnType<typeof itemRows>['rows'],
+  taggings: ReturnType<typeof itemRows>['taggings'],
+) {
+  return [
+    ...insertInChunks(
+      (rows) => db.insert(packingListOption).values(rows),
+      optionRows,
+      OPTIONS_PER_INSERT,
+    ),
+    ...insertInChunks(
+      (rows) => db.insert(packingListItem).values(rows),
+      itemInserts,
+      ITEMS_PER_INSERT,
+    ),
+    ...insertInChunks(
+      (rows) => db.insert(packingListItemOption).values(rows),
+      taggings,
+      TAGGINGS_PER_INSERT,
+    ),
+  ];
 }
 
 export async function create(
   userId: string,
   input: PackingListInput,
 ): Promise<string> {
-  const { title, isPublic, items } = normaliseInput(input);
+  const { title, isPublic, items, options } = normaliseInput(input);
   const id = crypto.randomUUID();
 
   const db = getDb();
-  const insertList = db
-    .insert(packingList)
-    .values({ id, userId, title, isPublic });
+  // Nothing exists yet, so every option is a new one.
+  const { rows: optionRows, idFor } = resolveOptions(id, options, new Set());
+  const { rows: itemInserts, taggings } = itemRows(id, items, idFor);
 
   // D1 has no interactive transactions; `batch` is the atomic equivalent.
-  if (items.length) {
-    await db.batch([insertList, ...insertItemsStatements(db, id, items)]);
-  } else {
-    await insertList;
-  }
+  await runBatch([
+    db.insert(packingList).values({ id, userId, title, isPublic }),
+    ...contentStatements(db, optionRows, itemInserts, taggings),
+  ]);
 
   return id;
 }
 
 /**
+ * `db.batch` types its first statement separately from the rest, which is
+ * awkward for a write whose shape depends on what was submitted; the list
+ * insert or update is always there, so the cast is safe.
+ */
+async function runBatch(statements: BatchStatement[]) {
+  await getDb().batch(
+    statements as unknown as [BatchStatement, ...BatchStatement[]],
+  );
+}
+
+/**
  * Replaces the whole list, items included: the editor submits the full set, so
- * diffing rows would add complexity without changing the result.
+ * diffing rows would add complexity without changing the result. Options are
+ * the exception — one the editor sent back keeps its id, because a visitor's
+ * saved toggles are keyed by it and would otherwise reset on every edit.
+ *
  * Returns `false` when the list is missing or owned by someone else.
  */
 export async function update(
@@ -343,7 +540,7 @@ export async function update(
   userId: string,
   input: PackingListInput,
 ): Promise<boolean> {
-  const { title, isPublic, items } = normaliseInput(input);
+  const { title, isPublic, items, options } = normaliseInput(input);
 
   const db = getDb();
   const [owned] = await db
@@ -354,23 +551,64 @@ export async function update(
 
   if (!owned) return false;
 
-  const updateList = db
-    .update(packingList)
-    .set({ title, isPublic, updatedAt: new Date() })
-    .where(and(eq(packingList.id, id), eq(packingList.userId, userId)));
-  const clearItems = db
-    .delete(packingListItem)
-    .where(eq(packingListItem.listId, id));
+  const existing = await db
+    .select({ id: packingListOption.id })
+    .from(packingListOption)
+    .where(eq(packingListOption.listId, id));
 
-  if (items.length) {
-    await db.batch([
-      updateList,
-      clearItems,
-      ...insertItemsStatements(db, id, items),
-    ]);
-  } else {
-    await db.batch([updateList, clearItems]);
+  const existingIds = new Set(existing.map((option) => option.id));
+  const { rows: optionRows, idFor } = resolveOptions(id, options, existingIds);
+  const kept = new Set(optionRows.map((option) => option.id));
+  const { rows: itemInserts, taggings } = itemRows(id, items, idFor);
+
+  const statements: BatchStatement[] = [
+    db
+      .update(packingList)
+      .set({ title, isPublic, updatedAt: new Date() })
+      .where(and(eq(packingList.id, id), eq(packingList.userId, userId))),
+    // Taggings go with their items through the cascade.
+    db.delete(packingListItem).where(eq(packingListItem.listId, id)),
+  ];
+
+  const dropped = [...existingIds].filter((optionId) => !kept.has(optionId));
+  if (dropped.length) {
+    statements.push(
+      db
+        .delete(packingListOption)
+        .where(
+          and(
+            eq(packingListOption.listId, id),
+            inArray(packingListOption.id, dropped),
+          ),
+        ),
+    );
   }
+
+  // An option the editor sent back is updated in place rather than replaced, so
+  // the taggings and the toggles saved against its id survive.
+  for (const option of optionRows.filter((row) => existingIds.has(row.id))) {
+    statements.push(
+      db
+        .update(packingListOption)
+        .set({
+          label: option.label,
+          position: option.position,
+          defaultOn: option.defaultOn,
+        })
+        .where(eq(packingListOption.id, option.id)),
+    );
+  }
+
+  statements.push(
+    ...contentStatements(
+      db,
+      optionRows.filter((row) => !existingIds.has(row.id)),
+      itemInserts,
+      taggings,
+    ),
+  );
+
+  await runBatch(statements);
 
   return true;
 }

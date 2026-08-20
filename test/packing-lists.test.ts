@@ -15,7 +15,7 @@ import {
   MAX_ITEMS,
   TITLE_MAX_LENGTH,
 } from '../src/lib/db/packing-lists';
-import { signedInUser } from './helpers';
+import { signedInUser, texts } from './helpers';
 
 async function countRows(table: string, column: string, value: string) {
   const row = await env.DB.prepare(
@@ -33,7 +33,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Weekend hike',
       isPublic: false,
-      items: ['Boots', 'Map', 'Water'],
+      items: texts('Boots', 'Map', 'Water'),
     });
 
     const list = await getById(id, owner.id);
@@ -53,7 +53,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: '  Beach  ',
       isPublic: false,
-      items: ['  Towel ', '', '   ', 'Sunscreen'],
+      items: texts('  Towel ', '', '   ', 'Sunscreen'),
     });
 
     const list = await getById(id, owner.id);
@@ -67,16 +67,16 @@ describe('packing lists', () => {
 
   it('stores a list far past D1 bound-variable limit of one statement', async () => {
     const owner = await signedInUser();
-    const items = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
+    const many = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
 
     const id = await create(owner.id, {
       title: 'Big trip',
       isPublic: false,
-      items,
+      items: texts(...many),
     });
 
     const list = await getById(id, owner.id);
-    expect(list?.items.map((item) => item.text)).toEqual(items);
+    expect(list?.items.map((item) => item.text)).toEqual(many);
   });
 
   it('replaces a list far past D1 bound-variable limit of one statement', async () => {
@@ -84,31 +84,38 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Big trip',
       isPublic: false,
-      items: ['Boots'],
+      items: texts('Boots'),
     });
-    const items = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
+    const many = Array.from({ length: MAX_ITEMS }, (_, i) => `Item ${i}`);
 
     expect(
-      await update(id, owner.id, { title: 'Big trip', isPublic: false, items }),
+      await update(id, owner.id, {
+        title: 'Big trip',
+        isPublic: false,
+        items: texts(...many),
+      }),
     ).toBe(true);
 
     const list = await getById(id, owner.id);
-    expect(list?.items.map((item) => item.text)).toEqual(items);
+    expect(list?.items.map((item) => item.text)).toEqual(many);
   });
 
   it('rejects input that is empty or over the limits', async () => {
     const owner = await signedInUser();
-    const valid = { title: 'Trip', isPublic: false, items: [] };
+    const valid = { title: 'Trip', isPublic: false, items: texts() };
 
     await expect(create(owner.id, { ...valid, title: '   ' })).rejects.toThrow();
     await expect(
       create(owner.id, { ...valid, title: 'x'.repeat(TITLE_MAX_LENGTH + 1) }),
     ).rejects.toThrow();
     await expect(
-      create(owner.id, { ...valid, items: ['x'.repeat(ITEM_MAX_LENGTH + 1)] }),
+      create(owner.id, { ...valid, items: texts('x'.repeat(ITEM_MAX_LENGTH + 1)) }),
     ).rejects.toThrow();
     await expect(
-      create(owner.id, { ...valid, items: Array(MAX_ITEMS + 1).fill('x') }),
+      create(owner.id, {
+        ...valid,
+        items: texts(...Array<string>(MAX_ITEMS + 1).fill('x')),
+      }),
     ).rejects.toThrow();
   });
 
@@ -118,7 +125,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Secret',
       isPublic: false,
-      items: ['Passport'],
+      items: texts('Passport'),
     });
 
     expect(await getById(id, owner.id)).not.toBeNull();
@@ -131,7 +138,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Festival',
       isPublic: true,
-      items: ['Tent'],
+      items: texts('Tent'),
     });
 
     const list = await getById(id);
@@ -147,8 +154,8 @@ describe('packing lists', () => {
 
   it('lists both private and public lists for their owner', async () => {
     const owner = await signedInUser();
-    await create(owner.id, { title: 'Private', isPublic: false, items: [] });
-    await create(owner.id, { title: 'Public', isPublic: true, items: [] });
+    await create(owner.id, { title: 'Private', isPublic: false, items: texts() });
+    await create(owner.id, { title: 'Public', isPublic: true, items: texts() });
 
     const owned = await listOwned(owner.id);
 
@@ -162,7 +169,7 @@ describe('packing lists', () => {
   it('excludes other people from an owner listing', async () => {
     const owner = await signedInUser();
     const stranger = await signedInUser();
-    await create(owner.id, { title: 'Mine', isPublic: true, items: [] });
+    await create(owner.id, { title: 'Mine', isPublic: true, items: texts() });
 
     expect(await listOwned(stranger.id)).toEqual([]);
   });
@@ -175,12 +182,12 @@ describe('packing lists', () => {
     const unpopular = await create(owner.id, {
       title: `Unpopular ${crypto.randomUUID()}`,
       isPublic: true,
-      items: [],
+      items: texts(),
     });
     const popular = await create(owner.id, {
       title: `Popular ${crypto.randomUUID()}`,
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     await setFavourite(popular, fanOne.id, true);
@@ -201,7 +208,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Hidden',
       isPublic: false,
-      items: [],
+      items: texts(),
     });
 
     const publicIds = (await listPublic(owner.id)).map((list) => list.id);
@@ -215,7 +222,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Camping',
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     await setFavourite(id, fan.id, true);
@@ -234,7 +241,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Ski',
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     await setFavourite(id, fan.id, true);
@@ -256,7 +263,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Private',
       isPublic: false,
-      items: [],
+      items: texts(),
     });
 
     expect(await setFavourite(id, fan.id, true)).toBeNull();
@@ -268,7 +275,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Mine',
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     expect(await setFavourite(id, owner.id, true)).toBeNull();
@@ -282,7 +289,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Sailing',
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     await setFavourite(id, fan.id, true);
@@ -298,14 +305,14 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Draft',
       isPublic: false,
-      items: ['Old'],
+      items: texts('Old'),
     });
 
     expect(
       await update(id, owner.id, {
         title: 'Final',
         isPublic: true,
-        items: ['New', 'Newer'],
+        items: texts('New', 'Newer'),
       }),
     ).toBe(true);
 
@@ -322,10 +329,10 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Draft',
       isPublic: false,
-      items: ['Old'],
+      items: texts('Old'),
     });
 
-    await update(id, owner.id, { title: 'Draft', isPublic: false, items: [] });
+    await update(id, owner.id, { title: 'Draft', isPublic: false, items: texts() });
 
     expect((await getById(id, owner.id))?.items).toEqual([]);
   });
@@ -336,14 +343,14 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Mine',
       isPublic: true,
-      items: ['Keep'],
+      items: texts('Keep'),
     });
 
     expect(
       await update(id, stranger.id, {
         title: 'Stolen',
         isPublic: false,
-        items: [],
+        items: texts(),
       }),
     ).toBe(false);
     expect(await remove(id, stranger.id)).toBe(false);
@@ -359,7 +366,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Temporary',
       isPublic: true,
-      items: ['Thing'],
+      items: texts('Thing'),
     });
     await setFavourite(id, fan.id, true);
 
@@ -375,7 +382,7 @@ describe('packing lists', () => {
     const id = await create(owner.id, {
       title: 'Goes away',
       isPublic: true,
-      items: ['Thing'],
+      items: texts('Thing'),
     });
     await setFavourite(id, fan.id, true);
 
@@ -397,15 +404,15 @@ describe('packing lists', () => {
         await create(owner.id, {
           title: `List ${i}`,
           isPublic: true,
-          items: [`Item ${i}`],
+          items: texts(`Item ${i}`),
         }),
       );
     }
 
-    const texts = await itemTextsFor(ids);
+    const byList = await itemTextsFor(ids);
 
-    expect(texts.size).toBe(150);
-    expect(texts.get(ids[149])).toEqual(['Item 149']);
+    expect(byList.size).toBe(150);
+    expect(byList.get(ids[149])).toEqual(['Item 149']);
   });
 
   it('reads favourites among more lists than a statement can bind', async () => {

@@ -69,3 +69,11 @@ export async function readUser(id: string) {
     .bind(id)
     .first<{ id: string; email: string; role: string; name: string }>();
 }
+
+/**
+ * Item inputs from plain texts. Most tests care about an item's text and not
+ * the options it belongs to, and this keeps them saying so.
+ */
+export function texts(...values: string[]) {
+  return values.map((text) => ({ text }));
+}

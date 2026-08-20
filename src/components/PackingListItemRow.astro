@@ -3,9 +3,11 @@ import { ITEM_MAX_LENGTH } from '../lib/packing-list-limits';
 
 interface Props {
   text?: string;
+  /** The options this item belongs to; empty means it is always packed. */
+  optionIds?: string[];
 }
 
-const { text = '' } = Astro.props;
+const { text = '', optionIds = [] } = Astro.props;
 ---
 
 <!--
@@ -14,37 +16,46 @@ const { text = '' } = Astro.props;
   rows — so the markup exists once rather than twice, in two languages, needing
   to be kept in step by hand.
 -->
-<li class="flex items-center gap-2" data-item-row>
-  <input
-    type="text"
-    value={text}
-    maxlength={ITEM_MAX_LENGTH}
-    placeholder="Something to bring"
-    data-item-input
-    class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-  />
-  <button
-    type="button"
-    data-move-up
-    aria-label="Move item up"
-    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
-  </button>
-  <button
-    type="button"
-    data-move-down
-    aria-label="Move item down"
-    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-  </button>
-  <button
-    type="button"
-    data-remove-item
-    aria-label="Remove item"
-    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
-  </button>
+<li data-item-row data-option-ids={optionIds.join(' ')}>
+  <div class="flex items-center gap-2">
+    <input
+      type="text"
+      value={text}
+      maxlength={ITEM_MAX_LENGTH}
+      placeholder="Something to bring"
+      data-item-input
+      class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+    />
+    <button
+      type="button"
+      data-move-up
+      aria-label="Move item up"
+      class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6" /></svg>
+    </button>
+    <button
+      type="button"
+      data-move-down
+      aria-label="Move item down"
+      class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-stone-100 disabled:opacity-30"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+    </button>
+    <button
+      type="button"
+      data-remove-item
+      aria-label="Remove item"
+      class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+    </button>
+  </div>
+
+  <!--
+    Filled in by the client script from whatever options the list has at the
+    time, so option rows and item rows cannot drift apart. Empty — and hidden —
+    for a list without options, which is most of them.
+  -->
+  <div data-item-tags class="mt-1.5 flex flex-wrap gap-1.5" hidden></div>
 </li>

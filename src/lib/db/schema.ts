@@ -195,14 +195,95 @@ export const packingListFavourite = sqliteTable(
   ],
 );
 
+/**
+ * A named yes/no choice within one list — "Cooking", "Wild camping" — that
+ * decides whether the items tagged with it are shown. Independent rather than
+ * a set of whole-list variants, so three questions describe eight trips
+ * without eight copies of the tent.
+ */
+export const packingListOption = sqliteTable(
+  "packing_list_option",
+  {
+    id: text("id").primaryKey(),
+    listId: text("list_id")
+      .notNull()
+      .references(() => packingList.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    position: integer("position").notNull(),
+    // Where the toggle starts for a visitor who has never touched it.
+    defaultOn: integer("default_on", { mode: "boolean" })
+      .default(false)
+      .notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+  },
+  (table) => [
+    index("packing_list_option_listId_position_idx").on(
+      table.listId,
+      table.position,
+    ),
+  ],
+);
+
+/**
+ * Which options an item belongs to. An item with no rows here is always shown;
+ * one with several is shown when *any* of them is on.
+ */
+export const packingListItemOption = sqliteTable(
+  "packing_list_item_option",
+  {
+    itemId: text("item_id")
+      .notNull()
+      .references(() => packingListItem.id, { onDelete: "cascade" }),
+    optionId: text("option_id")
+      .notNull()
+      .references(() => packingListOption.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({
+      name: "packing_list_item_option_pk",
+      columns: [table.itemId, table.optionId],
+    }),
+    // Reading everything tagged with an option, for the reverse direction.
+    index("packing_list_item_option_optionId_idx").on(table.optionId),
+  ],
+);
+
 export const packingListRelations = relations(packingList, ({ one, many }) => ({
   owner: one(user, {
     fields: [packingList.userId],
     references: [user.id],
   }),
   items: many(packingListItem),
+  options: many(packingListOption),
   favourites: many(packingListFavourite),
 }));
+
+export const packingListOptionRelations = relations(
+  packingListOption,
+  ({ one, many }) => ({
+    list: one(packingList, {
+      fields: [packingListOption.listId],
+      references: [packingList.id],
+    }),
+    items: many(packingListItemOption),
+  }),
+);
+
+export const packingListItemOptionRelations = relations(
+  packingListItemOption,
+  ({ one }) => ({
+    item: one(packingListItem, {
+      fields: [packingListItemOption.itemId],
+      references: [packingListItem.id],
+    }),
+    option: one(packingListOption, {
+      fields: [packingListItemOption.optionId],
+      references: [packingListOption.id],
+    }),
+  }),
+);
 
 export const packingListItemRelations = relations(packingListItem, ({ one }) => ({
   list: one(packingList, {

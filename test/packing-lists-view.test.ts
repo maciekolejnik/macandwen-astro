@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { create, setFavourite } from '../src/lib/db/packing-lists';
 import { applyFilters, loadIndex } from '../src/lib/packing-lists-view';
-import { signedInUser } from './helpers';
+import { signedInUser, texts } from './helpers';
 
 describe('packing lists index view', () => {
   it('shows a signed-out visitor public lists only', async () => {
@@ -9,12 +9,12 @@ describe('packing lists index view', () => {
     const priv = await create(owner.id, {
       title: 'Private',
       isPublic: false,
-      items: [],
+      items: texts(),
     });
     const pub = await create(owner.id, {
       title: 'Public',
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     const view = await loadIndex();
@@ -31,7 +31,7 @@ describe('packing lists index view', () => {
     const priv = await create(user.id, {
       title: 'Private',
       isPublic: false,
-      items: [],
+      items: texts(),
     });
 
     const view = await loadIndex(user.id);
@@ -45,7 +45,7 @@ describe('packing lists index view', () => {
     const pub = await create(user.id, {
       title: 'Shared',
       isPublic: true,
-      items: [],
+      items: texts(),
     });
 
     const view = await loadIndex(user.id);
@@ -60,7 +60,7 @@ describe('packing lists index view', () => {
     const list = await create(owner.id, {
       title: 'Shared',
       isPublic: true,
-      items: ['One'],
+      items: texts('One'),
     });
     await setFavourite(list, fan.id, true);
 
@@ -78,7 +78,7 @@ describe('packing lists index view', () => {
     const priv = await create(owner.id, {
       title: 'Secret',
       isPublic: false,
-      items: [],
+      items: texts(),
     });
 
     const view = await loadIndex(stranger.id);
@@ -94,12 +94,12 @@ describe('packing lists index view', () => {
     const quiet = await create(owner.id, {
       title: 'Quiet',
       isPublic: true,
-      items: ['One'],
+      items: texts('One'),
     });
     const loved = await create(owner.id, {
       title: 'Loved',
       isPublic: true,
-      items: ['One', 'Two'],
+      items: texts('One', 'Two'),
     });
     await setFavourite(loved, fan.id, true);
 
@@ -119,7 +119,7 @@ describe('index view items', () => {
     await create(user.id, {
       title: 'Ski trip',
       isPublic: false,
-      items: ['Skis', 'Goggles', 'Balm'],
+      items: texts('Skis', 'Goggles', 'Balm'),
     });
 
     const view = await loadIndex(user.id);
@@ -129,7 +129,7 @@ describe('index view items', () => {
 
   it('gives a list with no items an empty array rather than leaving it out', async () => {
     const user = await signedInUser();
-    await create(user.id, { title: 'Someday', isPublic: false, items: [] });
+    await create(user.id, { title: 'Someday', isPublic: false, items: texts() });
 
     const view = await loadIndex(user.id);
 
