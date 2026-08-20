@@ -1,0 +1,84 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import PlacesMap from '../../components/PlacesMap.astro';
+import PlacesViewToggle from '../../components/PlacesViewToggle.astro';
+import { listVisible } from '../../lib/db/places';
+import { countUnmapped } from '../../lib/places-map';
+
+// Reads the session, so it cannot be prerendered.
+export const prerender = false;
+
+const user = Astro.locals.user;
+
+// One set, not two: the list splits "yours" from "everyone's" because a page
+// of cards would otherwise show the same entry twice, and a map has no such
+// problem — a pin is where it is regardless of who wrote it.
+const places = await listVisible(user);
+const unmapped = countUnmapped(places);
+---
+
+<Layout
+  title="Places & activities on a map"
+  description="Lakes, hikes, viewpoints and everything else worth going back to, as pins."
+>
+  <div class="mx-auto max-w-5xl px-4 py-12">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-stone-900">Places &amp; activities</h1>
+        <p class="mt-2 max-w-prose text-stone-600">
+          Everything you can see, as pins. A hybrid is coloured by what you can
+          do there rather than by what it is.
+        </p>
+      </div>
+
+      <div class="mt-1 flex shrink-0 items-center gap-3">
+        <PlacesViewToggle active="map" />
+
+        {user && (
+          <a
+            href="/places/new"
+            class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+          >
+            Add
+          </a>
+        )}
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <PlacesMap places={places} height="h-[32rem] sm:h-[38rem]" />
+    </div>
+
+    <!-- An entry with no coordinates is left off rather than pinned somewhere
+         plausible, so the map says how many it is not showing — otherwise the
+         count differs from the list with no explanation. -->
+    {unmapped > 0 && (
+      <p class="mt-3 text-sm text-stone-500">
+        {unmapped === 1
+          ? 'One entry has no coordinates yet, so it is not on the map.'
+          : `${unmapped} entries have no coordinates yet, so they are not on the map.`}{' '}
+        <a href="/places" class="font-medium text-emerald-700 hover:underline">
+          See the list
+        </a>.
+      </p>
+    )}
+
+    {places.length === 0 && (
+      <p class="mt-3 text-sm text-stone-500">
+        Nothing to show yet.{' '}
+        {user ? (
+          <a href="/places/new" class="font-medium text-emerald-700 hover:underline">
+            Add the first one
+          </a>
+        ) : (
+          <a
+            href="/login?redirectTo=/places/map"
+            class="font-medium text-emerald-700 hover:underline"
+          >
+            Sign in
+          </a>
+        )}.
+      </p>
+    )}
+  </div>
+</Layout>

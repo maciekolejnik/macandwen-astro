@@ -1,6 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import PlaceCard from '../../components/PlaceCard.astro';
+import PlacesViewToggle from '../../components/PlacesViewToggle.astro';
 import { loadIndex } from '../../lib/places-view';
 
 // Reads the session, so it cannot be prerendered.
@@ -32,6 +33,10 @@ const { own, browse } = await loadIndex(user);
           Add
         </a>
       )}
+    </div>
+
+    <div class="mt-6">
+      <PlacesViewToggle active="list" />
     </div>
 
     {user ? (

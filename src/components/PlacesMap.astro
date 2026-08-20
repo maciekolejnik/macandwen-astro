@@ -1,0 +1,532 @@
+---
+/**
+ * The one map in the feature, used by `/places/map`, by a detail page's
+ * "Getting there" and by the editor as a picker — so tile configuration, pin
+ * colours and the popup are written once and three pages cannot drift apart.
+ *
+ * Pins are rendered into the HTML here, server-side, and Leaflet reads them
+ * out of a `<script type="application/json">` block. A shared link therefore
+ * never flashes an empty map, and the map can never show a different set from
+ * the list it sits beside.
+ */
+import type { PlaceSummary } from '../lib/db/places';
+import {
+  DEFAULT_CENTRE,
+  DEFAULT_ZOOM,
+  boundsOf,
+  initialPins,
+  toPins,
+  type MapData,
+} from '../lib/places-map';
+
+interface Props {
+  places?: PlaceSummary[];
+  /** The entry a detail page is about: its pin is drawn larger and opened. */
+  focusId?: string;
+  /**
+   * Turns the map into the editor's coordinate picker: clicking drops the pin,
+   * dragging moves it, and an area or a region can have a box dragged round it.
+   */
+  picker?: boolean;
+  /** The text field the picker keeps in step with, in both directions. */
+  coordinatesId?: string;
+  /** A hidden field the picker writes the bounding box into, as JSON. */
+  bboxId?: string;
+  /** Watched so the box control appears only for an area or a region. */
+  extentId?: string;
+  /** Tailwind height, since a map has no intrinsic one. */
+  height?: string;
+  class?: string;
+}
+
+const {
+  places = [],
+  focusId,
+  picker = false,
+  coordinatesId,
+  bboxId,
+  extentId,
+  height = 'h-[28rem]',
+  class: className = '',
+} = Astro.props;
+
+const pins = toPins(places, focusId);
+const initial = initialPins(pins);
+const data: MapData = { pins, initial, bounds: boundsOf(initial), picker };
+
+// The rest are behind a button rather than drawn straight away, so a page
+// about one hike opens on that hike.
+const held = pins.length - initial.length;
+
+// `set:html` does not escape, and a name is free text: `</script>` inside one
+// would otherwise end the block early. Escaping every `<` is the standard cure
+// and leaves the JSON valid.
+const json = JSON.stringify(data).replace(/</g, '\\u003c');
+---
+
+<div
+  class={`relative overflow-hidden rounded-2xl border border-stone-200 bg-stone-100 ${height} ${className}`}
+  data-places-map
+  data-coordinates-id={coordinatesId}
+  data-bbox-id={bboxId}
+  data-extent-id={extentId}
+  data-centre-lat={DEFAULT_CENTRE.lat}
+  data-centre-lng={DEFAULT_CENTRE.lng}
+  data-zoom={DEFAULT_ZOOM}
+>
+  <script
+    type="application/json"
+    is:inline
+    data-places-map-data
+    set:html={json}
+  />
+
+  <!-- Shown until Leaflet takes the element over, and left in place for
+       anybody without JavaScript, for whom the coordinates on the page are
+       still the real answer. -->
+  <p
+    class="absolute inset-0 flex items-center justify-center p-6 text-center text-sm text-stone-500"
+    data-places-map-fallback
+  >
+    {picker ? 'The map picker needs JavaScript. Typing coordinates works without it.' : 'Loading the map…'}
+  </p>
+
+  {
+    held > 0 && (
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[1000] flex justify-start p-3">
+        <button
+          type="button"
+          data-show-linked
+          data-show-label={`Show what it is linked to (${held})`}
+          data-hide-label="Show only this one"
+          hidden
+          class="pointer-events-auto rounded-lg border border-stone-300 bg-white/95 px-3 py-1.5 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-100"
+        >
+          Show what it is linked to ({held})
+        </button>
+      </div>
+    )
+  }
+
+  {
+    picker && (
+      <div
+        class="pointer-events-none absolute inset-x-0 bottom-0 z-[1000] flex flex-wrap items-center gap-2 p-3"
+        data-picker-controls
+        hidden
+      >
+        <button
+          type="button"
+          data-draw-box
+          class="pointer-events-auto rounded-lg border border-stone-300 bg-white/95 px-3 py-1.5 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-100"
+        >
+          Draw a box
+        </button>
+        <button
+          type="button"
+          data-clear-box
+          hidden
+          class="pointer-events-auto rounded-lg border border-stone-300 bg-white/95 px-3 py-1.5 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-100"
+        >
+          Clear the box
+        </button>
+        <p
+          data-picker-hint
+          class="pointer-events-none rounded-lg bg-white/90 px-2 py-1 text-xs text-stone-600 shadow-sm"
+        >
+          Click the map to drop the pin.
+        </p>
+      </div>
+    )
+  }
+</div>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+  import {
+    boundsOf,
+    normaliseBounds,
+    type MapBounds,
+    type MapData,
+    type MapPin,
+  } from '../lib/places-map';
+
+  // OpenStreetMap: no key, no account and no per-view bill. Attribution is a
+  // condition of the tiles, not decoration.
+  const TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+  /** The picker's own pin and box: the site's green, and deliberately not any
+   * type's colour — nothing has been chosen yet while you are placing it. */
+  const PICKER_COLOUR = '#059669';
+  const ATTRIBUTION =
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+  const escapeHtml = (value: string) =>
+    value.replace(
+      /[&<>"']/g,
+      (character) =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;',
+        })[character]!,
+    );
+
+  /**
+   * A `divIcon` rather than an image, so a pin is coloured by its type without
+   * shipping one PNG per colour, and an entry with no emoji simply gets a dot.
+   */
+  const pinIcon = (colour: string, icon: string | null, big = false) => {
+    const size = big ? 38 : 30;
+
+    return L.divIcon({
+      className: 'places-pin',
+      html: `<span style="--pin-colour:${escapeHtml(colour)};width:${size}px;height:${size}px"><i>${
+        icon ? escapeHtml(icon) : ''
+      }</i></span>`,
+      iconSize: [size, size],
+      iconAnchor: [size / 2, size],
+      popupAnchor: [0, -size],
+    });
+  };
+
+  const popupHtml = (pin: MapPin) => {
+    const photo = pin.photoUrl
+      ? `<img src="${escapeHtml(pin.photoUrl)}" alt="" class="places-popup-photo" />`
+      : '';
+    const type = pin.typeLabel
+      ? `<span class="places-popup-type">${escapeHtml(pin.typeLabel)}</span>`
+      : '';
+
+    return `<a class="places-popup" href="${escapeHtml(pin.href)}">${photo}<strong>${escapeHtml(
+      pin.name,
+    )}</strong>${type}</a>`;
+  };
+
+  const toLatLngBounds = (bounds: MapBounds) =>
+    L.latLngBounds(
+      [bounds.minLat, bounds.minLng],
+      [bounds.maxLat, bounds.maxLng],
+    );
+
+  function render(container: HTMLElement) {
+    const raw = container.querySelector('[data-places-map-data]')?.textContent;
+    if (!raw) return;
+
+    const data = JSON.parse(raw) as MapData;
+    const fallback = container.querySelector<HTMLElement>('[data-places-map-fallback]');
+
+    const map = L.map(container, { scrollWheelZoom: !data.picker });
+    L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 19 }).addTo(map);
+    fallback?.remove();
+
+    const marker = (pin: MapPin) =>
+      L.marker([pin.lat, pin.lng], {
+        icon: pinIcon(pin.colour, pin.icon, pin.focus),
+        title: pin.name,
+        zIndexOffset: pin.focus ? 1000 : 0,
+      }).bindPopup(popupHtml(pin));
+
+    for (const pin of data.initial) marker(pin).addTo(map);
+
+    /** Zero-sized bounds — one pin — would zoom to the roof tiles, so a single
+     * point gets a fixed zoom instead. */
+    const show = (bounds: MapBounds, count: number) => {
+      const latLngBounds = toLatLngBounds(bounds);
+
+      if (count === 1) {
+        map.setView(latLngBounds.getCenter(), 13);
+      } else {
+        map.fitBounds(latLngBounds, { padding: [40, 40], maxZoom: 15 });
+      }
+    };
+
+    if (data.bounds) {
+      show(data.bounds, data.initial.length);
+    } else {
+      map.setView(
+        L.latLng(
+          Number(container.dataset.centreLat),
+          Number(container.dataset.centreLng),
+        ),
+        Number(container.dataset.zoom),
+      );
+    }
+
+    wireLinkedToggle(container, map, data, marker, show);
+
+    // The focused pin is drawn larger and sits on top, but its popup is left
+    // shut: the page around it already says the name, and on a map this small
+    // an open popup covers everything else it was put there to show.
+    // The container starts hidden inside the editor's collapsed sections often
+    // enough that Leaflet measures it at zero; this is the standard cure.
+    setTimeout(() => map.invalidateSize(), 0);
+
+    if (data.picker) wirePicker(container, map);
+  }
+
+  /**
+   * A detail page hands the map its own entry and everything linked to it, but
+   * opens on the entry alone — otherwise the reader has to work out which of
+   * five pins is the one they came for. This puts the rest one click away, and
+   * the button says which state it will move to rather than which it is in.
+   */
+  function wireLinkedToggle(
+    container: HTMLElement,
+    map: L.Map,
+    data: MapData,
+    marker: (pin: MapPin) => L.Marker,
+    show: (bounds: MapBounds, count: number) => void,
+  ) {
+    const button = container.querySelector<HTMLButtonElement>('[data-show-linked]');
+    const held = data.pins.filter(
+      (pin) => !data.initial.some((shown) => shown.id === pin.id),
+    );
+    if (!button || held.length === 0) return;
+
+    const layer = L.layerGroup(held.map(marker));
+    let shown = false;
+
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      shown = !shown;
+
+      if (shown) {
+        layer.addTo(map);
+        const bounds = boundsOf(data.pins);
+        if (bounds) show(bounds, data.pins.length);
+      } else {
+        layer.remove();
+        if (data.bounds) show(data.bounds, data.initial.length);
+      }
+
+      button.textContent = shown
+        ? (button.dataset.hideLabel ?? '')
+        : (button.dataset.showLabel ?? '');
+    });
+  }
+
+  /**
+   * The picker is an addition to the coordinates field, never a replacement:
+   * the field stays authoritative, and the two are kept in step both ways —
+   * typing moves the pin, moving the pin rewrites the numbers.
+   */
+  function wirePicker(container: HTMLElement, map: L.Map) {
+    const coordinates = document.getElementById(
+      container.dataset.coordinatesId ?? '',
+    ) as HTMLInputElement | null;
+    const bboxField = document.getElementById(
+      container.dataset.bboxId ?? '',
+    ) as HTMLInputElement | null;
+    const extent = document.getElementById(
+      container.dataset.extentId ?? '',
+    ) as HTMLSelectElement | null;
+
+    const controls = container.querySelector<HTMLElement>('[data-picker-controls]');
+    const drawButton = container.querySelector<HTMLButtonElement>('[data-draw-box]');
+    const clearButton = container.querySelector<HTMLButtonElement>('[data-clear-box]');
+    const hint = container.querySelector<HTMLElement>('[data-picker-hint]');
+
+    if (controls) controls.hidden = false;
+
+    let marker: L.Marker | null = null;
+    let rectangle: L.Rectangle | null = null;
+    let drawing: L.LatLng | null = null;
+
+    const readCoordinates = () => {
+      const parts = (coordinates?.value ?? '').trim().split(/[,\s]+/).filter(Boolean);
+      if (parts.length !== 2) return null;
+
+      const [lat, lng] = parts.map(Number);
+      if (!Number.isFinite(lat!) || !Number.isFinite(lng!)) return null;
+
+      return L.latLng(lat!, lng!);
+    };
+
+    /** Five decimals is about a metre, which is as precise as a pin gets, and
+     * it keeps the field readable when the map writes into it. */
+    const writeCoordinates = (point: L.LatLng) => {
+      if (!coordinates) return;
+      coordinates.value = `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`;
+      coordinates.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    const placeMarker = (point: L.LatLng, write = true) => {
+      if (marker) {
+        marker.setLatLng(point);
+      } else {
+        marker = L.marker(point, {
+          draggable: true,
+          icon: pinIcon(PICKER_COLOUR, null),
+        }).addTo(map);
+        marker.on('dragend', () => writeCoordinates(marker!.getLatLng()));
+      }
+
+      if (write) writeCoordinates(point);
+      if (hint) hint.textContent = 'Drag the pin to move it.';
+    };
+
+    const drawRectangle = (bounds: MapBounds) => {
+      const latLngBounds = toLatLngBounds(bounds);
+      if (rectangle) {
+        rectangle.setBounds(latLngBounds);
+      } else {
+        rectangle = L.rectangle(latLngBounds, {
+          color: PICKER_COLOUR,
+          weight: 1,
+          fillOpacity: 0.08,
+        }).addTo(map);
+      }
+      if (clearButton) clearButton.hidden = false;
+    };
+
+    const writeBbox = (bounds: MapBounds | null) => {
+      if (bboxField) bboxField.value = bounds ? JSON.stringify(bounds) : '';
+    };
+
+    const existing = readCoordinates();
+    if (existing) placeMarker(existing, false);
+
+    let existingBox: MapBounds | null = null;
+    if (bboxField?.value) {
+      try {
+        existingBox = JSON.parse(bboxField.value) as MapBounds;
+        drawRectangle(existingBox);
+      } catch {
+        writeBbox(null);
+      }
+    }
+
+    // The box is the bigger thing, so it decides the view when there is one:
+    // opening on the pin at street level would put a region's edges off screen.
+    if (existingBox) {
+      map.fitBounds(toLatLngBounds(existingBox), { padding: [30, 30] });
+    } else if (existing) {
+      map.setView(existing, 13);
+    }
+
+    // Typing wins over the pin, because the field is the one that gets saved.
+    coordinates?.addEventListener('input', () => {
+      const point = readCoordinates();
+      if (!point) return;
+      placeMarker(point, false);
+      map.panTo(point);
+    });
+
+    /** A box only means something for an area or a region: a spot is a spot. */
+    const paintBoxControls = () => {
+      const wanted = extent ? extent.value !== 'point' : true;
+      if (drawButton) drawButton.hidden = !wanted;
+      if (clearButton) clearButton.hidden = !wanted || !rectangle;
+      if (!wanted && rectangle) {
+        rectangle.remove();
+        rectangle = null;
+        writeBbox(null);
+      }
+    };
+
+    paintBoxControls();
+    extent?.addEventListener('change', paintBoxControls);
+
+    drawButton?.addEventListener('click', () => {
+      drawing = null;
+      map.dragging.disable();
+      container.classList.add('places-map-drawing');
+      if (hint) hint.textContent = 'Click one corner of the box, then the other.';
+    });
+
+    clearButton?.addEventListener('click', () => {
+      rectangle?.remove();
+      rectangle = null;
+      writeBbox(null);
+      clearButton.hidden = true;
+    });
+
+    /**
+     * Two clicks rather than a drag. A drag has to fight the map's own panning
+     * on desktop and does not exist at all on a phone, where half of these
+     * entries get added; two clicks work identically in both places.
+     */
+    map.on('click', (event: L.LeafletMouseEvent) => {
+      if (container.classList.contains('places-map-drawing')) {
+        if (!drawing) {
+          drawing = event.latlng;
+          if (hint) hint.textContent = 'Now click the opposite corner.';
+          return;
+        }
+
+        const bounds = normaliseBounds(drawing, event.latlng);
+        drawRectangle(bounds);
+        writeBbox(bounds);
+        drawing = null;
+        map.dragging.enable();
+        container.classList.remove('places-map-drawing');
+        if (hint) hint.textContent = 'Drag the pin to move it.';
+        return;
+      }
+
+      placeMarker(event.latlng);
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-places-map]').forEach(render);
+</script>
+
+<style is:global>
+  /* The pin: a coloured circle with a point, holding an emoji when the type
+     has one. Global because Leaflet builds these elements itself, outside the
+     component's scoped markup. */
+  .places-pin span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    background-color: var(--pin-colour);
+    border: 2px solid white;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.4);
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
+  /* Undoes the pin's rotation, so the emoji inside sits upright. */
+  .places-pin span > i {
+    font-style: normal;
+    transform: rotate(45deg);
+  }
+
+  .places-map-drawing {
+    cursor: crosshair;
+  }
+
+  .places-popup {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    max-width: 12rem;
+  }
+
+  .places-popup-photo {
+    display: block;
+    width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .places-popup-type {
+    display: block;
+    color: #78716c;
+    font-size: 0.75rem;
+    margin-top: 0.1rem;
+  }
+
+  /* Leaflet's own panes sit at z-index 400–700; the picker controls belong
+     above them but below any site-wide overlay. */
+  .leaflet-container {
+    z-index: 0;
+    font: inherit;
+  }
+</style>

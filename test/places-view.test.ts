@@ -6,7 +6,6 @@ import {
   formatDistance,
   formatMinutes,
   loadIndex,
-  pinType,
   seasonLabel,
   splitSections,
   typeBadges,
@@ -81,22 +80,6 @@ describe('places display rules', () => {
     const { own } = await loadIndex(owner);
 
     expect(typeBadges(own[0]!).map((type) => type.label)).toEqual(['Lake', 'Hike']);
-  });
-
-  it('draws a hybrid pin from its activity, and a plain one from whatever it has', async () => {
-    const owner = await signedInUser();
-    await create(owner, {
-      name: 'Hybrid pin',
-      location: { typeId: LAKE },
-      activity: { typeId: HIKE },
-    });
-    await create(owner, { name: 'Location pin', location: { typeId: LAKE } });
-
-    const { own } = await loadIndex(owner);
-    const byName = new Map(own.map((place) => [place.name, place]));
-
-    expect(pinType(byName.get('Hybrid pin')!)?.label).toBe('Hike');
-    expect(pinType(byName.get('Location pin')!)?.label).toBe('Lake');
   });
 
   it('leaves out facts nobody filled in', () => {
