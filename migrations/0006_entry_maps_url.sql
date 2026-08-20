@@ -1,0 +1,22 @@
+-- A link to the place in whatever maps app is actually used to navigate.
+--
+-- On `entry` rather than on `location_detail`, for the same two reasons
+-- `access` moved there in 0004. A hike's trailhead has a maps link as much as
+-- a lake does, so putting it on the location row would mean an activity could
+-- only carry one by inventing a location row — which would corrupt the `kind`
+-- that row exists to derive. And a hybrid has one link, not two: the lake and
+-- the swim in it are the same dot on the earth.
+--
+-- It does not duplicate `lat`/`lng`, which stay the authority for the pin and
+-- for distance. A pasted link is a different thing from a coordinate: it points
+-- at a *named* place, with its reviews, photos and opening hours, and a link
+-- shared from a phone (`maps.app.goo.gl/…`) does not decompose into numbers
+-- without being resolved. Where the two disagree, the coordinates win, because
+-- they are what the map draws.
+--
+-- Named `maps_url` and not `google_maps_url`: nothing in the code inspects it
+-- beyond checking the scheme, so an Apple Maps, OsmAnd or Organic Maps link
+-- works exactly as well, and a vendor name in the column would be a lie the
+-- first time somebody pastes one.
+
+ALTER TABLE `entry` ADD COLUMN `maps_url` text;

@@ -138,7 +138,7 @@ const linkCandidates = place?.isOwn ? await listVisible(user) : [];
         </dl>
       )}
 
-      {(coordinates || place.access) && (
+      {(coordinates || place.access || place.mapsUrl) && (
         <section class="mt-8">
           <h2 class="text-lg font-semibold text-stone-900">Getting there</h2>
 
@@ -158,6 +158,22 @@ const linkCandidates = place?.isOwn ? await listVisible(user) : [];
 
           {place.access && (
             <p class="mt-2 text-sm text-stone-600">{place.access}</p>
+          )}
+
+          <!-- An action rather than a reference, so it gets a button: the
+               coordinates above are for reading, this is for tapping when you
+               are about to drive. `rel` is set because the host is whatever
+               the owner pasted. -->
+          {place.mapsUrl && (
+            <a
+              href={place.mapsUrl}
+              rel="noopener noreferrer nofollow"
+              target="_blank"
+              class="mt-3 inline-flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              Open in Maps
+            </a>
           )}
         </section>
       )}

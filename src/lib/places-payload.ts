@@ -87,6 +87,11 @@ export function parsePlaceBody(body: Record<string, unknown>): Parsed {
     return { message: '`access` must be a string' };
   }
 
+  const mapsUrl = optionalString(body.mapsUrl);
+  if (mapsUrl === undefined && body.mapsUrl !== undefined) {
+    return { message: '`mapsUrl` must be a string' };
+  }
+
   const visibility = oneOf<Visibility>(body.visibility, VISIBILITIES);
   if (visibility === 'bad') return { message: '`visibility` is not one of the allowed values' };
 
@@ -131,6 +136,7 @@ export function parsePlaceBody(body: Record<string, unknown>): Parsed {
       name,
       description,
       access,
+      mapsUrl,
       visibility: visibility ?? undefined,
       lat,
       lng,

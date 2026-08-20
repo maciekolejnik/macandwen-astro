@@ -79,6 +79,9 @@ export type PlaceSummary = {
    * row: an activity has a way in as much as a place does, and a hybrid has
    * one way in rather than two. */
   access: string | null;
+  /** A link to the entry in a maps app, for navigating there. Never used to
+   * place the pin — `lat`/`lng` do that. */
+  mapsUrl: string | null;
   createdAt: Date;
   updatedAt: Date;
   photoUrl: string | null;
@@ -141,6 +144,7 @@ export type PlaceInput = {
   } | null;
   seasons?: number;
   access?: string | null;
+  mapsUrl?: string | null;
   location?: {
     typeId: string;
     attributes?: Record<string, string> | null;
@@ -229,6 +233,7 @@ function summarySelection() {
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt,
     access: entry.access,
+    mapsUrl: entry.mapsUrl,
     photoUrl: firstPhotoUrl,
     locationTypeId: locationType.id,
     locationTypeSlug: locationType.slug,
@@ -286,6 +291,7 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
       : null,
     seasons: row.seasons,
     access: row.access,
+    mapsUrl: row.mapsUrl,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     photoUrl: row.photoUrl ?? null,
@@ -710,6 +716,7 @@ type NormalisedInput = {
   bboxMaxLng: number | null;
   seasons: number;
   access: string | null;
+  mapsUrl: string | null;
   location: {
     typeId: string;
     attributes: string | null;
@@ -734,6 +741,23 @@ function positiveOrNull(
   if (value === null || value === undefined) return null;
   if (!Number.isFinite(value) || value < 0) invalid(`${label} cannot be negative`);
   return Math.round(value);
+}
+
+/**
+ * Scheme-checked like a photo link, and for a sharper reason: this one is
+ * rendered as an `href`, so `javascript:` would be a stored XSS on an entry
+ * its owner is allowed to make public. The host is deliberately not checked —
+ * Apple Maps, OsmAnd and Organic Maps are all legitimate answers.
+ */
+function mapsUrl(value: string | null | undefined): string | null {
+  const url = value?.trim();
+  if (!url) return null;
+  if (url.length > URL_MAX_LENGTH) invalid('That map link is too long');
+  if (!/^https?:\/\//i.test(url)) {
+    invalid('A map link must start with http:// or https://');
+  }
+
+  return url;
 }
 
 export function normaliseInput(input: PlaceInput): NormalisedInput {
@@ -853,6 +877,7 @@ export function normaliseInput(input: PlaceInput): NormalisedInput {
     bboxMaxLng: bbox?.maxLng ?? null,
     seasons,
     access: trimmedOrNull(input.access, ACCESS_MAX_LENGTH, 'Access'),
+    mapsUrl: mapsUrl(input.mapsUrl),
     location: input.location
       ? {
           typeId: input.location.typeId,
@@ -977,6 +1002,7 @@ export async function create(
     bboxMaxLng: normalised.bboxMaxLng,
     seasons: normalised.seasons,
     access: normalised.access,
+    mapsUrl: normalised.mapsUrl,
   });
 
   // D1 has no interactive transactions; `batch` is the atomic equivalent.
@@ -1035,6 +1061,7 @@ export async function update(
         bboxMaxLng: normalised.bboxMaxLng,
         seasons: normalised.seasons,
         access: normalised.access,
+        mapsUrl: normalised.mapsUrl,
         updatedAt: new Date(),
       })
       .where(eq(entry.id, id)),
