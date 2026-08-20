@@ -1,0 +1,26 @@
+-- What the owner thought of it.
+--
+-- On `entry`, beside `access` and `maps_url`, for the third time and the same
+-- reason: you rate an outing, not separately the lake and the swim in it. A
+-- hybrid has one opinion, and an activity deserves one as much as a place.
+--
+-- Stored as a small integer rather than as an enum of words, even though the
+-- words are what actually carry the meaning (see `RATING_LABELS`). An integer
+-- is the convertible representation: labels are a display rule layered on top,
+-- so the wording can change without a data migration, and `rating >= 4` — the
+-- one query a rating exists to answer — stays trivial. An enum would need a
+-- companion ordering column to do the same job.
+--
+-- Nullable, and that matters: "not rated yet" is a common and honest state,
+-- and must not collapse into 0 or into the middle of the scale. Same lesson as
+-- `family_friendly` being tri-state.
+--
+-- One rating per entry rather than one per person, because this is an owner's
+-- editorial judgement — inseparable from the description they wrote — and not
+-- crowd feedback to be averaged. There is no wisdom of crowds in a database
+-- with two people in it. That is the opposite of the call made for visits,
+-- which needed their own table precisely because a visit is *not* the owner's.
+-- Should per-person ratings ever be wanted, `entry_rating` is additive and
+-- changes nothing here.
+
+ALTER TABLE `entry` ADD COLUMN `rating` integer;

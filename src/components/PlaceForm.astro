@@ -1,0 +1,770 @@
+---
+import type { PlaceDetail } from '../lib/db/places';
+import { listTypes } from '../lib/db/places';
+import PhotoRow from './PhotoRow.astro';
+import {
+  ACCESS_MAX_LENGTH,
+  URL_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  DIFFICULTIES,
+  DURATION_BUCKETS,
+  DURATION_LABELS,
+  EXTENTS,
+  MAX_PHOTOS,
+  NAME_MAX_LENGTH,
+  RATINGS,
+  RATING_LABELS,
+  SEASONS,
+  maskToSeasons,
+} from '../lib/places-constants';
+
+interface Props {
+  /** Absent when creating; the form posts instead of patching. */
+  place?: PlaceDetail;
+  /** Only an admin may publish, so the control is only rendered for one. */
+  canPublish?: boolean;
+}
+
+const { place, canPublish = false } = Astro.props;
+
+const types = await listTypes();
+const locationTypes = types.filter((type) => type.kind === 'location');
+const activityTypes = types.filter((type) => type.kind === 'activity');
+
+const isEdit = Boolean(place);
+const seasons = maskToSeasons(place?.seasons ?? 0);
+const seasonNames = Object.keys(SEASONS) as (keyof typeof SEASONS)[];
+
+// A single paste-friendly field: coordinates are almost always copied out of
+// another map as one string, and splitting them into two boxes means splitting
+// them by hand. The map picker in a later step fills the same field.
+const coordinates =
+  place?.lat != null && place?.lng != null ? `${place.lat}, ${place.lng}` : '';
+
+const field =
+  'mt-2 w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500';
+const label = 'text-sm font-medium text-stone-700';
+const hint = 'mt-1 text-xs text-stone-500';
+---
+
+<form
+  id="place-form"
+  data-place-id={place?.id}
+  data-place-slug={place?.slug}
+  method="post"
+  action={isEdit ? `/api/places/${place!.id}` : '/api/places'}
+  class="mt-8"
+  novalidate
+>
+  <p
+    id="form-error"
+    role="alert"
+    hidden
+    class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
+  </p>
+
+  <label class="block">
+    <span class={label}>Name</span>
+    <input
+      id="place-name"
+      type="text"
+      required
+      maxlength={NAME_MAX_LENGTH}
+      value={place?.name ?? ''}
+      placeholder="Estany de Banyoles"
+      class={field}
+    />
+  </label>
+
+  <label class="mt-6 block">
+    <span class={label}>Description</span>
+    <textarea
+      id="place-description"
+      rows="4"
+      maxlength={DESCRIPTION_MAX_LENGTH}
+      placeholder="What it is, and what it is like."
+      class={field}>{place?.description ?? ''}</textarea>
+  </label>
+
+  <!--
+    The kind is derived from which halves are filled in rather than chosen, so
+    these two checkboxes are the whole of it: tick both and the entry is a
+    hybrid without anybody having to know the word.
+  -->
+  <fieldset class="mt-8 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>What is it?</legend>
+
+    <label class="flex items-center gap-2 text-sm text-stone-700">
+      <input
+        id="is-location"
+        type="checkbox"
+        checked={Boolean(place?.location) || !isEdit}
+        class="rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+      />
+      A place
+    </label>
+
+    <label class="mt-2 flex items-center gap-2 text-sm text-stone-700">
+      <input
+        id="is-activity"
+        type="checkbox"
+        checked={Boolean(place?.activity)}
+        class="rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+      />
+      Something to do
+    </label>
+
+    <p class={hint}>Tick both if it is both — a lake you swim in, say.</p>
+  </fieldset>
+
+  <fieldset id="location-section" class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>The place</legend>
+
+    <label class="block">
+      <span class={label}>Type</span>
+      <select id="location-type" class={field}>
+        <!--
+          No preselection when creating. Defaulting to the first type meant an
+          untouched form quietly claimed "Lake", and a confidently wrong answer
+          is worse than an absent one — it colours a pin and will feed a filter.
+        -->
+        <option value="" selected={!place?.location}>Choose one…</option>
+        {
+          locationTypes.map((type) => (
+            <option
+              value={type.id}
+              selected={place?.location?.type.id === type.id}
+            >
+              {type.label}
+            </option>
+          ))
+        }
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset id="activity-section" class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>The thing to do</legend>
+
+    <label class="block">
+      <span class={label}>Type</span>
+      <select id="activity-type" class={field}>
+        <option value="" selected={!place?.activity}>Choose one…</option>
+        {
+          activityTypes.map((type) => (
+            <option
+              value={type.id}
+              selected={place?.activity?.type.id === type.id}
+            >
+              {type.label}
+            </option>
+          ))
+        }
+      </select>
+    </label>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <label class="block">
+        <span class={label}>Difficulty</span>
+        <select id="activity-difficulty" class={field}>
+          <option value="">Not said</option>
+          {
+            DIFFICULTIES.map((value) => (
+              <option value={value} selected={place?.activity?.difficulty === value}>
+                {value[0]!.toUpperCase() + value.slice(1)}
+              </option>
+            ))
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class={label}>How long</span>
+        <select id="activity-duration" class={field}>
+          <option value="">Not said</option>
+          {
+            DURATION_BUCKETS.map((value) => (
+              <option
+                value={value}
+                selected={place?.activity?.durationBucket === value}
+              >
+                {DURATION_LABELS[value]}
+              </option>
+            ))
+          }
+        </select>
+      </label>
+
+      <label class="block">
+        <span class={label}>Distance (km)</span>
+        <input
+          id="activity-distance"
+          type="number"
+          min="0"
+          step="0.1"
+          value={place?.activity?.distanceM != null
+            ? place.activity.distanceM / 1000
+            : ''}
+          class={field}
+        />
+      </label>
+
+      <label class="block">
+        <span class={label}>Ascent (m)</span>
+        <input
+          id="activity-ascent"
+          type="number"
+          min="0"
+          step="10"
+          value={place?.activity?.ascentM ?? ''}
+          class={field}
+        />
+      </label>
+    </div>
+
+    <!--
+      Three options rather than a checkbox, because "we have not tried" is a
+      different answer from "no" and the filter has to be able to tell them
+      apart.
+    -->
+    <label class="mt-4 block">
+      <span class={label}>Alright with small children?</span>
+      <select id="activity-family" class={field}>
+        <option value="" selected={place?.activity?.familyFriendly == null}>
+          Not said
+        </option>
+        <option value="yes" selected={place?.activity?.familyFriendly === true}>
+          Yes
+        </option>
+        <option value="no" selected={place?.activity?.familyFriendly === false}>
+          No
+        </option>
+      </select>
+    </label>
+  </fieldset>
+
+  <fieldset class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>Where</legend>
+
+    <label class="block">
+      <span class={label}>Coordinates</span>
+      <input
+        id="place-coordinates"
+        type="text"
+        value={coordinates}
+        placeholder="42.1256, 2.7469"
+        class={field}
+      />
+      <span class={hint}>Paste latitude and longitude straight from a map.</span>
+    </label>
+
+    <label class="mt-4 block">
+      <span class={label}>How big is it?</span>
+      <select id="place-extent" class={field}>
+        {
+          EXTENTS.map((value) => (
+            <option value={value} selected={(place?.extent ?? 'point') === value}>
+              {value === 'point'
+                ? 'A spot'
+                : value === 'area'
+                  ? 'An area — a lake, a valley'
+                  : 'A region — a county, a country'}
+            </option>
+          ))
+        }
+      </select>
+    </label>
+
+    <label class="mt-4 block">
+      <span class={label}>Maps link</span>
+      <input
+        id="place-maps-url"
+        type="url"
+        maxlength={URL_MAX_LENGTH}
+        value={place?.mapsUrl ?? ''}
+        placeholder="https://maps.app.goo.gl/…"
+        class={field}
+      />
+      <span class={hint}>
+        Optional. Whatever you would actually tap to navigate — the share link
+        from your phone is fine.
+      </span>
+    </label>
+
+    <label class="mt-4 block">
+      <span class={label}>Getting there</span>
+      <textarea
+        id="place-access"
+        rows="3"
+        maxlength={ACCESS_MAX_LENGTH}
+        placeholder="Park on the verge by the bridge, room for three cars."
+        class={field}>{place?.access ?? ''}</textarea>
+    </label>
+  </fieldset>
+
+  <!--
+    Real radios, visually hidden behind the stars: arrow-key navigation and the
+    grouping come free and correct, and the script only paints the fill. Each
+    one is named, so the choice is "Must see" rather than "5", which is what
+    stops the scale drifting into everything-is-a-four.
+  -->
+  <fieldset class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>What did you make of it?</legend>
+
+    <div class="flex items-center gap-3">
+      <div id="rating-stars" class="flex items-center">
+        {
+          RATINGS.map((star) => (
+            <label
+              class="cursor-pointer p-0.5 text-stone-300"
+              data-rating-star
+              data-value={star}
+              title={RATING_LABELS[star]}
+            >
+              <input
+                type="radio"
+                name="rating"
+                value={star}
+                checked={place?.rating === star}
+                class="sr-only"
+              />
+              <span class="sr-only">{RATING_LABELS[star]}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9z" /></svg>
+            </label>
+          ))
+        }
+      </div>
+
+      <p id="rating-label" class="text-sm text-stone-500"></p>
+
+      <button
+        type="button"
+        id="rating-clear"
+        class="ml-auto text-xs text-stone-400 transition-colors hover:text-stone-700"
+      >
+        Clear
+      </button>
+    </div>
+
+    <p class={hint}>Optional — leave it unrated until you have been.</p>
+  </fieldset>
+
+  <fieldset class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>Best time to go</legend>
+
+    <div class="flex flex-wrap gap-4">
+      {
+        seasonNames.map((season) => (
+          <label class="flex items-center gap-2 text-sm text-stone-700">
+            <input
+              type="checkbox"
+              value={season}
+              checked={seasons.includes(season)}
+              data-season
+              class="rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+            />
+            {season[0]!.toUpperCase() + season.slice(1)}
+          </label>
+        ))
+      }
+    </div>
+
+    <p class={hint}>Leave them all unticked for any time of year.</p>
+  </fieldset>
+
+  <fieldset class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>Photos</legend>
+
+    <ul id="photo-rows" class="mt-2 space-y-2">
+      {
+        place?.photos.map((photo) => (
+          <PhotoRow url={photo.url} caption={photo.caption} />
+        ))
+      }
+    </ul>
+
+    <!-- Cloned by the client script for every row added after load. -->
+    <template id="photo-row-template">
+      <PhotoRow />
+    </template>
+
+    <button
+      type="button"
+      id="add-photo"
+      class="mt-3 rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      Add a photo
+    </button>
+
+    <p class={hint}>
+      The first one is the picture on the list. Up to {MAX_PHOTOS}.
+    </p>
+  </fieldset>
+
+  {
+    canPublish && (
+      <label class="mt-6 flex items-center gap-2 text-sm text-stone-700">
+        <input
+          id="place-public"
+          type="checkbox"
+          checked={place?.visibility === 'public'}
+          class="rounded border-stone-300 text-emerald-600 focus:ring-emerald-500"
+        />
+        Show this to everybody
+      </label>
+    )
+  }
+
+  <div class="mt-8 flex items-center gap-3">
+    <button
+      type="submit"
+      id="save-place"
+      class="rounded-lg bg-emerald-600 px-5 py-2 font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+    >
+      {isEdit ? 'Save' : 'Add it'}
+    </button>
+
+    <a
+      href={isEdit ? `/places/${place!.slug}` : '/places'}
+      class="rounded-lg border border-stone-300 bg-white px-5 py-2 text-stone-700 transition-colors hover:bg-stone-100"
+    >
+      Cancel
+    </a>
+
+    {
+      isEdit && (
+        <button
+          type="button"
+          id="delete-place"
+          class="ml-auto rounded-lg border border-red-200 px-4 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+        >
+          Delete
+        </button>
+      )
+    }
+  </div>
+</form>
+
+<script>
+  import { MAX_PHOTOS } from '../lib/places-constants';
+
+  const form = document.getElementById('place-form') as HTMLFormElement | null;
+  const rows = document.getElementById('photo-rows');
+  const addPhoto = document.getElementById('add-photo');
+  const template = document.getElementById(
+    'photo-row-template',
+  ) as HTMLTemplateElement | null;
+  const save = document.getElementById('save-place') as HTMLButtonElement | null;
+  const remove = document.getElementById('delete-place') as HTMLButtonElement | null;
+  const errorBox = document.getElementById('form-error');
+
+  function el<T>(id: string) {
+    return document.getElementById(id) as T | null;
+  }
+
+  if (form && rows && addPhoto && template && save) {
+    const placeId = form.dataset.placeId;
+    const placeSlug = form.dataset.placeSlug;
+
+    const name = el<HTMLInputElement>('place-name')!;
+    const description = el<HTMLTextAreaElement>('place-description')!;
+    const access = el<HTMLTextAreaElement>('place-access')!;
+    const mapsUrl = el<HTMLInputElement>('place-maps-url')!;
+    const coordinates = el<HTMLInputElement>('place-coordinates')!;
+    const extent = el<HTMLSelectElement>('place-extent')!;
+    const isPublic = el<HTMLInputElement>('place-public');
+
+    const isLocation = el<HTMLInputElement>('is-location')!;
+    const isActivity = el<HTMLInputElement>('is-activity')!;
+    const locationSection = el<HTMLFieldSetElement>('location-section')!;
+    const activitySection = el<HTMLFieldSetElement>('activity-section')!;
+
+    const locationType = el<HTMLSelectElement>('location-type')!;
+    const activityType = el<HTMLSelectElement>('activity-type')!;
+    const difficulty = el<HTMLSelectElement>('activity-difficulty')!;
+    const duration = el<HTMLSelectElement>('activity-duration')!;
+    const distance = el<HTMLInputElement>('activity-distance')!;
+    const ascent = el<HTMLInputElement>('activity-ascent')!;
+    const family = el<HTMLSelectElement>('activity-family')!;
+
+    const stars = [...document.querySelectorAll<HTMLLabelElement>('[data-rating-star]')];
+    const ratingLabel = el<HTMLParagraphElement>('rating-label');
+    const clearRating = el<HTMLButtonElement>('rating-clear');
+
+    const chosenRating = () => {
+      const checked = document.querySelector<HTMLInputElement>(
+        'input[name="rating"]:checked',
+      );
+
+      return checked ? Number(checked.value) : null;
+    };
+
+    /** `upto` lets a hover preview the rating without committing to it. */
+    const paintStars = (upto?: number) => {
+      const value = upto ?? chosenRating() ?? 0;
+
+      stars.forEach((star) => {
+        const on = Number(star.dataset.value) <= value;
+        star.classList.toggle('text-amber-500', on);
+        star.classList.toggle('text-stone-300', !on);
+        star.querySelector('svg')!.setAttribute('fill', on ? 'currentColor' : 'none');
+      });
+
+      if (ratingLabel) {
+        const chosen = chosenRating();
+        ratingLabel.textContent = chosen
+          ? (stars[chosen - 1]?.title ?? '')
+          : 'Not rated';
+      }
+    };
+
+    paintStars();
+    stars.forEach((star) => {
+      star.addEventListener('change', () => paintStars());
+      star.addEventListener('mouseenter', () => paintStars(Number(star.dataset.value)));
+      star.addEventListener('mouseleave', () => paintStars());
+    });
+
+    clearRating?.addEventListener('click', () => {
+      const checked = document.querySelector<HTMLInputElement>(
+        'input[name="rating"]:checked',
+      );
+      if (checked) checked.checked = false;
+      paintStars();
+    });
+
+    const seasonBits: Record<string, number> = {
+      spring: 1,
+      summer: 2,
+      autumn: 4,
+      winter: 8,
+    };
+
+    const showError = (message: string) => {
+      if (!errorBox) return;
+      errorBox.textContent = message;
+      errorBox.hidden = false;
+      errorBox.scrollIntoView({ block: 'nearest' });
+    };
+
+    const clearError = () => {
+      if (errorBox) errorBox.hidden = true;
+    };
+
+    const photoRows = () => [...rows.querySelectorAll<HTMLLIElement>('[data-photo-row]')];
+
+    /** The ends have nowhere to move to, and only the first photo is the one
+     * that gets used as the picture — so it is worth saying which that is. */
+    const paint = () => {
+      const all = photoRows();
+
+      all.forEach((row, index) => {
+        row.querySelector<HTMLButtonElement>('[data-move-up]')!.disabled = index === 0;
+        row.querySelector<HTMLButtonElement>('[data-move-down]')!.disabled =
+          index === all.length - 1;
+        row.querySelector<HTMLParagraphElement>('[data-photo-position]')!.textContent =
+          index === 0 ? 'Main photo' : '';
+      });
+
+      addPhoto.toggleAttribute('disabled', all.length >= MAX_PHOTOS);
+    };
+
+    const addRow = (focus = true) => {
+      const row = template.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+      rows.appendChild(row);
+      paint();
+      if (focus) row.querySelector<HTMLInputElement>('[data-photo-url]')!.focus();
+
+      return row;
+    };
+
+    paint();
+    addPhoto.addEventListener('click', () => addRow());
+
+    // One listener on the container, so rows added later need no wiring.
+    rows.addEventListener('click', (event) => {
+      const button = (event.target as HTMLElement).closest('button');
+      const row = (event.target as HTMLElement).closest<HTMLLIElement>('[data-photo-row]');
+      if (!button || !row) return;
+
+      if (button.hasAttribute('data-remove-photo')) {
+        row.remove();
+      } else if (button.hasAttribute('data-move-up')) {
+        const previous = row.previousElementSibling;
+        if (previous) rows.insertBefore(row, previous);
+      } else if (button.hasAttribute('data-move-down')) {
+        const next = row.nextElementSibling;
+        if (next) rows.insertBefore(next, row);
+      }
+
+      paint();
+    });
+
+    /** Hiding rather than disabling: an unticked half is not sent at all, so
+     * what is on screen is exactly what will be stored. */
+    const paintSections = () => {
+      locationSection.hidden = !isLocation.checked;
+      activitySection.hidden = !isActivity.checked;
+    };
+
+    paintSections();
+    isLocation.addEventListener('change', paintSections);
+    isActivity.addEventListener('change', paintSections);
+
+    /**
+     * Accepts `42.1, 2.7`, `42.1 2.7` and the `42.1,2.7` that a URL gives you.
+     * Returns `null` for blank, which is a legitimate answer — a region often
+     * has no one point worth naming.
+     */
+    const parseCoordinates = (value: string) => {
+      const text = value.trim();
+      if (!text) return { lat: null, lng: null };
+
+      const parts = text.split(/[,\s]+/).filter(Boolean);
+      if (parts.length !== 2) return 'bad' as const;
+
+      const [lat, lng] = parts.map(Number);
+      if (!Number.isFinite(lat!) || !Number.isFinite(lng!)) return 'bad' as const;
+
+      return { lat: lat!, lng: lng! };
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      clearError();
+
+      if (!name.value.trim()) {
+        showError('It needs a name');
+        name.focus();
+        return;
+      }
+
+      if (!isLocation.checked && !isActivity.checked) {
+        showError('Say whether this is a place, something to do, or both');
+        isLocation.focus();
+        return;
+      }
+
+      if (isLocation.checked && !locationType.value) {
+        showError('Pick what kind of place it is — or Other, if none of them fit');
+        locationType.focus();
+        return;
+      }
+
+      if (isActivity.checked && !activityType.value) {
+        showError('Pick what kind of thing it is — or Other, if none of them fit');
+        activityType.focus();
+        return;
+      }
+
+      const point = parseCoordinates(coordinates.value);
+      if (point === 'bad') {
+        showError('Coordinates should be two numbers, like 42.1256, 2.7469');
+        coordinates.focus();
+        return;
+      }
+
+      const seasons = [...document.querySelectorAll<HTMLInputElement>('[data-season]')]
+        .filter((box) => box.checked)
+        .reduce((mask, box) => mask | (seasonBits[box.value] ?? 0), 0);
+
+      const photos = photoRows()
+        .map((row) => ({
+          url: row.querySelector<HTMLInputElement>('[data-photo-url]')!.value.trim(),
+          caption: row
+            .querySelector<HTMLInputElement>('[data-photo-caption]')!
+            .value.trim(),
+        }))
+        .filter((photo) => photo.url.length > 0);
+
+      // Kilometres are what a walk is described in; metres are what gets
+      // stored, so the conversion happens once, here.
+      const distanceM = distance.value.trim()
+        ? Math.round(Number(distance.value) * 1000)
+        : null;
+
+      const body = {
+        name: name.value,
+        description: description.value,
+        access: access.value,
+        mapsUrl: mapsUrl.value,
+        rating: chosenRating(),
+        lat: point.lat,
+        lng: point.lng,
+        extent: extent.value,
+        seasons,
+        visibility: isPublic?.checked ? 'public' : 'private',
+        location: isLocation.checked ? { typeId: locationType.value } : null,
+        activity: isActivity.checked
+          ? {
+              typeId: activityType.value,
+              difficulty: difficulty.value,
+              durationBucket: duration.value,
+              distanceM,
+              ascentM: ascent.value.trim() ? Number(ascent.value) : null,
+              familyFriendly: family.value,
+            }
+          : null,
+        photos,
+      };
+
+      save.disabled = true;
+
+      try {
+        const response = await fetch(form.action, {
+          method: placeId ? 'PATCH' : 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const payload = (await response.json().catch(() => null)) as
+          | { slug?: string; error?: string }
+          | null;
+
+        if (!response.ok) {
+          save.disabled = false;
+          showError(payload?.error ?? 'Something went wrong. Please try again.');
+          return;
+        }
+
+        // The slug is frozen on creation, so an edit already knows where it is
+        // going and a rename does not move the page.
+        window.location.href = `/places/${placeSlug ?? payload?.slug ?? ''}`;
+      } catch {
+        save.disabled = false;
+        showError('Could not reach the server. Please try again.');
+      }
+    });
+
+    remove?.addEventListener('click', async () => {
+      if (!placeId) return;
+
+      const confirmed = window.confirm(
+        'Delete this? Photos, visits and links go with it, and it cannot be undone.',
+      );
+      if (!confirmed) return;
+
+      clearError();
+      remove.disabled = true;
+
+      try {
+        const response = await fetch(`/api/places/${placeId}`, { method: 'DELETE' });
+
+        if (!response.ok) {
+          remove.disabled = false;
+          const payload = (await response.json().catch(() => null)) as
+            | { error?: string }
+            | null;
+          showError(payload?.error ?? 'Could not delete this.');
+          return;
+        }
+
+        window.location.href = '/places';
+      } catch {
+        remove.disabled = false;
+        showError('Could not reach the server. Please try again.');
+      }
+    });
+  }
+</script>

@@ -14,9 +14,10 @@ This document is the design and the plan. It is written before the code, so
 everything below is a decision with its reasoning attached rather than a
 description of what exists.
 
-Status: **In progress.** Step 1 of the plan — the schema and the query layer —
-has landed; the pages and the write API have not. Sections describing what does
-not exist yet stay in the future tense.
+Status: **In progress.** Steps 1 to 3 of the plan have landed: the schema and
+the query layer, the read-only pages, and the editor with its write API. The map
+is what remains. Sections describing what does not exist yet stay in the future
+tense.
 
 **Scope for the first release: storing, editing and displaying entries, on a
 list and on a map.** Filtering, moderation and the type-management UI are
@@ -114,6 +115,8 @@ bbox_min_lat  real  bbox_min_lng real
 bbox_max_lat  real  bbox_max_lng real
 seasons       integer not null default 0        -- bitmask, 0 = any time
 access        text                     -- how to reach the point above
+maps_url      text                     -- a link to it in a maps app
+rating        integer                  -- 1-5, null = not rated
 created_at / updated_at
 ```
 
@@ -135,6 +138,62 @@ the verge" — sits on `entry`, beside the point it describes, rather than on
 over: an activity has a way in as much as a place does, and forcing a hike to
 invent a location row just to hold one sentence would corrupt the `kind` that
 row is supposed to derive. A hybrid also has one way in, not two.
+
+**A maps link** sits beside it, on `entry` for both of the same reasons: a
+hike's trailhead has one as much as a lake does, and a hybrid has one link
+rather than two — the lake and the swim in it are the same dot on the earth.
+
+It is not a duplicate of `lat`/`lng`, which stay the authority for the pin and
+for distance. A pasted link is a different object from a coordinate: it points
+at a *named* place, carrying its reviews, photos and opening hours, and the link
+a phone gives you when you share (`maps.app.goo.gl/…`) does not decompose into
+numbers without being resolved over the network. Where the two disagree the
+coordinates win, because they are what the map draws.
+
+The column is `maps_url`, not `google_maps_url`. Nothing in the code inspects it
+beyond checking the scheme, so an Apple Maps, OsmAnd or Organic Maps link works
+exactly as well, and a vendor name would be a lie the first time somebody pastes
+one. That scheme check is not a formality: the value is rendered as an `href` on
+an entry its owner may publish, so `javascript:` would be stored XSS. The host
+is deliberately *not* checked, since there is no list of map providers worth
+maintaining.
+
+On the page it is a button rather than a link in a sentence, because it is an
+*action* — the thing you tap when you are about to drive — while the
+coordinates above it are for reading. Other external references, a Wikiloc
+route or a refuge's booking page, are a different feature: they would render as
+a list of further reading, and folding them together would mean the navigate
+button had to go and find itself among them. That list is a
+[future deliverable](#future-deliverables).
+
+**The rating** is the third column to land on `entry` for the same reason: you
+rate an outing, not separately the lake and the swim in it, and an activity
+deserves an opinion as much as a place does.
+
+Stars are the input, but **the words are the feature**. An uncalibrated
+five-point scale collapses into "everything I bothered to save is a four" and
+the bottom half dies, so each step is named — *Not worth it*, *Fine, nothing
+special*, *Good, worth going*, *Excellent, would go back*, *Must see* — and the
+name is what the tooltip and the accessible label say. Picking one is then a
+judgement rather than a mood.
+
+It is stored as an integer even though the words carry the meaning, because an
+integer is the convertible representation: `RATING_LABELS` is a display rule
+like `seasonLabel`, so the wording can be rewritten without touching data, and
+`rating >= 4` — the single query a rating exists to answer — stays trivial. An
+enum of words would need a companion ordering column to do the same job.
+
+**Null is not zero and not three.** "We have not been yet" is a common and
+honest state, and a filter has to be able to tell it from "it was poor" — the
+same lesson `family_friendly` learned by being tri-state.
+
+**One rating per entry, not one per person.** This is the owner's editorial
+judgement, inseparable from the description they wrote, and not crowd feedback
+to be averaged; there is no wisdom of crowds in a database with two people in
+it. That is deliberately the opposite of the call made for visits, which needed
+their own table precisely because a visit is *not* the owner's — anyone can go
+somewhere, but the entry says what its author thought. If per-person ratings are
+ever wanted, `entry_rating` is additive and changes nothing here.
 
 It stays separate from `description` because the two are read at different
 moments: the description is why you would go, the access line is what you need
@@ -254,9 +313,11 @@ Three rules follow, and they are what make a missing icon cost nothing:
   only if there is one. At the size a pin is drawn, a glyph is barely legible
   anyway — which is why the map needs a legend, and why the pin's tooltip and
   its popup both carry the label.
-- **Colour is only memorable for a handful of types at once.** With nineteen
+- **Colour is only memorable for a handful of types at once.** With thirty-odd
   seeded types no palette is self-explanatory, so colour separates what is on
   screen rather than encoding the whole vocabulary; the legend does the naming.
+  At this many types some pairs are genuinely close, which is fine as long as
+  nothing depends on colour alone.
 
 Emoji rather than an icon set, because an icon set would break the promise that
 a type is data: adding one whose icon name is not bundled would render nothing,
@@ -273,12 +334,40 @@ The seed ships in the migration:
 
 | Kind | Types |
 | --- | --- |
-| Location | lake, viewpoint, car park, refuge, beach, wild camping spot, campsite, town, region, cave, mountain peak, restaurant |
-| Activity | hike, via ferrata, climbing, kayaking, cycling, wild swimming, stand-up paddleboarding |
+| Location | lake, river, waterfall, spring, hot spring, beach, island, valley, gorge, cave, forest, mountain peak, mountain pass, viewpoint, refuge, campsite, wild camping spot, restaurant, castle or ruins, ski area, car park, town, region, **other** |
+| Activity | hike, via ferrata, climbing, kayaking, cycling, wild swimming, stand-up paddleboarding, **other** |
 
 Ids are readable and deterministic — `loc_lake`, `act_hike` — so a seeded type
 can be named in a test or a fixture without a lookup, and so re-running the seed
-is an obvious no-op.
+is an obvious no-op. They are ordered in families — water, then land, then
+places to stay, then the human-made — because `position` is what the dropdown
+reads and a list of thirty in invention order is not scannable.
+
+**`region` means an administrative or named division**, Catalunya or la
+Cerdanya — the things an `inside` link points at. It is deliberately *not* the
+answer for the Ordesa valley. That entry is a `valley` whose `extent` is `area`:
+**`type` says what a thing is and `extent` says how big it is**, and they are
+different questions. Before the landforms were seeded, `region` was drifting
+into meaning "the big one", which is not something you can filter on or colour a
+pin by. A river swimming spot had the same problem from the other end — the
+nearest type was `lake`, which was simply wrong.
+
+Note that *national park* is not in the list, and should not be: Ordesa is a
+valley **and** a national park, and a type has cardinality one. That is a
+[tag](#future-deliverables), and a good argument that the two axes both need to
+exist eventually.
+
+**`Other` is the fallback, on both sides.** Without one, somebody meeting an
+unlisted thing either picks a wrong type — which silently corrupts the pin
+colour and every filter later built on it, worse than no answer — or abandons
+the entry. `Other` makes the gap explicit and recoverable: retyping is one
+`UPDATE`, and the frozen slug means the URL does not move.
+
+It also earns its keep as a work queue, since the entries sitting on it are
+exactly the list of types the vocabulary is missing — most of what the "suggest
+a type" idea was going to be for, without the notification machinery. It sorts
+last and is never preselected, so it stays an escape hatch rather than a
+default.
 
 **There is no admin UI for types in the first release.** Adding one is a single
 `wrangler d1 execute` insert (see [database.md](./database.md)), which is
@@ -434,7 +523,7 @@ at if that page ever slows down.
 | --- | --- |
 | `/places` | Everything the visitor may see, as a list |
 | `/places/map` | The same set, as pins |
-| `/places/[slug]` | One entry: details, photos, visits, links |
+| `/places/[slug]` | One entry: details, photos, visits, and any links it has |
 | `/places/new` | The editor, empty — signed in only |
 | `/places/[slug]/edit` | The editor, loaded — owner only |
 
@@ -484,18 +573,33 @@ nothing later — it is one component and no schema.
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one
 must be ticked. That is what makes a hybrid a natural thing to create rather
-than an advanced feature. It is a plain form with a `<script>`, not a framework
-island, matching `PackingListForm.astro`.
+than an advanced feature. Unticking a half hides its section rather than
+disabling it, so what is on screen is exactly what will be stored. It is a plain
+form with a `<script>`, not a framework island, matching `PackingListForm.astro`.
 
-Coordinates come from a **map picker**: the editor shows the same map component
-as `/places/map`, and clicking it drops the pin. Dragging the pin moves it, and
-the numbers stay visible and editable underneath, because a coordinate pasted
-from Google Maps is often the fastest way in — the field accepts a `lat, lng`
-pair, which is exactly what copying from Maps gives you. The two are bound
-together: typing moves the pin, moving the pin updates the numbers.
+Photos are a list of URL-and-caption rows with move buttons, and the first is
+labelled "Main photo" — the ordering is not decoration, it decides the picture
+on the list and in a shared link. Distance is typed in kilometres and stored in
+metres; the conversion happens once, in the form.
 
-Without JavaScript the picker is absent and the pair of number fields is the
-whole story, so the form still works.
+The type dropdown starts on **"Choose one…"** for a new entry rather than on the
+first type. Preselecting meant an untouched form quietly claimed *Lake*, and a
+confidently wrong type is worse than a missing one — it colours a pin and feeds
+a filter. `Other` is what the impatient answer should be, and it is one option
+down the list. The server rejects a blank or unknown type as well; the client
+check only buys a better sentence.
+
+Coordinates are **one paste-friendly field**, `42.1256, 2.7469`, because that is
+what copying from a map gives you and splitting it into two boxes means
+splitting it by hand. It accepts a comma, a space, or both.
+
+Coordinates will also come from a **map picker** in step 4: the editor will show
+the same map component as `/places/map`, clicking drops the pin, dragging moves
+it, and the text field stays bound to it — typing moves the pin, moving the pin
+rewrites the numbers. The picker is an addition to the field rather than a
+replacement for it, which is why the field shipped first and alone: without
+JavaScript, or with a coordinate already on the clipboard, it is the faster
+path anyway.
 
 An entry whose `extent` is `area` or `region` picks a bounding box by dragging a
 rectangle, with the representative point defaulting to its centre and still
@@ -547,6 +651,35 @@ Forbidden and missing both answer `404` with an identical body.
 packing list editor's replace-everything update. D1 has no interactive
 transactions, so multi-table writes go through `db.batch`.
 
+Visits and links have their own routes rather than riding along with `PATCH`,
+and for two different reasons.
+
+A **visit** is not owned by the same person as the entry — it belongs to whoever
+recorded it — so it has to be addable by somebody who cannot edit the entry at
+all. That is why its control lives on the **detail page**, offered to any signed-in
+visitor: it is not editing, and the editor is a page a non-owner cannot reach.
+
+A **link** is owner-only, so it belongs in the **editor** with the rest of the
+entry, and the read-only list on the detail page disappears entirely when
+nothing is linked. It still has its own route rather than folding into `PATCH`,
+because replace-everything semantics are wrong for an edge with two ends:
+saving this entry would silently delete a link somebody else made pointing *at*
+it. So it saves the moment you click, which the editor says out loud, since
+everything around it waits for Save. Linking is unavailable on `/places/new` for
+the plain reason that a link needs both ends to exist and one of them does not
+yet.
+
+Both sub-editors reload the page on success rather than patching the DOM. That
+is heavier, but a link's label depends on which end it is read from and a date
+has a format — both are things the server already knows how to work out, and
+neither is worth writing a second time in the browser for an action taken this
+rarely.
+
+`src/lib/places-payload.ts` shape-checks a body before it reaches the data
+layer, which trusts its types. Content rules — trimming, limits, blanks, the
+derived kind — stay in `normaliseInput`, so they hold for every caller rather
+than only for HTTP.
+
 ## Tests
 
 Real D1 in workerd, no mocks, following the packing list precedent:
@@ -577,14 +710,14 @@ Each step is a mergeable change that leaves the site working.
    so they can be tested — see `places-view.test.ts`. A missing slug and a slug
    you are not allowed to see both return the same 404, since a distinguishable
    403 would confirm that the entry exists.
-3. **The editor and the write API.** Create, edit, delete, both detail sections,
-   photos — reorderable, since position 0 is the picture everything else uses —
-   and visits. The shared map component lands here, since the picker is its
-   first user.
-4. **The map view.** `/places/map` reusing that component, and the list/map
-   toggle.
-5. **Links.** The link editor on the detail page and the both-ends visibility
-   rule.
+3. ~~**The editor and the write API.**~~ **Done.** Create, edit, delete, both
+   detail sections, photos — reorderable, since position 0 is the picture
+   everything else uses — visits and links. The map picker was held back to step
+   4 rather than shipped half-built: coordinates are pasted for now, into a
+   field the picker will later fill.
+4. **The map view.** `/places/map` and the shared `PlacesMap.astro`, reused by
+   the detail page's "Getting there" and by the editor as a picker, plus the
+   list/map toggle.
 
 That is the release. A person can record places and things to do, see them on a
 list and on a map, and connect them.
@@ -595,7 +728,7 @@ Deferred deliberately, in roughly the order they are likely to be wanted. Each
 notes what the current schema already does for it, since that is the part that
 would be expensive to retrofit.
 
-**Filters.** Type, kind, difficulty, duration bucket, season, family
+**Filters.** Type, kind, difficulty, duration bucket, season, rating, family
 friendliness and text search, on both the list and the map. The schema is filter-ready: buckets are stored
 rather than derived, `family_friendly` is tri-state so "unknown" is not silently
 counted as "no", and seasons are a bitmask so a multi-season filter is one
@@ -660,6 +793,64 @@ But the things types handle *badly* are exactly the unbounded, personal,
 un-adminned ones in that list, so the two axes are orthogonal and should both
 exist eventually. A tag needs `tag` and `entry_tag` and touches nothing that is
 here — no column changes, no rewrite — which is the reason it can wait.
+
+**Type-to-filter on the long dropdowns.** Two selects outgrow a plain
+`<select>`: the link target, which gains an option for every entry ever added
+and so is the only one that degrades without bound, and the location type at
+twenty-four. The activity type comes along for consistency once the component
+exists. The five short ones — difficulty, duration, extent, family friendliness,
+relation — stay native, because a combobox over three options is worse than a
+dropdown, not better.
+
+Worth being precise about what is actually missing, because it is less than it
+looks. A focused native `<select>` already jumps as you type, and on a phone it
+opens the platform picker, which beats anything hand-built. What it cannot do is
+match anywhere but the **start** of the label — so it fails exactly when you do
+not know how a thing is filed: you think *canyon*, it is under **Gorge**; you
+think *col*, it is **Mountain pass**.
+
+That makes **synonyms the real feature** and filtering merely the delivery
+mechanism. A `search_terms` column on `entry_type` — space-separated, matched as
+substrings alongside the label — is what native can never do, and it is a
+one-column migration.
+
+Built as a small accessible combobox of our own (input, filtered listbox,
+arrow/enter/escape, `role="combobox"` with `aria-activedescendant`) rather than
+a dependency: it is about a hundred and fifty lines, and this repo has no UI
+libraries by choice. The matching itself is a pure function in `places-view.ts`,
+so it is unit-tested like the other display rules rather than only clickable.
+
+**External links.** A Wikiloc or AllTrails route, a refuge's booking page, a
+crag's page on 8a.nu — references rather than actions, so they render as a list
+of further reading and stay separate from the maps button. `entry_url`
+(`entry_id`, `url`, `label`, `position`) is the whole of it, and nothing
+existing changes.
+
+**Uploading photos.** Today a photo is a URL somebody pastes, which is fine for
+pictures already on `media.macandwen.com` and useless for one that is still on
+a phone. Its own feature, and worth writing up separately, but the shape is
+clear enough to record:
+
+- The `macandwen` R2 bucket is already public on `media.macandwen.com`, so an
+  upload writes `images/places/<entry>/<uuid>.webp` and hands back a URL. **The
+  schema does not change** — `entry_photo.url` holds it either way, which is why
+  this can land after the editor rather than before it. Upload swaps the input
+  control, not the model.
+- `POST /api/uploads` with an `r2_buckets` binding: session required, a content
+  type allowlist, a size cap and a random key. Roughly the size of one of the
+  packing list routes.
+- **Resize in the browser, not the Worker.** `sharp` is native and does not run
+  on Workers, and Cloudflare Images is a paid product for a problem this size. A
+  `<canvas>` resize to about 2000 px and `toBlob(…, 'image/webp', 0.82)` turns a
+  5 MB phone photo into roughly 300 KB before it leaves the device: faster
+  upload, less stored, no dependency, and the same format as everything already
+  in the bucket. HEIC is the exception — Safari decodes it, desktop Chrome does
+  not — so those either fall back to uploading the original or ask the phone to
+  shoot JPEG.
+- **The real work is orphans.** `entry_photo` rows cascade when an entry is
+  deleted; R2 objects do not. Removing a photo has to remove the object, and
+  whether that happens inline or as a sweep is the decision that feature exists
+  to make.
 
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into

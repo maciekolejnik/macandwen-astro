@@ -54,6 +54,26 @@ export function bucketForMinutes(minutes: number): DurationBucket {
   return 'multi_day';
 }
 
+export const MIN_RATING = 1;
+export const MAX_RATING = 5;
+
+/**
+ * Stars are the input, but these are what a star *means*. Writing them down is
+ * the whole point: an uncalibrated five-point scale collapses into "everything
+ * I bothered to save is a four", and the middle of it dies. Naming each step
+ * makes picking one a judgement rather than a mood, and gives the star row
+ * something to say to a screen reader.
+ */
+export const RATING_LABELS: Record<number, string> = {
+  1: 'Not worth it',
+  2: 'Fine, nothing special',
+  3: 'Good, worth going',
+  4: 'Excellent, would go back',
+  5: 'Must see',
+};
+
+export const RATINGS = [1, 2, 3, 4, 5] as const;
+
 export const SEASONS = {
   spring: 1,
   summer: 2,
