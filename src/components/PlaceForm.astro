@@ -403,7 +403,12 @@ const hint = 'mt-1 text-xs text-stone-500';
     <ul id="photo-rows" class="mt-2 space-y-2">
       {
         place?.photos.map((photo) => (
-          <PhotoRow url={photo.url} caption={photo.caption} />
+          <PhotoRow
+            url={photo.url}
+            caption={photo.caption}
+            width={photo.width}
+            height={photo.height}
+          />
         ))
       }
     </ul>
@@ -472,6 +477,12 @@ const hint = 'mt-1 text-xs text-stone-500';
 
 <script>
   import { MAX_PHOTOS } from '../lib/places-constants';
+
+  type Size = { width: number; height: number };
+
+  /** Long enough for a large photo on a phone connection, short enough that a
+   * dead host does not hold the save hostage. */
+  const MEASURE_TIMEOUT_MS = 8000;
 
   const form = document.getElementById('place-form') as HTMLFormElement | null;
   const rows = document.getElementById('photo-rows');
@@ -604,6 +615,79 @@ const hint = 'mt-1 text-xs text-stone-500';
       return row;
     };
 
+    /**
+     * A photo's shape is stored so the page can reserve its box before the
+     * image arrives, and the browser is the only thing here that knows it: the
+     * file lives on another host, so measuring it on the server would mean
+     * fetching it, while the browser is about to load it anyway.
+     *
+     * Keyed by URL and never evicted, so editing a caption, reordering rows or
+     * saving twice measures nothing again. A failure is cached as firmly as a
+     * success — a URL that does not load will not load on the second attempt
+     * either, and null is a perfectly good answer.
+     */
+    const measurements = new Map<string, Promise<Size | null>>();
+
+    // What the server already knows, so an entry being edited does not
+    // re-measure photos that were measured when they were added.
+    for (const row of photoRows()) {
+      const url = row.querySelector<HTMLInputElement>('[data-photo-url]')!.value.trim();
+      const width = Number(row.dataset.photoWidth);
+      const height = Number(row.dataset.photoHeight);
+      if (url && width > 0 && height > 0) {
+        measurements.set(url, Promise.resolve({ width, height }));
+      }
+    }
+
+    const measure = (url: string) => {
+      const known = measurements.get(url);
+      if (known) return known;
+
+      const pending = new Promise<Size | null>((resolve) => {
+        const image = new Image();
+        let settled = false;
+        const settle = (size: Size | null) => {
+          if (settled) return;
+          settled = true;
+          resolve(size);
+        };
+
+        // A host that accepts the connection and then says nothing would
+        // otherwise hang the save for as long as it felt like.
+        const timer = setTimeout(() => settle(null), MEASURE_TIMEOUT_MS);
+        image.addEventListener('load', () => {
+          clearTimeout(timer);
+          settle(
+            image.naturalWidth > 0 && image.naturalHeight > 0
+              ? { width: image.naturalWidth, height: image.naturalHeight }
+              : null,
+          );
+        });
+        image.addEventListener('error', () => {
+          clearTimeout(timer);
+          settle(null);
+        });
+
+        image.src = url;
+      });
+
+      measurements.set(url, pending);
+
+      return pending;
+    };
+
+    // Measuring as the URL is typed rather than only on save, so the request
+    // overlaps with the rest of the form being filled in and submitting is
+    // still instant. `change` rather than `input`: a URL is not worth loading
+    // halfway through being typed.
+    rows.addEventListener('change', (event) => {
+      const field = event.target as HTMLElement;
+      if (!field.matches('[data-photo-url]')) return;
+
+      const url = (field as HTMLInputElement).value.trim();
+      if (url) void measure(url);
+    });
+
     paint();
     addPhoto.addEventListener('click', () => addRow());
 
@@ -694,14 +778,33 @@ const hint = 'mt-1 text-xs text-stone-500';
         .filter((box) => box.checked)
         .reduce((mask, box) => mask | (seasonBits[box.value] ?? 0), 0);
 
-      const photos = photoRows()
-        .map((row) => ({
-          url: row.querySelector<HTMLInputElement>('[data-photo-url]')!.value.trim(),
-          caption: row
-            .querySelector<HTMLInputElement>('[data-photo-caption]')!
-            .value.trim(),
-        }))
-        .filter((photo) => photo.url.length > 0);
+      // Saving waits for the measurements, which is the one place this form
+      // blocks on the network before it submits. Nearly always instant: the
+      // URL was measured when it was typed, and the answer is cached. When it
+      // is not — a URL pasted and saved in the same breath, a slow host — the
+      // timeout bounds the wait and a photo simply saves unmeasured.
+      save.disabled = true;
+
+      const photos = (
+        await Promise.all(
+          photoRows().map(async (row) => {
+            const url = row
+              .querySelector<HTMLInputElement>('[data-photo-url]')!
+              .value.trim();
+            const caption = row
+              .querySelector<HTMLInputElement>('[data-photo-caption]')!
+              .value.trim();
+            const size = url ? await measure(url) : null;
+
+            return {
+              url,
+              caption,
+              width: size?.width ?? null,
+              height: size?.height ?? null,
+            };
+          }),
+        )
+      ).filter((photo) => photo.url.length > 0);
 
       // Kilometres are what a walk is described in; metres are what gets
       // stored, so the conversion happens once, here.
@@ -746,8 +849,6 @@ const hint = 'mt-1 text-xs text-stone-500';
           : null,
         photos,
       };
-
-      save.disabled = true;
 
       try {
         const response = await fetch(form.action, {

@@ -392,6 +392,11 @@ export const entryPhoto = sqliteTable(
     url: text("url").notNull(),
     caption: text("caption"),
     position: integer("position").notNull(),
+    /** The photo's natural size, measured in the editor, so the page can
+     * reserve the right box before the image loads. Nullable: a URL that
+     * fails to load, and every row written before this existed, has none. */
+    width: integer("width"),
+    height: integer("height"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),

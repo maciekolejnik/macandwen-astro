@@ -55,6 +55,10 @@ export type MapPin = {
   typeLabel: string | null;
   /** The picture the popup shows, when there is one. */
   photoUrl: string | null;
+  /** Its measured shape, so the popup is the right size the moment it opens
+   * rather than growing under the cursor. Null when never measured. */
+  photoWidth: number | null;
+  photoHeight: number | null;
   /** Marks the entry a detail page is about, so its own pin can stand out. */
   focus: boolean;
 };
@@ -93,6 +97,8 @@ export function toPin(place: PlaceSummary, focusId?: string): MapPin {
     icon: type?.icon ?? null,
     typeLabel: type?.label ?? null,
     photoUrl: place.photoUrl,
+    photoWidth: place.photoWidth ?? null,
+    photoHeight: place.photoHeight ?? null,
     focus: place.id === focusId,
   };
 }

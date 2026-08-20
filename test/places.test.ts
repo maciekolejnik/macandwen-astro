@@ -284,6 +284,49 @@ describe('places: editing', () => {
     expect(await countRows('entry_photo', 'entry_id', id)).toBe(1);
   });
 
+  it('stores a photo\'s measured shape, and hands it back on the card', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(
+      owner,
+      aPlace({
+        photos: [
+          { url: 'https://example.com/a.jpg', width: 4032, height: 3024 },
+          { url: 'https://example.com/b.jpg' },
+        ],
+      }),
+    );
+
+    const place = await getById(id, owner);
+    expect(place?.photos[0]).toMatchObject({ width: 4032, height: 3024 });
+    // Unmeasured stays unmeasured rather than becoming a guess.
+    expect(place?.photos[1]).toMatchObject({ width: null, height: null });
+    // The summary carries the first photo's shape, since that is the card.
+    expect(place?.photoWidth).toBe(4032);
+    expect(place?.photoHeight).toBe(3024);
+  });
+
+  it('keeps a measurement only as a pair, and drops nonsense', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(
+      owner,
+      aPlace({
+        photos: [
+          // Half a pair reserves nothing, so it is not worth storing.
+          { url: 'https://example.com/a.jpg', width: 1200, height: null },
+          { url: 'https://example.com/b.jpg', width: 0, height: 800 },
+          { url: 'https://example.com/c.jpg', width: 1e9, height: 1e9 },
+        ],
+      }),
+    );
+
+    const place = await getById(id, owner);
+    for (const photo of place?.photos ?? []) {
+      expect(photo).toMatchObject({ width: null, height: null });
+    }
+    // An unmeasurable photo is still a photo — nothing is refused over it.
+    expect(place?.photos).toHaveLength(3);
+  });
+
   it('rejects a photo link that is not http', async () => {
     const owner = await signedInUser();
 

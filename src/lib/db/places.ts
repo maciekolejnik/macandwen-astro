@@ -20,6 +20,7 @@ import {
   DURATION_BUCKETS,
   EXTENTS,
   MAX_PHOTOS,
+  MAX_PHOTO_DIMENSION,
   NAME_MAX_LENGTH,
   NOTE_MAX_LENGTH,
   URL_MAX_LENGTH,
@@ -89,6 +90,10 @@ export type PlaceSummary = {
   createdAt: Date;
   updatedAt: Date;
   photoUrl: string | null;
+  /** The first photo's natural size, so the card can reserve its box before
+   * the image loads. Null when unmeasured — see `entry_photo`. */
+  photoWidth: number | null;
+  photoHeight: number | null;
   location: {
     type: PlaceTypeRef;
     attributes: Record<string, string>;
@@ -110,6 +115,9 @@ export type PlacePhoto = {
   url: string;
   caption: string | null;
   position: number;
+  /** Natural size, or null when it was never measured. Both or neither. */
+  width: number | null;
+  height: number | null;
 };
 
 export type PlaceVisit = {
@@ -164,7 +172,12 @@ export type PlaceInput = {
     ascentM?: number | null;
     attributes?: Record<string, string> | null;
   } | null;
-  photos?: { url: string; caption?: string | null }[];
+  photos?: {
+    url: string;
+    caption?: string | null;
+    width?: number | null;
+    height?: number | null;
+  }[];
 };
 
 /**
@@ -211,8 +224,23 @@ function visibilityFor(viewer: Viewer, requested: Visibility | undefined) {
 const locationType = alias(entryType, 'location_type');
 const activityType = alias(entryType, 'activity_type');
 
+/**
+ * The card image and its shape, from the first photo. Correlated subqueries
+ * rather than a join, so an entry with no photo still comes back once — the
+ * same reason the URL alone was one.
+ */
 const firstPhotoUrl = sql<string | null>`(
   select ${entryPhoto.url} from ${entryPhoto}
+  where ${entryPhoto.entryId} = ${entry.id}
+  order by ${entryPhoto.position} asc limit 1
+)`;
+const firstPhotoWidth = sql<number | null>`(
+  select ${entryPhoto.width} from ${entryPhoto}
+  where ${entryPhoto.entryId} = ${entry.id}
+  order by ${entryPhoto.position} asc limit 1
+)`;
+const firstPhotoHeight = sql<number | null>`(
+  select ${entryPhoto.height} from ${entryPhoto}
   where ${entryPhoto.entryId} = ${entry.id}
   order by ${entryPhoto.position} asc limit 1
 )`;
@@ -241,6 +269,8 @@ function summarySelection() {
     mapsUrl: entry.mapsUrl,
     rating: entry.rating,
     photoUrl: firstPhotoUrl,
+    photoWidth: firstPhotoWidth,
+    photoHeight: firstPhotoHeight,
     locationTypeId: locationType.id,
     locationTypeSlug: locationType.slug,
     locationTypeLabel: locationType.label,
@@ -302,6 +332,8 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     photoUrl: row.photoUrl ?? null,
+    photoWidth: row.photoWidth ?? null,
+    photoHeight: row.photoHeight ?? null,
     location: row.locationTypeId
       ? {
           type: {
@@ -413,6 +445,8 @@ async function detailFor(
         url: entryPhoto.url,
         caption: entryPhoto.caption,
         position: entryPhoto.position,
+        width: entryPhoto.width,
+        height: entryPhoto.height,
       })
       .from(entryPhoto)
       .where(eq(entryPhoto.entryId, summary.id))
@@ -739,8 +773,40 @@ type NormalisedInput = {
     ascentM: number | null;
     attributes: string | null;
   } | null;
-  photos: { url: string; caption: string | null }[];
+  photos: {
+    url: string;
+    caption: string | null;
+    width: number | null;
+    height: number | null;
+  }[];
 };
+
+/**
+ * A photo's measured size. Kept as a pair on purpose: half a pair reserves
+ * nothing, since the box is derived from the ratio, so one without the other
+ * is discarded rather than stored to be tripped over later. A measurement that
+ * did not happen is the ordinary case — an unreachable URL, a row written
+ * before the columns existed — and it must stay renderable, so this refuses
+ * nothing and simply falls back to nulls.
+ */
+function dimensions(
+  width: number | null | undefined,
+  height: number | null | undefined,
+): { width: number | null; height: number | null } {
+  const usable = (value: number | null | undefined): number | null =>
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value > 0 &&
+    value <= MAX_PHOTO_DIMENSION
+      ? Math.round(value)
+      : null;
+
+  const measured = { width: usable(width), height: usable(height) };
+
+  return measured.width && measured.height
+    ? measured
+    : { width: null, height: null };
+}
 
 function positiveOrNull(
   value: number | null | undefined,
@@ -832,6 +898,7 @@ export function normaliseInput(input: PlaceInput): NormalisedInput {
     .map((photo) => ({
       url: photo.url?.trim() ?? '',
       caption: trimmedOrNull(photo.caption, CAPTION_MAX_LENGTH, 'Photo caption'),
+      ...dimensions(photo.width, photo.height),
     }))
     .filter((photo) => photo.url.length > 0);
 
@@ -982,6 +1049,8 @@ function detailRows(id: string, normalised: NormalisedInput) {
           entryId: id,
           url: photo.url,
           caption: photo.caption,
+          width: photo.width,
+          height: photo.height,
           position,
         })),
       ),

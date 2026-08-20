@@ -112,12 +112,19 @@ const hasMap = mapPlaces.some(isMappable);
         A carousel was tried and removed: a panorama and a portrait in one
         strip forced either a crop or a letterbox, and neither is worth the
         interaction. The rest go in a section further down.
+
+        Full width and above the fold makes this the largest layout shift on
+        the site when it loads, so the measured `width`/`height` are emitted
+        to reserve its box. `w-full` still governs the drawn size; the pair is
+        only there to state the ratio.
       -->
       {hero && (
         <figure class="mt-6">
           <img
             src={hero.url}
             alt={hero.caption ?? place.name}
+            width={hero.width ?? undefined}
+            height={hero.height ?? undefined}
             class="w-full rounded-2xl border border-stone-200 bg-stone-100"
           />
           {hero.caption && (
@@ -205,6 +212,8 @@ const hasMap = mapPlaces.some(isMappable);
                   src={photo.url}
                   alt={photo.caption ?? ''}
                   loading="lazy"
+                  width={photo.width ?? undefined}
+                  height={photo.height ?? undefined}
                   class="w-full rounded-xl border border-stone-200 bg-stone-100"
                 />
                 {photo.caption && (
