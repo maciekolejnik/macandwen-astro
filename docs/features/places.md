@@ -749,6 +749,32 @@ un-adminned ones in that list, so the two axes are orthogonal and should both
 exist eventually. A tag needs `tag` and `entry_tag` and touches nothing that is
 here — no column changes, no rewrite — which is the reason it can wait.
 
+**Type-to-filter on the long dropdowns.** Two selects outgrow a plain
+`<select>`: the link target, which gains an option for every entry ever added
+and so is the only one that degrades without bound, and the location type at
+twenty-four. The activity type comes along for consistency once the component
+exists. The five short ones — difficulty, duration, extent, family friendliness,
+relation — stay native, because a combobox over three options is worse than a
+dropdown, not better.
+
+Worth being precise about what is actually missing, because it is less than it
+looks. A focused native `<select>` already jumps as you type, and on a phone it
+opens the platform picker, which beats anything hand-built. What it cannot do is
+match anywhere but the **start** of the label — so it fails exactly when you do
+not know how a thing is filed: you think *canyon*, it is under **Gorge**; you
+think *col*, it is **Mountain pass**.
+
+That makes **synonyms the real feature** and filtering merely the delivery
+mechanism. A `search_terms` column on `entry_type` — space-separated, matched as
+substrings alongside the label — is what native can never do, and it is a
+one-column migration.
+
+Built as a small accessible combobox of our own (input, filtered listbox,
+arrow/enter/escape, `role="combobox"` with `aria-activedescendant`) rather than
+a dependency: it is about a hundred and fifty lines, and this repo has no UI
+libraries by choice. The matching itself is a pure function in `places-view.ts`,
+so it is unit-tested like the other display rules rather than only clickable.
+
 **External links.** A Wikiloc or AllTrails route, a refuge's booking page, a
 crag's page on 8a.nu — references rather than actions, so they render as a list
 of further reading and stay separate from the maps button. `entry_url`
