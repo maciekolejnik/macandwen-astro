@@ -12,6 +12,14 @@ export const CAPTION_MAX_LENGTH = 200;
 export const URL_MAX_LENGTH = 2000;
 export const MAX_PHOTOS = 20;
 
+/**
+ * A sanity ceiling on a measured photo, not a limit on what may be uploaded:
+ * the numbers arrive from a browser and are written to the database, so an
+ * absurd pair is treated as no measurement at all. Comfortably above any
+ * camera worth pointing at something.
+ */
+export const MAX_PHOTO_DIMENSION = 30000;
+
 export const KINDS = ['location', 'activity', 'both'] as const;
 export type Kind = (typeof KINDS)[number];
 

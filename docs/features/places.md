@@ -95,7 +95,7 @@ the location vocabulary because it is stored in the location table.
 | `activity_detail` | Present if the entry is a thing to do. Type, difficulty, duration, family friendliness, extras |
 | `entry_type` | The vocabulary of types, per kind |
 | `entry_link` | `(from_entry, relation, to_entry)` — the flexible graph |
-| `entry_photo` | Ordered image URLs with captions |
+| `entry_photo` | Ordered image URLs with captions and measured sizes |
 | `entry_visit` | One row per visit, per user, per entry |
 
 #### `entry`
@@ -417,7 +417,8 @@ copy depend on.
 #### `entry_photo`
 
 ```
-id, entry_id → entry.id (cascade), url, caption, position, created_at
+id, entry_id → entry.id (cascade), url, caption, position,
+width, height, created_at
 ```
 
 Rows, ordered by `position`, matching `packing_list_item`. URLs only — no
@@ -432,6 +433,38 @@ preview. Order is therefore something the editor has to let you set rather than
 an accident of the order you happened to paste links in — the write path
 already renumbers positions from the array it is given, so reordering is a
 matter of the form offering it.
+
+**`width` and `height` are the photo's natural size**, measured so the page can
+reserve the right box before the image arrives. Without them the browser
+reserves no height at all and everything below a photo jumps down as it
+decodes, which three things here made worse than usual: photos deliberately
+keep their own shape, so CSS alone cannot reserve the box — a fixed
+`aspect-[3/2]` would, and cropping a panorama and a portrait to one rectangle
+is exactly what was rejected; the list is a CSS-columns masonry, so a card can
+move *between* columns as images resolve rather than merely down the page; and
+the detail hero is full width and above the fold. Given the pair, browsers
+derive `aspect-ratio` even under a `width: 100%` rule, so natural shapes are
+kept and nothing moves. It also unlocks `<Image>` from `astro:assets`, which
+refuses remote images without dimensions.
+
+**Measured in the browser, on the URL that was pasted.** The file is on another
+host, so the server would have to fetch it to measure it, while the editor is
+about to load it anyway: it calls `new Image()` when the field changes, caches
+the answer per URL, and saving waits on that with a timeout. This deliberately
+did not wait for uploads, which is the obvious moment to measure a file —
+measuring a URL works today and uploads merely make it free later.
+
+**Both columns are nullable, and only ever written as a pair.** Half a pair
+reserves nothing, since the box comes from the ratio, so a lone dimension is
+discarded rather than stored to be tripped over. A URL that fails to load, a
+row written before the columns existed, and a photo posted straight to the API
+all store nulls and render exactly as they did before — the fallback is the old
+behaviour, not an error, which is why no backfill blocks anything.
+
+The effect is invisible on a warm cache. To see it: in DevTools disable the
+cache, throttle to Slow 4G, turn on Rendering → Layout Shift Regions and
+hard-reload `/places`; Lighthouse's Cumulative Layout Shift on the same page is
+the number to watch.
 
 #### `entry_visit`
 
@@ -892,47 +925,13 @@ clear enough to record:
   in the bucket. HEIC is the exception — Safari decodes it, desktop Chrome does
   not — so those either fall back to uploading the original or ask the phone to
   shoot JPEG.
+- **Dimensions come free.** `entry_photo.width`/`height` are already measured
+  in the editor from the pasted URL; an upload knows them from the file it just
+  resized, so it fills the same two columns without loading anything twice.
 - **The real work is orphans.** `entry_photo` rows cascade when an entry is
   deleted; R2 objects do not. Removing a photo has to remove the object, and
   whether that happens inline or as a sweep is the decision that feature exists
   to make.
-
-**Photo dimensions, to stop the page jumping.** No `<img>` in the places UI
-carries `width` or `height`, so until the bytes arrive the browser reserves no
-height at all and everything below a photo jumps down as each one decodes. That
-is ordinary enough on any image-heavy page, but three things here make it worse
-than usual:
-
-- **Photos deliberately keep their own shape.** A fixed `aspect-[3/2]` box would
-  reserve the space and end the problem, and it was rejected on purpose — a
-  panorama and a portrait should not be cropped to the same rectangle. That
-  decision stands, and the cost of it is that CSS alone cannot reserve the box,
-  because nothing on the page knows the shape until the image loads.
-- **The list is a CSS-columns masonry.** When one image resolves the column
-  balancing re-runs and cards can move *between* columns, so the shift is not
-  merely "things below move down" but "the card being aimed at moved sideways".
-- **The detail hero is full width and above the fold**, which makes it the
-  largest single shift on the site.
-
-The fix is to store `width` and `height` on `entry_photo` and emit them as
-attributes. Browsers derive `aspect-ratio` from the pair even under a
-`width: 100%` rule, so the correctly shaped box is reserved before the image
-arrives: natural shapes kept, nothing moves. It also unlocks `<Image>` from
-`astro:assets`, which refuses remote images without dimensions — see
-`docs/astro-feature-opportunities.md`.
-
-**This does not have to wait for uploads.** The obvious moment to measure a
-photo is while receiving the file, which would tie this to the deliverable
-above. It is not necessary: the editor can load a pasted URL with `new Image()`
-and read `naturalWidth`/`naturalHeight` before submitting, so the columns can be
-filled today and uploads merely make it free later. A URL that fails to load
-stores nulls and renders exactly as it does now, so the columns are nullable and
-existing rows need a one-off backfill rather than a blocking migration.
-
-Worth reproducing before fixing, because a warm cache hides it entirely: in
-DevTools disable the cache, throttle to Slow 4G, turn on Rendering → Layout
-Shift Regions, and hard-reload `/places`. Lighthouse's Cumulative Layout Shift
-on the same page is the number to watch move.
 
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into

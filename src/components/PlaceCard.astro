@@ -25,12 +25,21 @@ const facts = factsFor(place).slice(0, 3);
     tall card and a panorama a short one. An entry with no photo is simply a
     text card — a stand-in panel would take up the room of a photograph while
     saying less than the badges below it already do.
+
+    That is exactly why `width` and `height` matter more here than usual. The
+    browser derives `aspect-ratio` from the pair even under `w-full`, so the
+    right-shaped box is reserved before the photo arrives. Without it, this
+    being a CSS-columns masonry means a card can move *between* columns as
+    images resolve, not merely down the page. A photo measured before the
+    columns existed has neither and behaves as it always did.
   -->
   {place.photoUrl && (
     <img
       src={place.photoUrl}
       alt=""
       loading="lazy"
+      width={place.photoWidth ?? undefined}
+      height={place.photoHeight ?? undefined}
       class="w-full bg-stone-100"
     />
   )}

@@ -86,7 +86,14 @@ describe('POST /api/places', () => {
         lng: '2.7469',
         location: { typeId: LAKE },
         activity: { typeId: 'act_wild_swim', familyFriendly: 'yes' },
-        photos: [{ url: 'https://media.macandwen.com/a.webp', caption: '' }],
+        photos: [
+          {
+            url: 'https://media.macandwen.com/a.webp',
+            caption: '',
+            width: '1600',
+            height: '1200',
+          },
+        ],
       },
     });
 
@@ -101,6 +108,8 @@ describe('POST /api/places', () => {
     expect(place?.photos).toHaveLength(1);
     // An empty caption is a blank field, not a caption of ''.
     expect(place?.photos[0]?.caption).toBeNull();
+    // Measured by the editor and sent as strings, like the coordinates above.
+    expect(place?.photos[0]).toMatchObject({ width: 1600, height: 1200 });
   });
 
   it('turns a signed-out visitor away', async () => {

@@ -239,7 +239,16 @@ function parsePhotos(
       return { message: '`caption` must be a string' };
     }
 
-    photos.push({ url: photo.url, caption });
+    // Measured by the editor, and optional in a way the rest of the body is
+    // not: a client that cannot measure the file still gets to save the photo.
+    // Nonsense is refused rather than silently dropped, so a caller sending
+    // the wrong type hears about it.
+    const width = optionalNumber(photo.width);
+    if (width === 'bad') return { message: '`width` must be a number' };
+    const height = optionalNumber(photo.height);
+    if (height === 'bad') return { message: '`height` must be a number' };
+
+    photos.push({ url: photo.url, caption, width, height });
   }
 
   return { value: photos };

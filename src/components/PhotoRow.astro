@@ -4,9 +4,13 @@ import { CAPTION_MAX_LENGTH, URL_MAX_LENGTH } from '../lib/places-constants';
 interface Props {
   url?: string;
   caption?: string | null;
+  /** What this photo already measured, so editing an entry does not load
+   * every one of its photos again to learn what it already knows. */
+  width?: number | null;
+  height?: number | null;
 }
 
-const { url = '', caption = '' } = Astro.props;
+const { url = '', caption = '', width = null, height = null } = Astro.props;
 ---
 
 <!--
@@ -18,7 +22,12 @@ const { url = '', caption = '' } = Astro.props;
   the entry's picture on the list and in a shared link, so the move buttons are
   the point rather than a nicety.
 -->
-<li class="rounded-lg border border-stone-200 bg-white p-3" data-photo-row>
+<li
+  class="rounded-lg border border-stone-200 bg-white p-3"
+  data-photo-row
+  data-photo-width={width ?? undefined}
+  data-photo-height={height ?? undefined}
+>
   <div class="flex items-center gap-2">
     <input
       type="url"

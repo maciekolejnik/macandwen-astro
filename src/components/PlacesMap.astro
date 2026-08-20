@@ -193,8 +193,12 @@ const json = JSON.stringify(data).replace(/</g, '\\u003c');
   };
 
   const popupHtml = (pin: MapPin) => {
+    const size =
+      pin.photoWidth && pin.photoHeight
+        ? ` width="${pin.photoWidth}" height="${pin.photoHeight}"`
+        : '';
     const photo = pin.photoUrl
-      ? `<img src="${escapeHtml(pin.photoUrl)}" alt="" class="places-popup-photo" />`
+      ? `<img src="${escapeHtml(pin.photoUrl)}" alt=""${size} class="places-popup-photo" />`
       : '';
     const type = pin.typeLabel
       ? `<span class="places-popup-type">${escapeHtml(pin.typeLabel)}</span>`
@@ -512,6 +516,8 @@ const json = JSON.stringify(data).replace(/</g, '\\u003c');
   .places-popup-photo {
     display: block;
     width: 100%;
+    /* Paired with the emitted width/height, which give the ratio. */
+    height: auto;
     border-radius: 0.5rem;
     margin-bottom: 0.35rem;
   }
