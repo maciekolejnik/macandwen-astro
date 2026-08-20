@@ -293,6 +293,7 @@ export const entry = sqliteTable(
     // activity has a way in as much as a place does.
     access: text("access"),
     mapsUrl: text("maps_url"),
+    rating: integer("rating"),
     // Bitmask: spring 1, summer 2, autumn 4, winter 8. 0 means any time, and
     // needs no special case in a filter: `seasons = 0 or seasons & ? != 0`.
     seasons: integer("seasons").default(0).notNull(),

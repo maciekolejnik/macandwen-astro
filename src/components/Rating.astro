@@ -1,0 +1,55 @@
+---
+import { MAX_RATING, RATING_LABELS, RATINGS } from '../lib/places-constants';
+
+interface Props {
+  rating: number | null;
+  /** Cards are scanned, so their stars are smaller than a detail page's. */
+  size?: 'sm' | 'md';
+  /** The named meaning beside the stars. Too wordy for a card. */
+  showLabel?: boolean;
+}
+
+const { rating, size = 'md', showLabel = false } = Astro.props;
+
+const pixels = size === 'sm' ? 13 : 17;
+const label = rating ? RATING_LABELS[rating] : null;
+---
+
+<!--
+  Stars are the glyph, but the meaning is the label — an uncalibrated scale
+  drifts into everything-is-a-four. The label is the accessible name whether or
+  not it is drawn, so a screen reader hears "Must see" rather than "5 of 5".
+
+  Empty stars are drawn as well as full ones, because four stars only means
+  something next to the one it did not get.
+-->
+{
+  rating && (
+    <p
+      class="flex items-center gap-1"
+      title={`${label} (${rating} of ${MAX_RATING})`}
+      aria-label={`Rated ${rating} of ${MAX_RATING} — ${label}`}
+    >
+      <span class="flex items-center" aria-hidden="true">
+        {RATINGS.map((star) => (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width={pixels}
+            height={pixels}
+            viewBox="0 0 24 24"
+            fill={star <= rating ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class={star <= rating ? 'text-amber-500' : 'text-stone-300'}
+          >
+            <path d="M12 2.5 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9z" />
+          </svg>
+        ))}
+      </span>
+
+      {showLabel && <span class="ml-1 text-sm text-stone-500">{label}</span>}
+    </p>
+  )
+}

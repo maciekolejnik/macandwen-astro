@@ -23,6 +23,8 @@ import {
   NAME_MAX_LENGTH,
   NOTE_MAX_LENGTH,
   URL_MAX_LENGTH,
+  MIN_RATING,
+  MAX_RATING,
   RELATIONS,
   bucketForMinutes,
   isRelation,
@@ -82,6 +84,8 @@ export type PlaceSummary = {
   /** A link to the entry in a maps app, for navigating there. Never used to
    * place the pin — `lat`/`lng` do that. */
   mapsUrl: string | null;
+  /** The owner's opinion, 1–5, or null for "not rated". */
+  rating: number | null;
   createdAt: Date;
   updatedAt: Date;
   photoUrl: string | null;
@@ -145,6 +149,7 @@ export type PlaceInput = {
   seasons?: number;
   access?: string | null;
   mapsUrl?: string | null;
+  rating?: number | null;
   location?: {
     typeId: string;
     attributes?: Record<string, string> | null;
@@ -234,6 +239,7 @@ function summarySelection() {
     updatedAt: entry.updatedAt,
     access: entry.access,
     mapsUrl: entry.mapsUrl,
+    rating: entry.rating,
     photoUrl: firstPhotoUrl,
     locationTypeId: locationType.id,
     locationTypeSlug: locationType.slug,
@@ -292,6 +298,7 @@ function toSummary(row: SummaryRow, viewer: Viewer): PlaceSummary {
     seasons: row.seasons,
     access: row.access,
     mapsUrl: row.mapsUrl,
+    rating: row.rating,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     photoUrl: row.photoUrl ?? null,
@@ -717,6 +724,7 @@ type NormalisedInput = {
   seasons: number;
   access: string | null;
   mapsUrl: string | null;
+  rating: number | null;
   location: {
     typeId: string;
     attributes: string | null;
@@ -758,6 +766,16 @@ function mapsUrl(value: string | null | undefined): string | null {
   }
 
   return url;
+}
+
+/** Whole steps only, and null rather than 0 for "not rated". */
+function rating(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) return null;
+  if (!Number.isInteger(value) || value < MIN_RATING || value > MAX_RATING) {
+    invalid(`A rating must be a whole number from ${MIN_RATING} to ${MAX_RATING}`);
+  }
+
+  return value;
 }
 
 export function normaliseInput(input: PlaceInput): NormalisedInput {
@@ -878,6 +896,7 @@ export function normaliseInput(input: PlaceInput): NormalisedInput {
     seasons,
     access: trimmedOrNull(input.access, ACCESS_MAX_LENGTH, 'Access'),
     mapsUrl: mapsUrl(input.mapsUrl),
+    rating: rating(input.rating),
     location: input.location
       ? {
           typeId: input.location.typeId,
@@ -1003,6 +1022,7 @@ export async function create(
     seasons: normalised.seasons,
     access: normalised.access,
     mapsUrl: normalised.mapsUrl,
+    rating: normalised.rating,
   });
 
   // D1 has no interactive transactions; `batch` is the atomic equivalent.
@@ -1062,6 +1082,7 @@ export async function update(
         seasons: normalised.seasons,
         access: normalised.access,
         mapsUrl: normalised.mapsUrl,
+        rating: normalised.rating,
         updatedAt: new Date(),
       })
       .where(eq(entry.id, id)),

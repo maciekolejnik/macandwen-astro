@@ -1,6 +1,7 @@
 ---
 import type { PlaceSummary } from '../lib/db/places';
 import { factsFor, typeBadges } from '../lib/places-view';
+import Rating from './Rating.astro';
 
 interface Props {
   place: PlaceSummary;
@@ -49,6 +50,8 @@ const facts = factsFor(place).slice(0, 3);
         </span>
       )}
     </div>
+
+    <Rating rating={place.rating} size="sm" />
 
     <p class="mt-2 flex flex-wrap items-center gap-1.5">
       {badges.map((type) => (

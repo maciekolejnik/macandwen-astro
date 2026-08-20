@@ -12,6 +12,8 @@ import {
   EXTENTS,
   MAX_PHOTOS,
   NAME_MAX_LENGTH,
+  RATINGS,
+  RATING_LABELS,
   SEASONS,
   maskToSeasons,
 } from '../lib/places-constants';
@@ -301,6 +303,53 @@ const hint = 'mt-1 text-xs text-stone-500';
     </label>
   </fieldset>
 
+  <!--
+    Real radios, visually hidden behind the stars: arrow-key navigation and the
+    grouping come free and correct, and the script only paints the fill. Each
+    one is named, so the choice is "Must see" rather than "5", which is what
+    stops the scale drifting into everything-is-a-four.
+  -->
+  <fieldset class="mt-6 rounded-lg border border-stone-200 p-4">
+    <legend class={`px-2 ${label}`}>What did you make of it?</legend>
+
+    <div class="flex items-center gap-3">
+      <div id="rating-stars" class="flex items-center">
+        {
+          RATINGS.map((star) => (
+            <label
+              class="cursor-pointer p-0.5 text-stone-300"
+              data-rating-star
+              data-value={star}
+              title={RATING_LABELS[star]}
+            >
+              <input
+                type="radio"
+                name="rating"
+                value={star}
+                checked={place?.rating === star}
+                class="sr-only"
+              />
+              <span class="sr-only">{RATING_LABELS[star]}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5 15 9l7 .6-5.3 4.6L18.3 21 12 17.3 5.7 21l1.6-6.8L2 9.6 9 9z" /></svg>
+            </label>
+          ))
+        }
+      </div>
+
+      <p id="rating-label" class="text-sm text-stone-500"></p>
+
+      <button
+        type="button"
+        id="rating-clear"
+        class="ml-auto text-xs text-stone-400 transition-colors hover:text-stone-700"
+      >
+        Clear
+      </button>
+    </div>
+
+    <p class={hint}>Optional — leave it unrated until you have been.</p>
+  </fieldset>
+
   <fieldset class="mt-6 rounded-lg border border-stone-200 p-4">
     <legend class={`px-2 ${label}`}>Best time to go</legend>
 
@@ -438,6 +487,52 @@ const hint = 'mt-1 text-xs text-stone-500';
     const distance = el<HTMLInputElement>('activity-distance')!;
     const ascent = el<HTMLInputElement>('activity-ascent')!;
     const family = el<HTMLSelectElement>('activity-family')!;
+
+    const stars = [...document.querySelectorAll<HTMLLabelElement>('[data-rating-star]')];
+    const ratingLabel = el<HTMLParagraphElement>('rating-label');
+    const clearRating = el<HTMLButtonElement>('rating-clear');
+
+    const chosenRating = () => {
+      const checked = document.querySelector<HTMLInputElement>(
+        'input[name="rating"]:checked',
+      );
+
+      return checked ? Number(checked.value) : null;
+    };
+
+    /** `upto` lets a hover preview the rating without committing to it. */
+    const paintStars = (upto?: number) => {
+      const value = upto ?? chosenRating() ?? 0;
+
+      stars.forEach((star) => {
+        const on = Number(star.dataset.value) <= value;
+        star.classList.toggle('text-amber-500', on);
+        star.classList.toggle('text-stone-300', !on);
+        star.querySelector('svg')!.setAttribute('fill', on ? 'currentColor' : 'none');
+      });
+
+      if (ratingLabel) {
+        const chosen = chosenRating();
+        ratingLabel.textContent = chosen
+          ? (stars[chosen - 1]?.title ?? '')
+          : 'Not rated';
+      }
+    };
+
+    paintStars();
+    stars.forEach((star) => {
+      star.addEventListener('change', () => paintStars());
+      star.addEventListener('mouseenter', () => paintStars(Number(star.dataset.value)));
+      star.addEventListener('mouseleave', () => paintStars());
+    });
+
+    clearRating?.addEventListener('click', () => {
+      const checked = document.querySelector<HTMLInputElement>(
+        'input[name="rating"]:checked',
+      );
+      if (checked) checked.checked = false;
+      paintStars();
+    });
 
     const seasonBits: Record<string, number> = {
       spring: 1,
@@ -594,6 +689,7 @@ const hint = 'mt-1 text-xs text-stone-500';
         description: description.value,
         access: access.value,
         mapsUrl: mapsUrl.value,
+        rating: chosenRating(),
         lat: point.lat,
         lng: point.lng,
         extent: extent.value,

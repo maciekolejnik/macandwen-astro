@@ -21,6 +21,8 @@ import {
   bucketForMinutes,
   maskToSeasons,
   parseCoordinates,
+  RATING_LABELS,
+  RATINGS,
   seasonsToMask,
   slugify,
 } from '../src/lib/places-constants';
@@ -580,6 +582,46 @@ describe('places: maps link', () => {
     const { id } = await create(owner, { ...aPlace(), mapsUrl: '   ' });
 
     expect((await getById(id, owner))?.mapsUrl).toBeNull();
+  });
+});
+
+describe('places: rating', () => {
+  it('keeps a rating on the entry, so an activity can have one', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(owner, {
+      name: 'The ridge walk',
+      activity: { typeId: HIKE },
+      rating: 5,
+    });
+
+    expect((await getById(id, owner))?.rating).toBe(5);
+  });
+
+  it('keeps unrated distinct from badly rated', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(owner, aPlace());
+
+    // Not 0, and not the middle of the scale: "we have not been yet" is a real
+    // answer and a filter has to be able to tell it from "it was poor".
+    expect((await getById(id, owner))?.rating).toBeNull();
+  });
+
+  it('refuses a rating off the scale or between steps', async () => {
+    const owner = await signedInUser();
+
+    for (const rating of [0, 6, 2.5, -1]) {
+      await expect(
+        create(owner, { ...aPlace(), rating }),
+      ).rejects.toThrow(/whole number/i);
+    }
+  });
+
+  it('names every step of the scale', async () => {
+    // The stars are the input; these are what one means. A gap would leave a
+    // star with nothing to say to a screen reader.
+    for (const step of RATINGS) {
+      expect(RATING_LABELS[step]).toBeTruthy();
+    }
   });
 });
 

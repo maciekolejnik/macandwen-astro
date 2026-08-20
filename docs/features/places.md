@@ -116,6 +116,7 @@ bbox_max_lat  real  bbox_max_lng real
 seasons       integer not null default 0        -- bitmask, 0 = any time
 access        text                     -- how to reach the point above
 maps_url      text                     -- a link to it in a maps app
+rating        integer                  -- 1-5, null = not rated
 created_at / updated_at
 ```
 
@@ -164,6 +165,35 @@ route or a refuge's booking page, are a different feature: they would render as
 a list of further reading, and folding them together would mean the navigate
 button had to go and find itself among them. That list is a
 [future deliverable](#future-deliverables).
+
+**The rating** is the third column to land on `entry` for the same reason: you
+rate an outing, not separately the lake and the swim in it, and an activity
+deserves an opinion as much as a place does.
+
+Stars are the input, but **the words are the feature**. An uncalibrated
+five-point scale collapses into "everything I bothered to save is a four" and
+the bottom half dies, so each step is named — *Not worth it*, *Fine, nothing
+special*, *Good, worth going*, *Excellent, would go back*, *Must see* — and the
+name is what the tooltip and the accessible label say. Picking one is then a
+judgement rather than a mood.
+
+It is stored as an integer even though the words carry the meaning, because an
+integer is the convertible representation: `RATING_LABELS` is a display rule
+like `seasonLabel`, so the wording can be rewritten without touching data, and
+`rating >= 4` — the single query a rating exists to answer — stays trivial. An
+enum of words would need a companion ordering column to do the same job.
+
+**Null is not zero and not three.** "We have not been yet" is a common and
+honest state, and a filter has to be able to tell it from "it was poor" — the
+same lesson `family_friendly` learned by being tri-state.
+
+**One rating per entry, not one per person.** This is the owner's editorial
+judgement, inseparable from the description they wrote, and not crowd feedback
+to be averaged; there is no wisdom of crowds in a database with two people in
+it. That is deliberately the opposite of the call made for visits, which needed
+their own table precisely because a visit is *not* the owner's — anyone can go
+somewhere, but the entry says what its author thought. If per-person ratings are
+ever wanted, `entry_rating` is additive and changes nothing here.
 
 It stays separate from `description` because the two are read at different
 moments: the description is why you would go, the access line is what you need
@@ -683,7 +713,7 @@ Deferred deliberately, in roughly the order they are likely to be wanted. Each
 notes what the current schema already does for it, since that is the part that
 would be expensive to retrofit.
 
-**Filters.** Type, kind, difficulty, duration bucket, season, family
+**Filters.** Type, kind, difficulty, duration bucket, season, rating, family
 friendliness and text search, on both the list and the map. The schema is filter-ready: buckets are stored
 rather than derived, `family_friendly` is tri-state so "unknown" is not silently
 counted as "no", and seasons are a bitmask so a multi-season filter is one
