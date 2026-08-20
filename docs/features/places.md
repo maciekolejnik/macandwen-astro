@@ -852,6 +852,43 @@ clear enough to record:
   whether that happens inline or as a sweep is the decision that feature exists
   to make.
 
+**Photo dimensions, to stop the page jumping.** No `<img>` in the places UI
+carries `width` or `height`, so until the bytes arrive the browser reserves no
+height at all and everything below a photo jumps down as each one decodes. That
+is ordinary enough on any image-heavy page, but three things here make it worse
+than usual:
+
+- **Photos deliberately keep their own shape.** A fixed `aspect-[3/2]` box would
+  reserve the space and end the problem, and it was rejected on purpose — a
+  panorama and a portrait should not be cropped to the same rectangle. That
+  decision stands, and the cost of it is that CSS alone cannot reserve the box,
+  because nothing on the page knows the shape until the image loads.
+- **The list is a CSS-columns masonry.** When one image resolves the column
+  balancing re-runs and cards can move *between* columns, so the shift is not
+  merely "things below move down" but "the card being aimed at moved sideways".
+- **The detail hero is full width and above the fold**, which makes it the
+  largest single shift on the site.
+
+The fix is to store `width` and `height` on `entry_photo` and emit them as
+attributes. Browsers derive `aspect-ratio` from the pair even under a
+`width: 100%` rule, so the correctly shaped box is reserved before the image
+arrives: natural shapes kept, nothing moves. It also unlocks `<Image>` from
+`astro:assets`, which refuses remote images without dimensions — see
+`docs/astro-feature-opportunities.md`.
+
+**This does not have to wait for uploads.** The obvious moment to measure a
+photo is while receiving the file, which would tie this to the deliverable
+above. It is not necessary: the editor can load a pasted URL with `new Image()`
+and read `naturalWidth`/`naturalHeight` before submitting, so the columns can be
+filled today and uploads merely make it free later. A URL that fails to load
+stores nulls and renders exactly as it does now, so the columns are nullable and
+existing rows need a one-off backfill rather than a blocking migration.
+
+Worth reproducing before fixing, because a warm cache hides it entirely: in
+DevTools disable the cache, throttle to Slow 4G, turn on Rendering → Layout
+Shift Regions, and hard-reload `/places`. Lighthouse's Cumulative Layout Shift
+on the same page is the number to watch move.
+
 **Scale.** Everything here loads every entry the visitor may see, which is
 comfortable in the hundreds. Past that the list paginates, the filters move into
 SQL, and the map gets a viewport query and clustering. Not a concern at the size
