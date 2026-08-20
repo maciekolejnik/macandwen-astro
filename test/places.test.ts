@@ -545,6 +545,44 @@ describe('places: access helpers', () => {
   });
 });
 
+describe('places: maps link', () => {
+  it('keeps a maps link on the entry, so an activity can have one', async () => {
+    const owner = await signedInUser();
+
+    // No location half at all: the link lives on `entry`, so a hike does not
+    // have to invent a location row to carry one.
+    const { id } = await create(owner, {
+      name: 'The ridge walk',
+      activity: { typeId: HIKE },
+      mapsUrl: 'https://maps.app.goo.gl/abc123',
+    });
+
+    expect((await getById(id, owner))?.mapsUrl).toBe(
+      'https://maps.app.goo.gl/abc123',
+    );
+  });
+
+  it('refuses a link that is not http', async () => {
+    const owner = await signedInUser();
+
+    // It is rendered as an href on an entry that may be public, so a
+    // `javascript:` URL would be stored XSS.
+    await expect(
+      create(owner, {
+        ...aPlace(),
+        mapsUrl: 'javascript:alert(1)',
+      }),
+    ).rejects.toThrow(/http/i);
+  });
+
+  it('treats a blank link as absent', async () => {
+    const owner = await signedInUser();
+    const { id } = await create(owner, { ...aPlace(), mapsUrl: '   ' });
+
+    expect((await getById(id, owner))?.mapsUrl).toBeNull();
+  });
+});
+
 describe('places: types', () => {
   it('seeds both vocabularies and scopes them by kind', async () => {
     const locations = await listTypes('location');
@@ -553,6 +591,29 @@ describe('places: types', () => {
     expect(locations.map((type) => type.slug)).toContain('wild-camping-spot');
     expect(activities.map((type) => type.slug)).toContain('via-ferrata');
     expect(locations.every((type) => type.kind === 'location')).toBe(true);
+  });
+
+  it('offers an Other fallback last in both vocabularies', async () => {
+    const locations = await listTypes('location');
+    const activities = await listTypes('activity');
+
+    // Last, so it is never the thing you land on by accident, and present on
+    // both sides — the escape hatch has to exist wherever a type is required.
+    expect(locations.at(-1)?.id).toBe('loc_other');
+    expect(activities.at(-1)?.id).toBe('act_other');
+  });
+
+  it('has a type for a landform, so `region` need not stretch to cover one', async () => {
+    const slugs = (await listTypes('location')).map((type) => type.slug);
+
+    // The Ordesa valley is a valley of extent `area`, not a region. `region`
+    // means an administrative or named division, which is what an `inside`
+    // link points at.
+    expect(slugs).toContain('valley');
+    expect(slugs).toContain('waterfall');
+    // A river swim used to have to call itself a lake.
+    expect(slugs).toContain('river');
+    expect(slugs).toContain('region');
   });
 
   it('leaves an icon off where no emoji is honest', async () => {

@@ -115,6 +115,7 @@ bbox_min_lat  real  bbox_min_lng real
 bbox_max_lat  real  bbox_max_lng real
 seasons       integer not null default 0        -- bitmask, 0 = any time
 access        text                     -- how to reach the point above
+maps_url      text                     -- a link to it in a maps app
 created_at / updated_at
 ```
 
@@ -136,6 +137,33 @@ the verge" — sits on `entry`, beside the point it describes, rather than on
 over: an activity has a way in as much as a place does, and forcing a hike to
 invent a location row just to hold one sentence would corrupt the `kind` that
 row is supposed to derive. A hybrid also has one way in, not two.
+
+**A maps link** sits beside it, on `entry` for both of the same reasons: a
+hike's trailhead has one as much as a lake does, and a hybrid has one link
+rather than two — the lake and the swim in it are the same dot on the earth.
+
+It is not a duplicate of `lat`/`lng`, which stay the authority for the pin and
+for distance. A pasted link is a different object from a coordinate: it points
+at a *named* place, carrying its reviews, photos and opening hours, and the link
+a phone gives you when you share (`maps.app.goo.gl/…`) does not decompose into
+numbers without being resolved over the network. Where the two disagree the
+coordinates win, because they are what the map draws.
+
+The column is `maps_url`, not `google_maps_url`. Nothing in the code inspects it
+beyond checking the scheme, so an Apple Maps, OsmAnd or Organic Maps link works
+exactly as well, and a vendor name would be a lie the first time somebody pastes
+one. That scheme check is not a formality: the value is rendered as an `href` on
+an entry its owner may publish, so `javascript:` would be stored XSS. The host
+is deliberately *not* checked, since there is no list of map providers worth
+maintaining.
+
+On the page it is a button rather than a link in a sentence, because it is an
+*action* — the thing you tap when you are about to drive — while the
+coordinates above it are for reading. Other external references, a Wikiloc
+route or a refuge's booking page, are a different feature: they would render as
+a list of further reading, and folding them together would mean the navigate
+button had to go and find itself among them. That list is a
+[future deliverable](#future-deliverables).
 
 It stays separate from `description` because the two are read at different
 moments: the description is why you would go, the access line is what you need
@@ -255,9 +283,11 @@ Three rules follow, and they are what make a missing icon cost nothing:
   only if there is one. At the size a pin is drawn, a glyph is barely legible
   anyway — which is why the map needs a legend, and why the pin's tooltip and
   its popup both carry the label.
-- **Colour is only memorable for a handful of types at once.** With nineteen
+- **Colour is only memorable for a handful of types at once.** With thirty-odd
   seeded types no palette is self-explanatory, so colour separates what is on
   screen rather than encoding the whole vocabulary; the legend does the naming.
+  At this many types some pairs are genuinely close, which is fine as long as
+  nothing depends on colour alone.
 
 Emoji rather than an icon set, because an icon set would break the promise that
 a type is data: adding one whose icon name is not bundled would render nothing,
@@ -274,12 +304,40 @@ The seed ships in the migration:
 
 | Kind | Types |
 | --- | --- |
-| Location | lake, viewpoint, car park, refuge, beach, wild camping spot, campsite, town, region, cave, mountain peak, restaurant |
-| Activity | hike, via ferrata, climbing, kayaking, cycling, wild swimming, stand-up paddleboarding |
+| Location | lake, river, waterfall, spring, hot spring, beach, island, valley, gorge, cave, forest, mountain peak, mountain pass, viewpoint, refuge, campsite, wild camping spot, restaurant, castle or ruins, ski area, car park, town, region, **other** |
+| Activity | hike, via ferrata, climbing, kayaking, cycling, wild swimming, stand-up paddleboarding, **other** |
 
 Ids are readable and deterministic — `loc_lake`, `act_hike` — so a seeded type
 can be named in a test or a fixture without a lookup, and so re-running the seed
-is an obvious no-op.
+is an obvious no-op. They are ordered in families — water, then land, then
+places to stay, then the human-made — because `position` is what the dropdown
+reads and a list of thirty in invention order is not scannable.
+
+**`region` means an administrative or named division**, Catalunya or la
+Cerdanya — the things an `inside` link points at. It is deliberately *not* the
+answer for the Ordesa valley. That entry is a `valley` whose `extent` is `area`:
+**`type` says what a thing is and `extent` says how big it is**, and they are
+different questions. Before the landforms were seeded, `region` was drifting
+into meaning "the big one", which is not something you can filter on or colour a
+pin by. A river swimming spot had the same problem from the other end — the
+nearest type was `lake`, which was simply wrong.
+
+Note that *national park* is not in the list, and should not be: Ordesa is a
+valley **and** a national park, and a type has cardinality one. That is a
+[tag](#future-deliverables), and a good argument that the two axes both need to
+exist eventually.
+
+**`Other` is the fallback, on both sides.** Without one, somebody meeting an
+unlisted thing either picks a wrong type — which silently corrupts the pin
+colour and every filter later built on it, worse than no answer — or abandons
+the entry. `Other` makes the gap explicit and recoverable: retyping is one
+`UPDATE`, and the frozen slug means the URL does not move.
+
+It also earns its keep as a work queue, since the entries sitting on it are
+exactly the list of types the vocabulary is missing — most of what the "suggest
+a type" idea was going to be for, without the notification machinery. It sorts
+last and is never preselected, so it stays an escape hatch rather than a
+default.
 
 **There is no admin UI for types in the first release.** Adding one is a single
 `wrangler d1 execute` insert (see [database.md](./database.md)), which is
@@ -494,6 +552,13 @@ labelled "Main photo" — the ordering is not decoration, it decides the picture
 on the list and in a shared link. Distance is typed in kilometres and stored in
 metres; the conversion happens once, in the form.
 
+The type dropdown starts on **"Choose one…"** for a new entry rather than on the
+first type. Preselecting meant an untouched form quietly claimed *Lake*, and a
+confidently wrong type is worse than a missing one — it colours a pin and feeds
+a filter. `Other` is what the impatient answer should be, and it is one option
+down the list. The server rejects a blank or unknown type as well; the client
+check only buys a better sentence.
+
 Coordinates are **one paste-friendly field**, `42.1256, 2.7469`, because that is
 what copying from a map gives you and splitting it into two boxes means
 splitting it by hand. It accepts a comma, a space, or both.
@@ -683,6 +748,12 @@ But the things types handle *badly* are exactly the unbounded, personal,
 un-adminned ones in that list, so the two axes are orthogonal and should both
 exist eventually. A tag needs `tag` and `entry_tag` and touches nothing that is
 here — no column changes, no rewrite — which is the reason it can wait.
+
+**External links.** A Wikiloc or AllTrails route, a refuge's booking page, a
+crag's page on 8a.nu — references rather than actions, so they render as a list
+of further reading and stay separate from the maps button. `entry_url`
+(`entry_id`, `url`, `label`, `position`) is the whole of it, and nothing
+existing changes.
 
 **Uploading photos.** Today a photo is a URL somebody pastes, which is fine for
 pictures already on `media.macandwen.com` and useless for one that is still on
