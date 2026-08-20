@@ -468,19 +468,18 @@ An entry with no photo is simply a text card. A tinted stand-in was tried and
 removed: it took up the room of a photograph while saying less than the type
 badges directly beneath it already did.
 
-**The carousel** is a scroll-snap strip, not a slideshow: it swipes on a phone
-and scrolls with a trackpad before any JavaScript runs. The arrows are added by
-a script and stay hidden until it does, so nothing on screen is ever inert. The
-current index is read back from `scrollLeft` rather than held in a variable,
-which is what stops a swipe and an arrow press disagreeing about which photo is
-showing.
+**One picture at the top, the rest below.** The first photo is shown at its own
+aspect ratio under the title, and the others go in a Photos section further
+down, in columns so the ragged heights do not leave gaps.
 
-**The arrows wrap**: the last photo goes on to the first, and back from the
-first lands on the last. A handful of photographs is a loop rather than a
-document with an end, and an arrow that greys out at the edge is a control that
-looks available and does nothing. The wrap itself jumps rather than animating,
-since scrolling from last to first would otherwise drag the strip past every
-photo in between. No framework, matching the rest of the site.
+A carousel was built and removed. With every photo at its natural shape, a
+strip has to be as tall as its tallest member, so a panorama sitting next to a
+portrait was displayed as a thin band in an acre of empty background. The
+alternatives were both worse: crop everything to one ratio, which loses the
+portrait, or let the height jump as you page through. Swipe-through belongs
+here eventually, but it needs a considered answer to mixed aspect ratios rather
+than a component that mostly works, and shipping the plain version now costs
+nothing later — it is one component and no schema.
 
 **The editor** is one form for both kinds. Two checkboxes, "this is a place" and
 "this is a thing to do", reveal the location and activity sections; at least one
