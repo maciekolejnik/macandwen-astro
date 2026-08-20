@@ -4,6 +4,8 @@ import { getBySlug } from '../../lib/db/places';
 import Rating from '../../components/Rating.astro';
 import VisitEditor from '../../components/VisitEditor.astro';
 import LinkEditor from '../../components/LinkEditor.astro';
+import PlacesMap from '../../components/PlacesMap.astro';
+import { isMappable } from '../../lib/places-map';
 import {
   extentNote,
   factsFor,
@@ -43,6 +45,13 @@ const extras = place
 
 // Photos arrive ordered by `position`, so the first is the default picture.
 const [hero, ...morePhotos] = place?.photos ?? [];
+
+// The entry and whatever it is linked to, so "park at" and "starts at" are a
+// glance rather than two page loads. The entry's own pin is the focused one.
+const mapPlaces = place
+  ? [place, ...place.links.map((link) => link.other)]
+  : [];
+const hasMap = mapPlaces.some(isMappable);
 
 ---
 
@@ -138,9 +147,15 @@ const [hero, ...morePhotos] = place?.photos ?? [];
         </dl>
       )}
 
-      {(coordinates || place.access || place.mapsUrl) && (
+      {(coordinates || place.access || place.mapsUrl || hasMap) && (
         <section class="mt-8">
           <h2 class="text-lg font-semibold text-stone-900">Getting there</h2>
+
+          {hasMap && (
+            <div class="mt-3">
+              <PlacesMap places={mapPlaces} focusId={place.id} height="h-72" />
+            </div>
+          )}
 
           {coordinates && (
             <p class="mt-2 text-sm text-stone-600">

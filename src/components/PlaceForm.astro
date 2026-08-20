@@ -2,6 +2,7 @@
 import type { PlaceDetail } from '../lib/db/places';
 import { listTypes } from '../lib/db/places';
 import PhotoRow from './PhotoRow.astro';
+import PlacesMap from './PlacesMap.astro';
 import {
   ACCESS_MAX_LENGTH,
   URL_MAX_LENGTH,
@@ -40,6 +41,11 @@ const seasonNames = Object.keys(SEASONS) as (keyof typeof SEASONS)[];
 // them by hand. The map picker in a later step fills the same field.
 const coordinates =
   place?.lat != null && place?.lng != null ? `${place.lat}, ${place.lng}` : '';
+
+// The picker reads and writes this as JSON. An entry that has a box keeps it
+// through an edit, which matters because a PATCH replaces the whole entry:
+// leaving the field out would silently unset the box on every save.
+const bbox = place?.bbox ? JSON.stringify(place.bbox) : '';
 
 const field =
   'mt-2 w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500';
@@ -256,8 +262,26 @@ const hint = 'mt-1 text-xs text-stone-500';
         placeholder="42.1256, 2.7469"
         class={field}
       />
-      <span class={hint}>Paste latitude and longitude straight from a map.</span>
+      <span class={hint}>
+        Paste latitude and longitude straight from a map, or click the map
+        below.
+      </span>
     </label>
+
+    <!-- The picker is an addition to the field above, not a replacement for
+         it: without JavaScript, or with a coordinate already on the clipboard,
+         typing is the faster path anyway. The box is JSON in a hidden field so
+         the form reads it the same way it reads everything else. -->
+    <input id="place-bbox" type="hidden" value={bbox} />
+    <div class="mt-4">
+      <PlacesMap
+        picker
+        coordinatesId="place-coordinates"
+        bboxId="place-bbox"
+        extentId="place-extent"
+        height="h-80"
+      />
+    </div>
 
     <label class="mt-4 block">
       <span class={label}>How big is it?</span>
@@ -472,6 +496,7 @@ const hint = 'mt-1 text-xs text-stone-500';
     const access = el<HTMLTextAreaElement>('place-access')!;
     const mapsUrl = el<HTMLInputElement>('place-maps-url')!;
     const coordinates = el<HTMLInputElement>('place-coordinates')!;
+    const bbox = el<HTMLInputElement>('place-bbox')!;
     const extent = el<HTMLSelectElement>('place-extent')!;
     const isPublic = el<HTMLInputElement>('place-public');
 
@@ -684,6 +709,18 @@ const hint = 'mt-1 text-xs text-stone-500';
         ? Math.round(Number(distance.value) * 1000)
         : null;
 
+      // A spot has no box, whatever was drawn before it became one — the
+      // server would take a bbox on a point entry, and it would then be drawn
+      // on the map, saying something the extent denies.
+      let box: unknown = null;
+      if (extent.value !== 'point' && bbox.value) {
+        try {
+          box = JSON.parse(bbox.value);
+        } catch {
+          box = null;
+        }
+      }
+
       const body = {
         name: name.value,
         description: description.value,
@@ -693,6 +730,7 @@ const hint = 'mt-1 text-xs text-stone-500';
         lat: point.lat,
         lng: point.lng,
         extent: extent.value,
+        bbox: box,
         seasons,
         visibility: isPublic?.checked ? 'public' : 'private',
         location: isLocation.checked ? { typeId: locationType.value } : null,

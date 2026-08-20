@@ -593,17 +593,25 @@ Coordinates are **one paste-friendly field**, `42.1256, 2.7469`, because that is
 what copying from a map gives you and splitting it into two boxes means
 splitting it by hand. It accepts a comma, a space, or both.
 
-Coordinates will also come from a **map picker** in step 4: the editor will show
-the same map component as `/places/map`, clicking drops the pin, dragging moves
-it, and the text field stays bound to it — typing moves the pin, moving the pin
-rewrites the numbers. The picker is an addition to the field rather than a
-replacement for it, which is why the field shipped first and alone: without
-JavaScript, or with a coordinate already on the clipboard, it is the faster
-path anyway.
+Coordinates also come from a **map picker**: the editor shows the same map
+component as `/places/map`, clicking drops the pin, dragging moves it, and the
+text field stays bound to it — typing moves the pin, moving the pin rewrites
+the numbers. The picker is an addition to the field rather than a replacement
+for it, which is why the field shipped first and alone: without JavaScript, or
+with a coordinate already on the clipboard, it is the faster path anyway. The
+field stays the thing that gets saved, so the two can never disagree about what
+a save will store.
 
-An entry whose `extent` is `area` or `region` picks a bounding box by dragging a
-rectangle, with the representative point defaulting to its centre and still
-movable — a region's centre is rarely the place you would point at.
+An entry whose `extent` is `area` or `region` can also put a **bounding box**
+round itself, drawn by clicking one corner and then the other. Two clicks
+rather than a drag: a drag has to fight the map's own panning on a desktop and
+does not exist at all on a phone, where half of these entries get added, and
+clicking twice works identically in both. The box lives in a hidden field as
+JSON, which is what makes it survive an edit — a `PATCH` replaces the whole
+entry, so a box the form did not send would be silently unset on every save.
+Changing the extent back to a spot discards the box rather than keeping it out
+of sight, since a stored box on a point entry would be drawn on the map, saying
+something the extent denies.
 
 **The map** is Leaflet with OpenStreetMap tiles: no API key, no account, no
 per-view billing, and small enough to load only on the pages that use it. It is
@@ -621,7 +629,7 @@ Pins are coloured and iconed by `entry_type` — which is why those columns exis
 now. A hybrid has two types, so the pin is a real decision rather than a lookup:
 **the activity wins**, because a map is being asked "what can I do here", and
 because the location half of a hybrid is usually the less specific of the pair —
-"lake" against "wild swimming". `pinType()` in `places-view.ts` is the only
+"lake" against "wild swimming". `pinType()` in `places-map.ts` is the only
 thing allowed to make that choice, so the map page, the detail page and any
 future legend cannot disagree about what an entry is. Both types still show as
 badges everywhere there is room for two; it is only the pin that has to pick.
@@ -630,7 +638,25 @@ arrives when the pins actually overlap, not before.
 
 `src/components/PlacesMap.astro` is the single map component, used by the map
 page and the editor, so pin colours and tile configuration are written once.
-The detail page reuses it too, showing one pin and any linked entries around it.
+The detail page reuses it too, showing its own pin — drawn larger, with its
+popup left shut, because the page around it already says the name — and any
+linked entries around it, so "park at" and "starts at" are a glance rather than
+two page loads.
+
+What the browser is given is decided in `src/lib/places-map.ts`: which entries
+are mappable, what a pin's colour, icon and popup say, and the rectangle the
+view opens on. That module is imported by the browser as well as the server, so
+it may hold types from the data layer but never values from it — one import of
+Drizzle or of the D1 binding and the map script stops building, which is the
+same rule `places-constants.ts` lives under, and the reason `pinType()` moved
+here from `places-view.ts`.
+
+An entry **without coordinates is left off** rather than pinned somewhere
+plausible: a wrong pin is worse than a missing one, and a bounding box is not
+enough to invent one from, since a region's centre is rarely the place you would
+point at. The map page says how many it is not showing, because a count that
+quietly differs from the list is the kind of thing nobody notices until they are
+looking for a place that is there.
 
 ## HTTP API
 
@@ -689,7 +715,13 @@ Real D1 in workerd, no mocks, following the packing list precedent:
 | `test/places.test.ts` | Access rules, visibility, the derived `kind`, slug generation, cascades |
 | `test/places-links.test.ts` | Relation direction, symmetry, the both-ends visibility rule |
 | `test/places-view.test.ts` | The display rules: sectioning, badges, facts, season and duration wording |
+| `test/places-map.test.ts` | What reaches the map: which entries are mappable, the pin a hybrid draws, the opening view, a drawn box |
 | `test/places-api.test.ts` | Each route: success, anonymous, non-owner, admin-is-not-owner, malformed bodies |
+
+Leaflet itself is not tested: a map needs a real browser with a real layout, so
+mocking one would only assert that the mock was called. What a test can reach —
+every decision about what the browser is handed — is in `places-map.ts`, and
+the wiring around it was checked by driving a browser by hand.
 
 The link-visibility rule and "an admin may not edit someone else's entry" are
 the two places where a bug is a leak rather than a broken page, so both get
@@ -715,9 +747,12 @@ Each step is a mergeable change that leaves the site working.
    everything else uses — visits and links. The map picker was held back to step
    4 rather than shipped half-built: coordinates are pasted for now, into a
    field the picker will later fill.
-4. **The map view.** `/places/map` and the shared `PlacesMap.astro`, reused by
-   the detail page's "Getting there" and by the editor as a picker, plus the
-   list/map toggle.
+4. ~~**The map view.**~~ **Done.** `/places/map` and the shared
+   `PlacesMap.astro`, reused by the detail page's "Getting there" and by the
+   editor as a picker, plus the list/map toggle. Leaflet is the one dependency
+   the feature added. The rules a test can reach live in `places-map.ts`; the
+   Leaflet wiring, which cannot be tested without a browser, lives in the
+   component and was checked by driving one.
 
 That is the release. A person can record places and things to do, see them on a
 list and on a map, and connect them.

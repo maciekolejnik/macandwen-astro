@@ -49,20 +49,6 @@ export function typeBadges(place: PlaceSummary) {
   );
 }
 
-/**
- * The one type a map pin is drawn from. A hybrid has two, so this is a real
- * decision rather than a lookup: the activity wins, because a map is being
- * asked "what can I do here", and because the location half of a hybrid is
- * usually the less specific of the pair — "lake" against "wild swimming".
- *
- * It lives here, and is the only thing allowed to make this choice, so the pin
- * on the map page, the pin on a detail page and any future legend can never
- * disagree about what an entry is.
- */
-export function pinType(place: PlaceSummary) {
-  return place.activity?.type ?? place.location?.type ?? null;
-}
-
 const SEASON_LABELS: Record<Season, string> = {
   spring: 'spring',
   summer: 'summer',
