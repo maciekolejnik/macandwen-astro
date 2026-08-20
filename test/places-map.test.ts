@@ -5,6 +5,7 @@ import {
   FALLBACK_COLOUR,
   boundsOf,
   countUnmapped,
+  initialPins,
   isMappable,
   normaliseBounds,
   pinType,
@@ -101,17 +102,24 @@ describe('what a pin says', () => {
     expect(pin.typeLabel).toBeNull();
   });
 
-  it('draws a box only for an area or a region', () => {
-    const bbox = { minLat: 41, minLng: 1, maxLat: 43, maxLng: 3 };
-
-    expect(toPin(summary({ extent: 'point', bbox })).bbox).toBeNull();
-    expect(toPin(summary({ extent: 'area', bbox })).bbox).toEqual(bbox);
-  });
-
   it('marks the entry a detail page is about', () => {
     const pins = toPins([summary(), summary({ id: 'b' })], 'b');
 
     expect(pins.map((pin) => pin.focus)).toEqual([false, true]);
+  });
+});
+
+describe('what a map opens on', () => {
+  it('shows only the entry a detail page is about', () => {
+    const pins = toPins([summary(), summary({ id: 'b' })], 'b');
+
+    expect(initialPins(pins).map((pin) => pin.id)).toEqual(['b']);
+  });
+
+  it('shows everything when no entry is the subject', () => {
+    const pins = toPins([summary(), summary({ id: 'b' })]);
+
+    expect(initialPins(pins)).toEqual(pins);
   });
 });
 
@@ -134,7 +142,11 @@ describe('the view the map opens on', () => {
     });
   });
 
-  it('holds a bounding box as well as its pin', () => {
+  it('ignores a bounding box, which is not drawn', () => {
+    // A box round an area used to be drawn beside its pin, and was removed: on
+    // a page about one hike, a rectangle round the region it sits in reads as
+    // belonging to the hike. The box is still stored, for the "inside this
+    // area" filter to come.
     const pins = toPins([
       summary({
         lat: 42,
@@ -145,10 +157,10 @@ describe('the view the map opens on', () => {
     ]);
 
     expect(boundsOf(pins)).toEqual({
-      minLat: 40,
-      minLng: 0,
-      maxLat: 44,
-      maxLng: 4,
+      minLat: 42,
+      minLng: 2,
+      maxLat: 42,
+      maxLng: 2,
     });
   });
 });

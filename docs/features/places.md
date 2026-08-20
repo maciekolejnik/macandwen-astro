@@ -633,15 +633,25 @@ because the location half of a hybrid is usually the less specific of the pair �
 thing allowed to make that choice, so the map page, the detail page and any
 future legend cannot disagree about what an entry is. Both types still show as
 badges everywhere there is room for two; it is only the pin that has to pick.
-Areas and regions draw their bounding box as well as their pin. Clustering
-arrives when the pins actually overlap, not before.
+**A bounding box is stored but never drawn.** Drawing one was tried and
+removed: a rectangle on a map has no label, so on a page about a hike the box
+round the park it sits inside reads as belonging to the hike, and even on the
+map page a box round a region says nothing a reader can attach to a pin. The
+box is still worth keeping — it is what the "inside this area" filter will be
+built on, and it is still drawn in the editor, where it is the thing being
+edited and cannot be mistaken for anything else. Clustering arrives when the
+pins actually overlap, not before.
 
 `src/components/PlacesMap.astro` is the single map component, used by the map
 page and the editor, so pin colours and tile configuration are written once.
 The detail page reuses it too, showing its own pin — drawn larger, with its
-popup left shut, because the page around it already says the name — and any
-linked entries around it, so "park at" and "starts at" are a glance rather than
-two page loads.
+popup left shut, because the page around it already says the name. It opens on
+that pin **alone**, with everything the entry is linked to behind a button:
+"park at" and "starts at" are worth a glance rather than two page loads, but a
+map that draws a car park, a refuge and a region the moment it loads makes the
+reader work out which of the pins is the one they came for. The button names
+the state it will move to — "Show what it is linked to (3)", then "Show only
+this one" — and refits the view each way.
 
 What the browser is given is decided in `src/lib/places-map.ts`: which entries
 are mappable, what a pin's colour, icon and popup say, and the rectangle the
@@ -715,7 +725,7 @@ Real D1 in workerd, no mocks, following the packing list precedent:
 | `test/places.test.ts` | Access rules, visibility, the derived `kind`, slug generation, cascades |
 | `test/places-links.test.ts` | Relation direction, symmetry, the both-ends visibility rule |
 | `test/places-view.test.ts` | The display rules: sectioning, badges, facts, season and duration wording |
-| `test/places-map.test.ts` | What reaches the map: which entries are mappable, the pin a hybrid draws, the opening view, a drawn box |
+| `test/places-map.test.ts` | What reaches the map: which entries are mappable, the pin a hybrid draws, what it opens on, a drawn box |
 | `test/places-api.test.ts` | Each route: success, anonymous, non-owner, admin-is-not-owner, malformed bodies |
 
 Leaflet itself is not tested: a map needs a real browser with a real layout, so

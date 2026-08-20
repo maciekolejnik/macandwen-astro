@@ -14,6 +14,7 @@ import {
   DEFAULT_CENTRE,
   DEFAULT_ZOOM,
   boundsOf,
+  initialPins,
   toPins,
   type MapData,
 } from '../lib/places-map';
@@ -50,7 +51,12 @@ const {
 } = Astro.props;
 
 const pins = toPins(places, focusId);
-const data: MapData = { pins, bounds: boundsOf(pins), picker };
+const initial = initialPins(pins);
+const data: MapData = { pins, initial, bounds: boundsOf(initial), picker };
+
+// The rest are behind a button rather than drawn straight away, so a page
+// about one hike opens on that hike.
+const held = pins.length - initial.length;
 
 // `set:html` does not escape, and a name is free text: `</script>` inside one
 // would otherwise end the block early. Escaping every `<` is the standard cure
@@ -84,6 +90,23 @@ const json = JSON.stringify(data).replace(/</g, '\\u003c');
   >
     {picker ? 'The map picker needs JavaScript. Typing coordinates works without it.' : 'Loading the map…'}
   </p>
+
+  {
+    held > 0 && (
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 z-[1000] flex justify-start p-3">
+        <button
+          type="button"
+          data-show-linked
+          data-show-label={`Show what it is linked to (${held})`}
+          data-hide-label="Show only this one"
+          hidden
+          class="pointer-events-auto rounded-lg border border-stone-300 bg-white/95 px-3 py-1.5 text-xs font-medium text-stone-700 shadow-sm transition-colors hover:bg-stone-100"
+        >
+          Show what it is linked to ({held})
+        </button>
+      </div>
+    )
+  }
 
   {
     picker && (
@@ -122,6 +145,7 @@ const json = JSON.stringify(data).replace(/</g, '\\u003c');
   import L from 'leaflet';
   import 'leaflet/dist/leaflet.css';
   import {
+    boundsOf,
     normaliseBounds,
     type MapBounds,
     type MapData,
@@ -198,42 +222,40 @@ const json = JSON.stringify(data).replace(/</g, '\\u003c');
     L.tileLayer(TILES, { attribution: ATTRIBUTION, maxZoom: 19 }).addTo(map);
     fallback?.remove();
 
-    for (const pin of data.pins) {
+    const marker = (pin: MapPin) =>
       L.marker([pin.lat, pin.lng], {
         icon: pinIcon(pin.colour, pin.icon, pin.focus),
         title: pin.name,
         zIndexOffset: pin.focus ? 1000 : 0,
-      })
-        .addTo(map)
-        .bindPopup(popupHtml(pin));
+      }).bindPopup(popupHtml(pin));
 
-      if (pin.bbox) {
-        L.rectangle(toLatLngBounds(pin.bbox), {
-          color: pin.colour,
-          weight: 1,
-          fillOpacity: 0.08,
-        }).addTo(map);
+    for (const pin of data.initial) marker(pin).addTo(map);
+
+    /** Zero-sized bounds — one pin — would zoom to the roof tiles, so a single
+     * point gets a fixed zoom instead. */
+    const show = (bounds: MapBounds, count: number) => {
+      const latLngBounds = toLatLngBounds(bounds);
+
+      if (count === 1) {
+        map.setView(latLngBounds.getCenter(), 13);
+      } else {
+        map.fitBounds(latLngBounds, { padding: [40, 40], maxZoom: 15 });
       }
-    }
-
-    const centre = L.latLng(
-      Number(container.dataset.centreLat),
-      Number(container.dataset.centreLng),
-    );
-    const zoom = Number(container.dataset.zoom);
+    };
 
     if (data.bounds) {
-      const bounds = toLatLngBounds(data.bounds);
-      // A single pin has a bounds of zero size, which would zoom to the roof
-      // tiles; a fixed zoom is the right answer for one point.
-      if (data.pins.length === 1 && !data.pins[0]!.bbox) {
-        map.setView(bounds.getCenter(), 13);
-      } else {
-        map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-      }
+      show(data.bounds, data.initial.length);
     } else {
-      map.setView(centre, zoom);
+      map.setView(
+        L.latLng(
+          Number(container.dataset.centreLat),
+          Number(container.dataset.centreLng),
+        ),
+        Number(container.dataset.zoom),
+      );
     }
+
+    wireLinkedToggle(container, map, data, marker, show);
 
     // The focused pin is drawn larger and sits on top, but its popup is left
     // shut: the page around it already says the name, and on a map this small
@@ -243,6 +265,47 @@ const json = JSON.stringify(data).replace(/</g, '\\u003c');
     setTimeout(() => map.invalidateSize(), 0);
 
     if (data.picker) wirePicker(container, map);
+  }
+
+  /**
+   * A detail page hands the map its own entry and everything linked to it, but
+   * opens on the entry alone — otherwise the reader has to work out which of
+   * five pins is the one they came for. This puts the rest one click away, and
+   * the button says which state it will move to rather than which it is in.
+   */
+  function wireLinkedToggle(
+    container: HTMLElement,
+    map: L.Map,
+    data: MapData,
+    marker: (pin: MapPin) => L.Marker,
+    show: (bounds: MapBounds, count: number) => void,
+  ) {
+    const button = container.querySelector<HTMLButtonElement>('[data-show-linked]');
+    const held = data.pins.filter(
+      (pin) => !data.initial.some((shown) => shown.id === pin.id),
+    );
+    if (!button || held.length === 0) return;
+
+    const layer = L.layerGroup(held.map(marker));
+    let shown = false;
+
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      shown = !shown;
+
+      if (shown) {
+        layer.addTo(map);
+        const bounds = boundsOf(data.pins);
+        if (bounds) show(bounds, data.pins.length);
+      } else {
+        layer.remove();
+        if (data.bounds) show(data.bounds, data.initial.length);
+      }
+
+      button.textContent = shown
+        ? (button.dataset.hideLabel ?? '')
+        : (button.dataset.showLabel ?? '');
+    });
   }
 
   /**

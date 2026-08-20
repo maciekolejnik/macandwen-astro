@@ -53,8 +53,6 @@ export type MapPin = {
   icon: string | null;
   /** The winning type's label, or null for an entry with no type at all. */
   typeLabel: string | null;
-  /** Drawn as a rectangle beside the pin, for an area or a region. */
-  bbox: MapBounds | null;
   /** The picture the popup shows, when there is one. */
   photoUrl: string | null;
   /** Marks the entry a detail page is about, so its own pin can stand out. */
@@ -94,7 +92,6 @@ export function toPin(place: PlaceSummary, focusId?: string): MapPin {
     colour: type?.colour ?? FALLBACK_COLOUR,
     icon: type?.icon ?? null,
     typeLabel: type?.label ?? null,
-    bbox: place.extent === 'point' ? null : place.bbox,
     photoUrl: place.photoUrl,
     focus: place.id === focusId,
   };
@@ -114,9 +111,8 @@ export function countUnmapped(places: PlaceSummary[]): number {
 }
 
 /**
- * The rectangle the view should open on: every pin, and every bounding box,
- * inside it. Null when there is nothing to show, which is the only case where
- * a default centre is needed.
+ * The rectangle holding every pin. Null when there is nothing to show, which
+ * is the only case where a default centre is needed.
  */
 export function boundsOf(pins: MapPin[]): MapBounds | null {
   if (pins.length === 0) return null;
@@ -129,23 +125,26 @@ export function boundsOf(pins: MapPin[]): MapBounds | null {
   };
 
   for (const pin of pins) {
-    const corners = pin.bbox
-      ? [
-          { lat: pin.lat, lng: pin.lng },
-          { lat: pin.bbox.minLat, lng: pin.bbox.minLng },
-          { lat: pin.bbox.maxLat, lng: pin.bbox.maxLng },
-        ]
-      : [{ lat: pin.lat, lng: pin.lng }];
-
-    for (const corner of corners) {
-      bounds.minLat = Math.min(bounds.minLat, corner.lat);
-      bounds.minLng = Math.min(bounds.minLng, corner.lng);
-      bounds.maxLat = Math.max(bounds.maxLat, corner.lat);
-      bounds.maxLng = Math.max(bounds.maxLng, corner.lng);
-    }
+    bounds.minLat = Math.min(bounds.minLat, pin.lat);
+    bounds.minLng = Math.min(bounds.minLng, pin.lng);
+    bounds.maxLat = Math.max(bounds.maxLat, pin.lat);
+    bounds.maxLng = Math.max(bounds.maxLng, pin.lng);
   }
 
   return bounds;
+}
+
+/**
+ * The pins a map starts with. A detail page hands over the entry and whatever
+ * it is linked to, but opens on the entry alone: a page about one hike that
+ * draws its car park, its refuge and the region around it is answering a
+ * question nobody asked, and the reader has to work out which pin is the one
+ * they came for. The rest are one click away.
+ */
+export function initialPins(pins: MapPin[]): MapPin[] {
+  const focus = pins.filter((pin) => pin.focus);
+
+  return focus.length > 0 ? focus : pins;
 }
 
 /** Corners in whichever order they were dragged, normalised to min and max.
@@ -171,8 +170,12 @@ export function normaliseBounds(
  * and the browser reads one shape.
  */
 export type MapData = {
+  /** Everything the map may show, focused entry included. */
   pins: MapPin[];
+  /** The subset it opens on — see `initialPins`. */
+  initial: MapPin[];
+  /** The view that fits `initial`. */
   bounds: MapBounds | null;
-  /** Lets the owner drop and drag a pin, and drag a box for an area. */
+  /** Lets the owner drop and drag a pin, and click out a box for an area. */
   picker: boolean;
 };
