@@ -7,6 +7,8 @@ one; the public listing is ranked by how many favourites a list has.
 
 This document covers the data, HTTP and UI layers. Saving other people's lists
 and filtering arrive in later changes and are described here as they land.
+Variations of one list — with cooking, without — are proposed separately in
+`docs/features/packing-list-options.md`.
 
 ## Tables
 
