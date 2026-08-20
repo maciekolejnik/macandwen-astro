@@ -158,7 +158,7 @@ every existing list keeps working unchanged.
 
 ## Migration
 
-`migrations/0002_packing_list_options.sql` creates both tables. Nothing
+`migrations/0009_packing_list_options.sql` creates both tables. Nothing
 backfills: an existing list has no options, which is exactly the state the whole
 feature degrades to.
 
