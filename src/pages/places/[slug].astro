@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import { getBySlug, listVisible } from '../../lib/db/places';
+import { getBySlug } from '../../lib/db/places';
 import Rating from '../../components/Rating.astro';
 import VisitEditor from '../../components/VisitEditor.astro';
 import LinkEditor from '../../components/LinkEditor.astro';
@@ -44,9 +44,6 @@ const extras = place
 // Photos arrive ordered by `position`, so the first is the default picture.
 const [hero, ...morePhotos] = place?.photos ?? [];
 
-// Only fetched when there is a link editor to fill, since it is a second query
-// for the sake of one dropdown.
-const linkCandidates = place?.isOwn ? await listVisible(user) : [];
 ---
 
 {place ? (
@@ -206,13 +203,10 @@ const linkCandidates = place?.isOwn ? await listVisible(user) : [];
         </section>
       )}
 
-      {(place.links.length > 0 || place.isOwn) && (
-        <LinkEditor
-          placeId={place.id}
-          links={place.links}
-          candidates={linkCandidates}
-          editable={place.isOwn}
-        />
+      <!-- Read-only here, and absent entirely when there is nothing linked:
+           editing links belongs in the editor with the rest of the entry. -->
+      {place.links.length > 0 && (
+        <LinkEditor placeId={place.id} links={place.links} candidates={[]} editable={false} />
       )}
 
       <!-- Offered to anybody signed in: a visit is private to whoever wrote

@@ -20,6 +20,14 @@ const others = candidates.filter((candidate) => candidate.id !== placeId);
 <section class="mt-8" data-link-editor={editable ? '' : null} data-place-id={placeId}>
   <h2 class="text-lg font-semibold text-stone-900">Nearby and related</h2>
 
+  <!-- Said out loud because everything else on this page waits for Save, and
+       a control that does not should admit it. -->
+  {
+    editable && (
+      <p class="mt-1 text-xs text-stone-500">Links save as you add them.</p>
+    )
+  }
+
   <p
     data-link-error
     role="alert"

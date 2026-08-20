@@ -1,7 +1,8 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import PlaceForm from '../../../components/PlaceForm.astro';
-import { getBySlug, isAdmin } from '../../../lib/db/places';
+import { getBySlug, isAdmin, listVisible } from '../../../lib/db/places';
+import LinkEditor from '../../../components/LinkEditor.astro';
 
 // Reads the session, so it cannot be prerendered.
 export const prerender = false;
@@ -21,6 +22,10 @@ const editable = place?.isOwn ? place : null;
 if (!editable) {
   Astro.response.status = 404;
 }
+
+// Everything the owner can see is a possible far end; the API checks the same
+// thing again when the link is actually made.
+const linkCandidates = editable ? await listVisible(user) : [];
 ---
 
 {editable ? (
@@ -36,6 +41,20 @@ if (!editable) {
     <h1 class="mt-4 text-3xl font-bold text-stone-900">Edit</h1>
 
     <PlaceForm place={editable} canPublish={isAdmin(user)} />
+
+    <!--
+      Below the form rather than inside it, because a link is made and unmade
+      the moment you click: it cannot ride along with the entry's
+      save-everything PATCH. Folding it in would also mean replacing every
+      link on each save, and a link has two ends — that would let saving this
+      entry silently delete one somebody else made pointing at it.
+    -->
+    <LinkEditor
+      placeId={editable.id}
+      links={editable.links}
+      candidates={linkCandidates}
+      editable
+    />
   </div>
 </Layout>
 ) : (

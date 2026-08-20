@@ -523,7 +523,7 @@ at if that page ever slows down.
 | --- | --- |
 | `/places` | Everything the visitor may see, as a list |
 | `/places/map` | The same set, as pins |
-| `/places/[slug]` | One entry: details, photos, visits, links |
+| `/places/[slug]` | One entry: details, photos, visits, and any links it has |
 | `/places/new` | The editor, empty — signed in only |
 | `/places/[slug]/edit` | The editor, loaded — owner only |
 
@@ -652,13 +652,28 @@ packing list editor's replace-everything update. D1 has no interactive
 transactions, so multi-table writes go through `db.batch`.
 
 Visits and links have their own routes rather than riding along with `PATCH`,
-because they are not owned by the same person as the entry: a visit belongs to
-whoever recorded it, so it must be addable by somebody who cannot edit the entry
-at all. The two sub-editors on the detail page reload the page on success rather
-than patching the DOM. That is heavier, but a link's label depends on which end
-it is read from and a date has a format — both are things the server already
-knows how to work out, and neither is worth writing a second time in the
-browser for an action taken this rarely.
+and for two different reasons.
+
+A **visit** is not owned by the same person as the entry — it belongs to whoever
+recorded it — so it has to be addable by somebody who cannot edit the entry at
+all. That is why its control lives on the **detail page**, offered to any signed-in
+visitor: it is not editing, and the editor is a page a non-owner cannot reach.
+
+A **link** is owner-only, so it belongs in the **editor** with the rest of the
+entry, and the read-only list on the detail page disappears entirely when
+nothing is linked. It still has its own route rather than folding into `PATCH`,
+because replace-everything semantics are wrong for an edge with two ends:
+saving this entry would silently delete a link somebody else made pointing *at*
+it. So it saves the moment you click, which the editor says out loud, since
+everything around it waits for Save. Linking is unavailable on `/places/new` for
+the plain reason that a link needs both ends to exist and one of them does not
+yet.
+
+Both sub-editors reload the page on success rather than patching the DOM. That
+is heavier, but a link's label depends on which end it is read from and a date
+has a format — both are things the server already knows how to work out, and
+neither is worth writing a second time in the browser for an action taken this
+rarely.
 
 `src/lib/places-payload.ts` shape-checks a body before it reaches the data
 layer, which trusts its types. Content rules — trimming, limits, blanks, the
