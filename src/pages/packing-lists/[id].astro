@@ -91,6 +91,29 @@ const formatDate = (date: Date) =>
 
       {list.items.length > 0 ? (
         <>
+          {list.options.length > 0 && (
+            <div id="packing-options" class="mt-8">
+              <p class="text-sm font-medium text-stone-700">This trip</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                {list.options.map((option) => (
+                  <button
+                    type="button"
+                    data-option={option.id}
+                    data-default-on={option.defaultOn ? 'true' : 'false'}
+                    aria-pressed={option.defaultOn ? 'true' : 'false'}
+                    class="rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-100"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              <p class="mt-2 text-xs text-stone-400">
+                Items that only belong to an option you have turned off are
+                hidden. Your choices are kept on this device.
+              </p>
+            </div>
+          )}
+
           <p
             id="packed-count"
             class="mt-8 text-sm font-medium text-stone-500"
@@ -105,7 +128,7 @@ const formatDate = (date: Date) =>
             class="mt-3 divide-y divide-stone-200 overflow-hidden rounded-xl border border-stone-200 bg-white"
           >
             {list.items.map((item) => (
-              <li>
+              <li data-item-options={item.optionIds.join(' ')}>
                 <label class="flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors hover:bg-stone-50">
                   <input
                     type="checkbox"
@@ -162,6 +185,16 @@ const formatDate = (date: Date) =>
     pruneExpiredTicks,
     saveTicks,
   } from '../../lib/packing-ticks';
+  import {
+    loadOptionState,
+    pruneExpiredOptionState,
+    saveOptionState,
+  } from '../../lib/packing-list-option-state';
+  import {
+    isItemVisible,
+    resolveActiveOptions,
+    type PackingListOption,
+  } from '../../lib/packing-list-options';
   import { wireSaveButtons } from '../../lib/save-button';
 
   wireSaveButtons();
@@ -176,8 +209,25 @@ const formatDate = (date: Date) =>
       ...list.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
     ];
 
-    // Only ever removes entries, so it is safe to run on every page view.
+    const chips = [
+      ...document.querySelectorAll<HTMLButtonElement>('[data-option]'),
+    ];
+
+    const options: PackingListOption[] = chips.map((chip, position) => ({
+      id: chip.dataset.option!,
+      label: chip.textContent?.trim() ?? '',
+      position,
+      defaultOn: chip.dataset.defaultOn === 'true',
+    }));
+
+    // Only ever removes entries, so both are safe to run on every page view.
     pruneExpiredTicks(localStorage);
+    pruneExpiredOptionState(localStorage);
+
+    const active = resolveActiveOptions(
+      options,
+      options.length ? loadOptionState(localStorage, listId) : null,
+    );
 
     const ticked = loadTicks(
       localStorage,
@@ -185,20 +235,69 @@ const formatDate = (date: Date) =>
       boxes.map((box) => box.value),
     );
 
+    const rowFor = (box: HTMLInputElement) =>
+      box.closest<HTMLLIElement>('li');
+
+    /** Hidden items are not packed and not unpacked; they are not on this trip. */
+    const isShown = (box: HTMLInputElement) => {
+      const row = rowFor(box);
+      const tags = row?.dataset.itemOptions?.split(' ').filter(Boolean) ?? [];
+
+      return isItemVisible(tags, active);
+    };
+
     const paint = () => {
       let packed = 0;
+      let shown = 0;
 
       for (const box of boxes) {
+        const row = rowFor(box);
+        const visible = isShown(box);
+
+        if (row) row.hidden = !visible;
+        if (!visible) continue;
+
+        shown += 1;
+
         const label = box.closest('label');
         label?.classList.toggle('text-stone-400', box.checked);
         label?.querySelector('span')?.classList.toggle('line-through', box.checked);
         if (box.checked) packed += 1;
       }
 
-      counter.textContent = `${packed} of ${boxes.length} packed`;
+      for (const chip of chips) {
+        const on = active.has(chip.dataset.option!);
+        chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+        chip.classList.toggle('border-emerald-600', on);
+        chip.classList.toggle('bg-emerald-50', on);
+        chip.classList.toggle('text-emerald-800', on);
+        chip.classList.toggle('bg-white', !on);
+        chip.classList.toggle('text-stone-600', !on);
+      }
+
+      counter.textContent = `${packed} of ${shown} packed`;
       counter.hidden = false;
       reset.hidden = packed === 0;
     };
+
+    for (const chip of chips) {
+      chip.addEventListener('click', () => {
+        const id = chip.dataset.option!;
+        if (active.has(id)) active.delete(id);
+        else active.add(id);
+
+        // Stored explicitly per option, so an option added to the list later
+        // starts from its own default rather than silently off.
+        saveOptionState(
+          localStorage,
+          listId,
+          Object.fromEntries(
+            options.map((option) => [option.id, active.has(option.id)]),
+          ),
+        );
+        paint();
+      });
+    }
 
     for (const box of boxes) {
       box.checked = ticked.has(box.value);

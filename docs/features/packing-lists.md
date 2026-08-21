@@ -7,6 +7,9 @@ one; the public listing is ranked by how many favourites a list has.
 
 This document covers the data, HTTP and UI layers. Saving other people's lists
 and filtering arrive in later changes and are described here as they land.
+Variations of one list — with cooking, without — are described in
+`docs/features/packing-list-options.md`, which owns the two tables, the
+visibility rule and the editor's tagging UI.
 
 ## Tables
 
@@ -15,6 +18,7 @@ and filtering arrive in later changes and are described here as they land.
 | `packing_list` | Title, owner, `is_public`, timestamps |
 | `packing_list_item` | One row per item, ordered by `position` within a list |
 | `packing_list_favourite` | `(user_id, list_id)` primary key — one favourite per user per list |
+| `packing_list_option`, `packing_list_item_option` | Per-list options and the items tagged with them — see `packing-list-options.md` |
 
 Items are rows rather than a JSON column so they can be ordered, counted and
 searched in SQL — the last of those matters if keyword search ever moves from
@@ -81,7 +85,9 @@ has already decided the viewer may see.
 ## Writes
 
 `update` replaces the whole list, items included: the editor submits the full
-set, so diffing rows would add complexity without changing the result. D1 has
+set, so diffing rows would add complexity without changing the result. Options
+are the exception, keeping their ids across an edit, because visitors' saved
+toggles are keyed by them. D1 has
 no interactive transactions, so writes that touch two tables go through
 `db.batch`, which is atomic.
 
@@ -112,7 +118,9 @@ All of them are `prerender = false` and require a session; without one they answ
 read, so the UI can show it as-is.
 
 `PATCH` sends the whole list, matching the data layer's replace-everything
-update. A list that does not exist and one owned by somebody else both answer
+update. `items` is an array of `{ text, optionIds? }` objects and `options` is
+optional; see `packing-list-options.md`. A list that does not exist and one
+owned by somebody else both answer
 `404` with an identical body, so the routes cannot be used to discover which
 ids are real.
 

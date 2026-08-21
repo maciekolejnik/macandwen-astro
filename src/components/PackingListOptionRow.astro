@@ -1,0 +1,46 @@
+---
+import { OPTION_LABEL_MAX_LENGTH } from '../lib/packing-list-limits';
+
+interface Props {
+  option?: { id: string; label: string; defaultOn: boolean };
+}
+
+const { option } = Astro.props;
+---
+
+<!--
+  One option of the editor, rendered for each existing one and once more inside
+  a <template> for the client script to clone — the same arrangement as an item
+  row, so the markup lives in one place.
+
+  `data-option-id` is empty for an option added in the browser. The server then
+  treats a known id as the same option, which is what keeps a visitor's saved
+  toggles alive across an edit, and anything else as a new one.
+-->
+<li class="flex items-center gap-2" data-option-row data-option-id={option?.id ?? ''}>
+  <input
+    type="text"
+    value={option?.label ?? ''}
+    maxlength={OPTION_LABEL_MAX_LENGTH}
+    placeholder="Cooking"
+    data-option-input
+    class="w-full rounded-lg border border-stone-300 bg-white px-4 py-2 text-stone-900 outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+  />
+  <label class="flex shrink-0 items-center gap-2 text-sm text-stone-600">
+    <input
+      type="checkbox"
+      checked={option?.defaultOn ?? false}
+      data-option-default
+      class="h-4 w-4 rounded border-stone-300 accent-emerald-600"
+    />
+    On by default
+  </label>
+  <button
+    type="button"
+    data-remove-option
+    aria-label="Remove option"
+    class="shrink-0 rounded-lg border border-stone-300 bg-white px-2 py-2 text-stone-500 transition-colors hover:bg-red-50 hover:text-red-600"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+  </button>
+</li>
